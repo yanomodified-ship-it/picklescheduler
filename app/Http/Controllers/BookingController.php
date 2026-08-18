@@ -11,66 +11,80 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    // Fetch active courts for display
+    // Fetch active courts and future/today bookings for availability display
     public function index(): View
     {
         $courts = Court::where('status', 'active')->orderBy('id')->get();
-        return view('welcome', compact('courts'));
+
+        $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
+            ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
+            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
+
+        return view('welcome', compact('courts', 'existingBookings'));
     }
 
     // Store a new booking with receipt upload support
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'full_name'        => 'required|string|max:255',
-            'email'            => 'nullable|email|max:255',
-            'contact_number'   => 'required|string|max:50',
-            'court_id'         => 'required|exists:courts,id',
-            'booking_date'     => 'required|date|after_or_equal:today',
-            'start_time'       => 'required|date_format:H:i,H:i:s',
-            'end_time'         => 'required|date_format:H:i,H:i:s|after:start_time',
-            'total_amount'     => 'required|numeric|min:0',
-            'payment_reference'=> 'nullable|string|max:100',
-            'receipt'          => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'name'               => 'required|string|max:100',
+            'email'              => 'nullable|email|max:150',
+            'contact_number'     => 'required|string|max:30',
+            'court_id'           => 'required|exists:courts,id',
+            'booking_date'       => 'required|date|after_or_equal:today',
+            'start_time'         => 'required',
+            'end_time'           => 'required|after:start_time',
+            'number_of_players'  => 'nullable|integer|min:1|max:30',
+            'payment_reference' => 'required|string|max:100',
+            'payment_receipt'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         // 1. Strict Double-Booking Overlap Check
-        if (Booking::hasOverlap($validated['court_id'], $validated['booking_date'], $validated['start_time'], $validated['end_time'])) {
-            return back()->withErrors(['time_slot' => 'The selected court is already booked for this time slot. Please choose another time or court.'])->withInput();
+        if (method_exists(Booking::class, 'hasOverlap')) {
+            if (Booking::hasOverlap($validated['court_id'], $validated['booking_date'], $validated['start_time'], $validated['end_time'])) {
+                return back()->withErrors(['time_slot' => 'The selected court is already booked for this time slot. Please choose another time or court.'])->withInput();
+            }
         }
 
-        // 2. Handle Receipt Upload
+        // 2. Calculate Pricing based on duration
+        $court = Court::findOrFail($validated['court_id']);
+        $hourlyRate = $this->getCourtHourlyRate($court);
+
+        $start = \Carbon\Carbon::parse($validated['start_time']);
+        $end = \Carbon\Carbon::parse($validated['end_time']);
+        $durationMinutes = $end->diffInMinutes($start);
+        $durationHours = max(0.5, $durationMinutes / 60);
+        $totalAmount = $hourlyRate * $durationHours;
+
+        // 3. Handle Receipt Upload
         $receiptPath = null;
-        if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        if ($request->hasFile('payment_receipt')) {
+            $receiptPath = $request->file('payment_receipt')->store('receipts', 'public');
         }
 
-        // 3. Create or find Customer
+        // 4. Create or find Customer
         $customer = Customer::firstOrCreate(
             ['contact_number' => $validated['contact_number']],
             [
-                'full_name' => $validated['full_name'],
-                'email'     => $validated['email'],
+                'name'  => $validated['name'],
+                'email' => $validated['email'] ?? null,
             ]
         );
 
-        // Calculate duration in hours
-        $start = \Carbon\Carbon::parse($validated['start_time']);
-        $end = \Carbon\Carbon::parse($validated['end_time']);
-        $durationHours = $end->diffInHours($start);
-
-        // 4. Create Booking
+        // 5. Create Booking
         $reference = $this->generateBookingReference();
-        $booking = Booking::create([
+        Booking::create([
             'booking_reference' => $reference,
             'customer_id'       => $customer->id,
             'court_id'          => $validated['court_id'],
             'booking_date'      => $validated['booking_date'],
             'start_time'        => $validated['start_time'],
             'end_time'          => $validated['end_time'],
-            'duration'          => $durationHours > 0 ? $durationHours : 1,
-            'total_amount'      => $validated['total_amount'],
-            'payment_reference' => $validated['payment_reference'] ?? null,
+            'number_of_players' => $validated['number_of_players'] ?? 2,
+            'duration'          => $durationHours,
+            'total_price'       => $totalAmount,
+            'total_amount'      => $totalAmount,
+            'payment_reference' => $validated['payment_reference'],
             'receipt_path'      => $receiptPath,
             'booking_status'    => 'Pending Verification',
             'payment_status'    => 'For Verification',
@@ -90,11 +104,15 @@ class BookingController extends Controller
             ->where('booking_reference', $booking_reference)
             ->firstOrFail();
 
+        $courts = Court::where('status', 'active')->orderBy('id')->get();
+
+        $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
+            ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
+            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
+
         return view('welcome', [
-            'courts' => Court::query()
-                ->where('status', 'active')
-                ->orderBy('id')
-                ->get(),
+            'courts'              => $courts,
+            'existingBookings'    => $existingBookings,
             'confirmationBooking' => $booking,
         ]);
     }

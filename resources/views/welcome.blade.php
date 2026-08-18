@@ -1,7 +1,7 @@
 {{-- =========================================================================
 resources/views/welcome.blade.php
 Pickleball Court Booking & Management System
-Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
+Laravel 11 + Blade + Tailwind CSS + Alpine.js (Dark Slate Theme)
 ============================================================================ --}}
 
 <!DOCTYPE html>
@@ -35,13 +35,14 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50" x-data="{ mobileMenu: false }">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                <span class="text-3xl">🏓</span>
-                <span class="text-2xl font-extrabold tracking-tight text-lime-400">Pickle<span class="text-white">Scheduler</span></span>
+                <span class="text-2xl sm:text-3xl">🏓</span>
+                <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-lime-400">
+                    HomeCourt<span class="text-white">PickleHouse</span>
+                </span>
             </a>
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex space-x-8 text-sm font-semibold text-slate-300">
-                <a href="#features" class="hover:text-lime-400 transition">Features</a>
                 <a href="#courts" class="hover:text-lime-400 transition">Courts</a>
                 <a href="#rates" class="hover:text-lime-400 transition">Rates</a>
                 <a href="#rules" class="hover:text-lime-400 transition">Rules</a>
@@ -51,7 +52,7 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                 <a href="#booking" class="text-sm font-semibold bg-lime-400 text-slate-950 px-5 py-2.5 rounded-lg hover:bg-lime-300 transition shadow-lg shadow-lime-400/20">Book a Court</a>
             </div>
 
-            <!-- Mobile menu button -->
+            <!-- Mobile Menu Button -->
             <button type="button" @click="mobileMenu = !mobileMenu" class="md:hidden text-slate-300 hover:text-white">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -61,7 +62,6 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
 
         <!-- Mobile Navigation -->
         <nav x-show="mobileMenu" x-cloak class="md:hidden border-t border-slate-800 px-6 py-4 space-y-3 bg-slate-900">
-            <a href="#features" @click="mobileMenu = false" class="block text-sm font-semibold text-slate-300 hover:text-lime-400">Features</a>
             <a href="#courts" @click="mobileMenu = false" class="block text-sm font-semibold text-slate-300 hover:text-lime-400">Courts</a>
             <a href="#rates" @click="mobileMenu = false" class="block text-sm font-semibold text-slate-300 hover:text-lime-400">Rates</a>
             <a href="#rules" @click="mobileMenu = false" class="block text-sm font-semibold text-slate-300 hover:text-lime-400">Rules</a>
@@ -174,15 +174,16 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
 
         <!-- Hero Section -->
         <section class="relative pt-16 pb-20 px-6 max-w-7xl mx-auto text-center">
+            <!-- MODIFICATION: Tagline updated to Private Court Bookings -->
             <div class="inline-block bg-slate-800 text-lime-400 text-xs font-bold px-4 py-1.5 rounded-full mb-6 border border-slate-700">
-                🎾 Open Play & Private Court Bookings Now Live
+                🎾 Private Court Bookings
             </div>
             <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-                Reserve Your Court. <br>
+                Reserve Your Court.<br>
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 to-emerald-400">Serve Your Best Game.</span>
             </h1>
             <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-                Seamless pickleball court reservations, open-play queueing, and match coordination—all in one place.
+                Seamless pickleball court reservations and match coordination—all in one place.
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
                 <a href="#booking" class="bg-lime-400 text-slate-950 font-bold px-8 py-4 rounded-xl text-lg hover:bg-lime-300 transition shadow-xl shadow-lime-400/20">
@@ -194,58 +195,72 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
             </div>
         </section>
 
-        <!-- Feature Grid -->
-        <section id="features" class="py-16 bg-slate-950/50 border-t border-slate-800">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                        <div class="w-12 h-12 bg-lime-400/10 text-lime-400 rounded-xl flex items-center justify-center text-2xl mb-6">⚡</div>
-                        <h3 class="text-xl font-bold mb-3">Real-Time Booking</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Check court availability in real time and lock in your preferred time slot instantly with no hassle.
-                        </p>
-                    </div>
-                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                        <div class="w-12 h-12 bg-lime-400/10 text-lime-400 rounded-xl flex items-center justify-center text-2xl mb-6">👥</div>
-                        <h3 class="text-xl font-bold mb-3">Open Play Queues</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Join open play rotation, see who is on deck, and get notified when it's your turn to take the court.
-                        </p>
-                    </div>
-                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                        <div class="w-12 h-12 bg-lime-400/10 text-lime-400 rounded-xl flex items-center justify-center text-2xl mb-6">🏆</div>
-                        <h3 class="text-xl font-bold mb-3">Tournaments & Events</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">
-                            Sign up for weekend round-robins, local leagues, and skill-level based matchmaking events.
-                        </p>
-                    </div>
+        <!-- Courts Section -->
+        <section id="courts" class="scroll-mt-20 border-t border-slate-800 px-6 py-16 max-w-7xl mx-auto" x-data="{ courtFilter: 'outdoor' }">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Our Courts</div>
+                    <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl text-white mt-1">Choose your court</h2>
+                    <p class="mt-2 text-slate-400">Select between our available outdoor and indoor courts below.</p>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="inline-flex p-1.5 rounded-xl bg-slate-800 border border-slate-700/60 text-sm font-semibold">
+                    <button 
+                        type="button" 
+                        @click="courtFilter = 'outdoor'" 
+                        :class="courtFilter === 'outdoor' ? 'bg-lime-400 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'" 
+                        class="px-5 py-2 rounded-lg transition duration-200 flex items-center gap-2">
+                        <span>☀️ Outdoor</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'outdoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">4</span>
+                    </button>
+
+                    <button 
+                        type="button" 
+                        @click="courtFilter = 'indoor'" 
+                        :class="courtFilter === 'indoor' ? 'bg-lime-400 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'" 
+                        class="px-5 py-2 rounded-lg transition duration-200 flex items-center gap-2">
+                        <span>🏢 Indoor</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'indoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">3</span>
+                    </button>
                 </div>
             </div>
-        </section>
 
-        <!-- Courts Section -->
-        <section id="courts" class="scroll-mt-20 px-6 py-16 max-w-7xl mx-auto">
-            <div class="max-w-2xl mb-10">
-                <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Our Courts</div>
-                <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl text-white mt-1">Choose your court</h2>
-                <p class="mt-2 text-slate-400">We currently have {{ $courts->count() }} active courts available for booking.</p>
-            </div>
-
+            <!-- Courts Grid -->
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse ($courts as $court)
-                    <article class="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 transition hover:-translate-y-1 hover:border-slate-700">
-                        <div class="flex h-36 items-center justify-center bg-slate-800">
-                            <span class="text-6xl transition group-hover:scale-110">🏓</span>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-start justify-between gap-3">
-                                <h3 class="text-lg font-bold text-white">{{ $court->name }}</h3>
-                                <span class="rounded-full bg-lime-400/10 px-2.5 py-1 text-xs font-bold text-lime-400 border border-lime-400/20">Active</span>
+                    @php
+                        $type = strtolower($court->type ?? '');
+                        if (!$type) {
+                            $type = ($loop->iteration <= 4) ? 'outdoor' : 'indoor';
+                        }
+                    @endphp
+
+                    <article 
+                        x-show="courtFilter === '{{ $type }}'" 
+                        x-cloak 
+                        class="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 transition hover:-translate-y-1 hover:border-slate-700 flex flex-col justify-between">
+                        <div>
+                            <div class="flex h-36 items-center justify-center bg-slate-800 relative">
+                                <span class="text-6xl transition group-hover:scale-110">🏓</span>
+                                <span class="absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-md bg-slate-900/80 text-slate-300 border border-slate-700/50 uppercase tracking-wider">
+                                    {{ $type }}
+                                </span>
                             </div>
-                            <p class="mt-2 text-sm leading-relaxed text-slate-400">
-                                {{ $court->description ?? 'Professional pickleball court available for scheduled games.' }}
-                            </p>
-                            <a href="#booking" class="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-lime-400/30 bg-lime-400/10 py-2.5 text-sm font-bold text-lime-400 transition hover:bg-lime-400 hover:text-slate-950">
+                            <div class="p-5">
+                                <div class="flex items-start justify-between gap-3">
+                                    <h3 class="text-lg font-bold text-white">{{ $court->name }}</h3>
+                                    <span class="rounded-full bg-lime-400/10 px-2.5 py-1 text-xs font-bold text-lime-400 border border-lime-400/20">Active</span>
+                                </div>
+                                <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                                    {{ $court->description ?? 'Professional pickleball court available for scheduled games.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0">
+                            <a href="#booking" 
+                               @click="$dispatch('select-court', { id: '{{ $court->id }}' })" 
+                               class="inline-flex w-full items-center justify-center rounded-xl border border-lime-400/30 bg-lime-400/10 py-2.5 text-sm font-bold text-lime-400 transition hover:bg-lime-400 hover:text-slate-950">
                                 Book this court
                             </a>
                         </div>
@@ -287,9 +302,10 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                 <h2 class="mt-1 text-3xl font-extrabold text-white sm:text-4xl">Play fair. Play safe.</h2>
             </div>
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <!-- MODIFICATION: Rule 2 changed to "Have Fun" -->
                 @foreach ([
                     ['icon' => '⏱️', 'title' => 'Arrive Early', 'text' => 'Please arrive before your scheduled booking time.'],
-                    ['icon' => '👟', 'title' => 'Proper Shoes', 'text' => 'Use appropriate non-marking court footwear.'],
+                    ['icon' => '🎉', 'title' => 'Have Fun', 'text' => 'Enjoy your time on the court and bring your best energy!'],
                     ['icon' => '🤝', 'title' => 'Respect Others', 'text' => 'Keep the court area clean and respect other players.'],
                     ['icon' => '🏓', 'title' => 'Play Safely', 'text' => 'Follow facility instructions and play responsibly.'],
                 ] as $rule)
@@ -308,24 +324,52 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                 <div class="max-w-2xl mb-10">
                     <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Book Now</div>
                     <h2 class="mt-1 text-3xl font-extrabold text-white sm:text-4xl">Reserve your court</h2>
-                    <p class="mt-2 text-slate-400">Complete the form below. Your booking remains pending until payment verification.</p>
+                    <p class="mt-2 text-slate-400">Complete the form below to reserve your court.</p>
                 </div>
 
-                <form id="bookingForm" method="POST" action="{{ route('booking.store') }}" enctype="multipart/form-data" x-data="bookingForm()" @submit="prepareSubmit">
+                <form id="bookingForm" 
+                      method="POST" 
+                      action="{{ route('booking.store') }}" 
+                      enctype="multipart/form-data" 
+                      x-data="bookingForm()" 
+                      @select-court.window="handleCourtSelect($event.detail.id)" 
+                      @submit="prepareSubmit">
                     @csrf
+
+                    <!-- Hidden Inputs for Form Submission -->
+                    <input type="hidden" name="start_time" :value="startTime">
+                    <input type="hidden" name="end_time" :value="endTime">
+
                     <div class="grid gap-8 lg:grid-cols-3">
+
                         <div class="space-y-6 lg:col-span-2">
                             
-                            <!-- Step 1: Schedule -->
+                            <!-- STEP 1: SCHEDULE & AVAILABILITY GRID -->
                             <div class="rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
-                                <div class="mb-6">
-                                    <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Step 1</div>
-                                    <h3 class="text-xl font-bold text-white mt-1">Select your schedule</h3>
+                                <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div>
+                                        <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Step 1</div>
+                                        <h3 class="text-xl font-bold text-white mt-1">Select court & schedule</h3>
+                                    </div>
+
+                                    <!-- Dynamic Court Status Badges -->
+                                    <template x-if="courtId && isFullyBooked">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                                            🔴 Fully Booked
+                                        </span>
+                                    </template>
+                                    <template x-if="courtId && !isFullyBooked">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-lime-400/10 text-lime-400 border border-lime-400/20">
+                                            🟢 <span x-text="availableHoursCount"></span> hours available
+                                        </span>
+                                    </template>
                                 </div>
+
+                                <!-- Date & Court Selector Inputs -->
                                 <div class="grid gap-5 sm:grid-cols-2">
                                     <div>
                                         <label for="booking_date" class="mb-2 block text-sm font-semibold text-slate-300">Booking Date</label>
-                                        <input id="booking_date" name="booking_date" type="date" min="{{ now()->format('Y-m-d') }}" value="{{ old('booking_date') }}" required x-model="bookingDate" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+                                        <input id="booking_date" name="booking_date" type="date" min="{{ now()->format('Y-m-d') }}" value="{{ old('booking_date', now()->format('Y-m-d')) }}" required x-model="bookingDate" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
                                     </div>
                                     <div>
                                         <label for="court_id" class="mb-2 block text-sm font-semibold text-slate-300">Court</label>
@@ -338,59 +382,67 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div>
-                                        <label for="start_time" class="mb-2 block text-sm font-semibold text-slate-300">Start Time</label>
-                                        <select id="start_time" name="start_time" required x-model="startTime" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-                                            <option value="">Select start time</option>
-                                            @for ($hour = 6; $hour <= 22; $hour++)
-                                                @foreach ([0, 30] as $minute)
-                                                    @php $time = sprintf('%02d:%02d', $hour, $minute); @endphp
-                                                    @if ($time < '23:00')
-                                                        <option value="{{ $time }}" {{ old('start_time') === $time ? 'selected' : '' }}>
-                                                            {{ \Carbon\Carbon::createFromFormat('H:i', $time)->format('g:i A') }}
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            @endfor
-                                        </select>
+                                </div>
+
+                                <!-- TIME SLOT GRID -->
+                                <div x-show="courtId && bookingDate" class="mt-6 pt-6 border-t border-slate-800">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                                            Court Availability for <span x-text="formattedDate" class="text-lime-400"></span>
+                                        </label>
+                                        <template x-if="selectedSlots.length > 0">
+                                            <button type="button" @click="selectedSlots = []" class="text-xs text-slate-400 hover:text-lime-400 underline">
+                                                Clear Selection
+                                            </button>
+                                        </template>
                                     </div>
-                                    <div>
-                                        <label for="end_time" class="mb-2 block text-sm font-semibold text-slate-300">End Time</label>
-                                        <select id="end_time" name="end_time" required x-model="endTime" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-                                            <option value="">Select end time</option>
-                                            @for ($hour = 6; $hour <= 23; $hour++)
-                                                @foreach ([0, 30] as $minute)
-                                                    @php $time = sprintf('%02d:%02d', $hour, $minute); @endphp
-                                                    @if ($time <= '23:00')
-                                                        <option value="{{ $time }}" {{ old('end_time') === $time ? 'selected' : '' }}>
-                                                            {{ \Carbon\Carbon::createFromFormat('H:i', $time)->format('g:i A') }}
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            @endfor
-                                        </select>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                                        <template x-for="slot in allSlots" :key="slot">
+                                            <button 
+                                                type="button"
+                                                :disabled="isSlotBooked(slot)"
+                                                :class="[
+                                                    isSlotBooked(slot) 
+                                                        ? 'bg-red-500/10 border-red-500/30 text-red-400/60 cursor-not-allowed' 
+                                                        : (selectedSlots.includes(slot) 
+                                                            ? 'bg-lime-400 border-lime-400 text-slate-950 font-bold shadow-lg shadow-lime-400/20' 
+                                                            : 'bg-slate-800 border-slate-700 text-slate-200 hover:border-lime-400 hover:text-lime-400 cursor-pointer')
+                                                ]"
+                                                @click="selectSlot(slot)"
+                                                class="p-3 rounded-xl border text-center transition flex flex-col items-center justify-center">
+                                                
+                                                <span class="text-xs font-bold" x-text="getSlotRangeLabel(slot)"></span>
+                                                
+                                                <span 
+                                                    class="text-[10px] mt-1 font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md" 
+                                                    :class="isSlotBooked(slot) ? 'bg-red-500/20 text-red-400' : (selectedSlots.includes(slot) ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700/50 text-slate-400')">
+                                                    <span x-text="isSlotBooked(slot) ? 'Booked' : (selectedSlots.includes(slot) ? 'Selected' : 'Available')"></span>
+                                                </span>
+                                            </button>
+                                        </template>
                                     </div>
+                                </div>
+
+                                <div x-show="courtId && bookingDate" class="mt-4 text-xs text-slate-400 flex items-center gap-2">
+                                    <span>💡 Click multiple slots to reserve contiguous time blocks.</span>
                                 </div>
                             </div>
 
-                            <!-- Step 2: Customer -->
+                            <!-- STEP 2: CUSTOMER DETAILS (GMAIL FIELD REMOVED) -->
                             <div class="rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
                                 <div class="mb-6">
                                     <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Step 2</div>
                                     <h3 class="text-xl font-bold text-white mt-1">Your details</h3>
                                 </div>
                                 <div class="grid gap-5 sm:grid-cols-2">
-                                    <div class="sm:col-span-2">
+                                    <div>
                                         <label for="name" class="mb-2 block text-sm font-semibold text-slate-300">Full Name</label>
                                         <input id="name" name="name" type="text" maxlength="100" autocomplete="name" value="{{ old('name') }}" required x-model="customerName" placeholder="Juan Dela Cruz" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
                                     </div>
                                     <div>
                                         <label for="contact_number" class="mb-2 block text-sm font-semibold text-slate-300">Contact Number</label>
                                         <input id="contact_number" name="contact_number" type="tel" maxlength="30" autocomplete="tel" value="{{ old('contact_number') }}" required placeholder="09XXXXXXXXX" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-                                    </div>
-                                    <div>
-                                        <label for="email" class="mb-2 block text-sm font-semibold text-slate-300">Email Address <span class="text-slate-500 font-normal">(Optional)</span></label>
-                                        <input id="email" name="email" type="email" maxlength="150" autocomplete="email" value="{{ old('email') }}" placeholder="you@example.com" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label for="number_of_players" class="mb-2 block text-sm font-semibold text-slate-300">Number of Players</label>
@@ -399,31 +451,31 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                                 </div>
                             </div>
 
-                            <!-- Step 3: Payment -->
+                            <!-- STEP 3: PAYMENT METHOD (MODIFIED) -->
                             <div class="rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
                                 <div class="mb-6">
                                     <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Step 3</div>
-                                    <h3 class="text-xl font-bold text-white mt-1">Payment & receipt</h3>
-                                </div>
-                                <div class="rounded-2xl bg-slate-950 p-5 border border-slate-800 text-slate-300 mb-6">
-                                    <div class="text-sm font-bold text-lime-400 mb-2">Payment Instructions</div>
-                                    <p class="text-sm"><strong class="text-white">GCash:</strong> 09XX-XXX-XXXX</p>
-                                    <p class="text-sm"><strong class="text-white">Account Name:</strong> Pickleball Court</p>
+                                    <h3 class="text-xl font-bold text-white mt-1">Payment Method</h3>
                                 </div>
                                 <div class="space-y-5">
+                                    <!-- MODIFICATION: Mode of Payment Field -->
                                     <div>
-                                        <label for="payment_reference" class="mb-2 block text-sm font-semibold text-slate-300">Transaction Reference Number</label>
-                                        <input id="payment_reference" name="payment_reference" type="text" maxlength="100" value="{{ old('payment_reference') }}" required placeholder="Enter reference number" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+                                        <label for="payment_method" class="mb-2 block text-sm font-semibold text-slate-300">Mode of Payment</label>
+                                        <select id="payment_method" name="payment_method" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+                                            <option value="GCash" selected>GCash</option>
+                                            <option value="Cash">Cash on Arrival</option>
+                                        </select>
                                     </div>
                                     <div>
-                                        <label for="payment_receipt" class="mb-2 block text-sm font-semibold text-slate-300">Payment Receipt File</label>
-                                        <input id="payment_receipt" name="payment_receipt" type="file" accept=".jpg,.jpeg,.png,.pdf" required class="block w-full text-sm text-slate-400 border border-slate-700 rounded-xl bg-slate-800 cursor-pointer file:mr-4 file:py-3 file:px-4 file:border-0 file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600">
+                                        <label for="payment_receipt" class="mb-2 block text-sm font-semibold text-slate-300">Payment Receipt File <span class="text-slate-500 font-normal">(Optional for Cash)</span></label>
+                                        <input id="payment_receipt" name="payment_receipt" type="file" accept=".jpg,.jpeg,.png,.pdf" class="block w-full text-sm text-slate-400 border border-slate-700 rounded-xl bg-slate-800 cursor-pointer file:mr-4 file:py-3 file:px-4 file:border-0 file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600">
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
-                        <!-- Summary Sidebar -->
+                        <!-- SIDEBAR SUMMARY -->
                         <aside class="lg:col-span-1">
                             <div class="sticky top-24 rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl space-y-4">
                                 <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Summary</div>
@@ -461,7 +513,7 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                                     <div class="text-3xl font-black text-lime-400 mt-1" x-text="formattedTotal"></div>
                                 </div>
 
-                                <button type="submit" :disabled="submitting" class="w-full rounded-xl bg-lime-400 py-4 font-bold text-slate-950 hover:bg-lime-300 transition shadow-lg shadow-lime-400/20 disabled:opacity-50">
+                                <button type="submit" :disabled="submitting || isFullyBooked || selectedSlots.length === 0" class="w-full rounded-xl bg-lime-400 py-4 font-bold text-slate-950 hover:bg-lime-300 transition shadow-lg shadow-lime-400/20 disabled:opacity-50">
                                     <span x-show="!submitting">Submit Booking</span>
                                     <span x-show="submitting" x-cloak>Submitting...</span>
                                 </button>
@@ -478,7 +530,7 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
     <!-- Footer -->
     <footer class="border-t border-slate-800 py-8 bg-slate-950">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-            <p>© {{ date('Y') }} PickleScheduler. All rights reserved.</p>
+            <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
             <div class="flex space-x-6">
                 <a href="#" class="hover:text-slate-300 transition">Privacy Policy</a>
                 <a href="#" class="hover:text-slate-300 transition">Terms of Service</a>
@@ -487,18 +539,116 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
         </div>
     </footer>
 
-    <!-- Alpine.js -->
+    <!-- Alpine.js Script -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         function bookingForm() {
             return {
-                bookingDate: @js(old('booking_date', '')),
+                bookingDate: @js(old('booking_date', now()->format('Y-m-d'))),
                 courtId: @js(old('court_id', '')),
-                startTime: @js(old('start_time', '')),
-                endTime: @js(old('end_time', '')),
+                selectedSlots: [],
                 customerName: @js(old('name', '')),
                 players: @js((int) old('number_of_players', 2)),
                 submitting: false,
+                existingBookings: @js($existingBookings ?? []),
+
+                allSlots: [
+                    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+                    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+                    '18:00', '19:00', '20:00', '21:00', '22:00'
+                ],
+
+                handleCourtSelect(id) {
+                    this.courtId = id;
+                    this.selectedSlots = [];
+                },
+
+                get startTime() {
+                    if (this.selectedSlots.length === 0) return '';
+                    const sorted = [...this.selectedSlots].sort();
+                    return sorted[0];
+                },
+
+                get endTime() {
+                    if (this.selectedSlots.length === 0) return '';
+                    const sorted = [...this.selectedSlots].sort();
+                    const lastSlot = sorted[sorted.length - 1];
+                    const [hour, minute] = lastSlot.split(':').map(Number);
+                    return `${String(hour + 1).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                },
+
+                getSlotEndTime(slotTime) {
+                    if (!slotTime) return '';
+                    const [hour, minute] = slotTime.split(':').map(Number);
+                    return `${String(hour + 1).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                },
+
+                getSlotRangeLabel(slotTime) {
+                    const start = this.formatTime(slotTime);
+                    const end = this.formatTime(this.getSlotEndTime(slotTime));
+                    return `${start} - ${end}`;
+                },
+
+                selectSlot(slot) {
+                    if (this.isSlotBooked(slot)) return;
+
+                    if (this.selectedSlots.includes(slot)) {
+                        this.selectedSlots = this.selectedSlots.filter(s => s !== slot);
+                    } else {
+                        if (this.selectedSlots.length === 0) {
+                            this.selectedSlots.push(slot);
+                        } else {
+                            const sorted = [...this.selectedSlots].sort();
+                            const firstIdx = this.allSlots.indexOf(sorted[0]);
+                            const lastIdx = this.allSlots.indexOf(sorted[sorted.length - 1]);
+                            const currentIdx = this.allSlots.indexOf(slot);
+
+                            if (currentIdx < firstIdx) {
+                                for (let i = currentIdx; i <= lastIdx; i++) {
+                                    const s = this.allSlots[i];
+                                    if (!this.isSlotBooked(s) && !this.selectedSlots.includes(s)) {
+                                        this.selectedSlots.push(s);
+                                    }
+                                }
+                            } else if (currentIdx > lastIdx) {
+                                for (let i = firstIdx; i <= currentIdx; i++) {
+                                    const s = this.allSlots[i];
+                                    if (!this.isSlotBooked(s) && !this.selectedSlots.includes(s)) {
+                                        this.selectedSlots.push(s);
+                                    }
+                                }
+                            } else {
+                                this.selectedSlots.push(slot);
+                            }
+                        }
+                    }
+                },
+
+                get activeBookingsForSelected() {
+                    if (!this.courtId || !this.bookingDate) return [];
+                    return this.existingBookings.filter(b => 
+                        String(b.court_id) === String(this.courtId) && 
+                        b.booking_date === this.bookingDate
+                    );
+                },
+
+                isSlotBooked(slotTime) {
+                    return this.activeBookingsForSelected.some(b => {
+                        const start = b.start_time.substring(0, 5);
+                        const end = b.end_time.substring(0, 5);
+                        return slotTime >= start && slotTime < end;
+                    });
+                },
+
+                get isFullyBooked() {
+                    if (!this.courtId || !this.bookingDate) return false;
+                    return this.allSlots.every(slot => this.isSlotBooked(slot));
+                },
+
+                get availableHoursCount() {
+                    if (!this.courtId || !this.bookingDate) return this.allSlots.length;
+                    return this.allSlots.filter(slot => !this.isSlotBooked(slot)).length;
+                },
 
                 get courtName() {
                     if (!this.courtId) return 'Not selected';
@@ -514,19 +664,10 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                     return Number(option?.dataset.rate || @json((float) env('PICKLEBALL_HOURLY_RATE', 500)));
                 },
 
-                get durationMinutes() {
-                    if (!this.startTime || !this.endTime) return 0;
-                    const [startHour, startMinute] = this.startTime.split(':').map(Number);
-                    const [endHour, endMinute] = this.endTime.split(':').map(Number);
-                    return Math.max(0, (endHour * 60 + endMinute) - (startHour * 60 + startMinute));
-                },
-
                 get durationLabel() {
-                    const minutes = this.durationMinutes;
-                    if (!minutes) return 'Not selected';
-                    const hours = Math.floor(minutes / 60);
-                    const remaining = minutes % 60;
-                    return remaining === 0 ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : `${hours}h ${remaining}m`;
+                    const hours = this.selectedSlots.length;
+                    if (!hours) return 'Not selected';
+                    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
                 },
 
                 get formattedDate() {
@@ -549,7 +690,7 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                 },
 
                 get totalPrice() {
-                    return this.durationMinutes ? (this.hourlyRate * (this.durationMinutes / 60)) : 0;
+                    return this.selectedSlots.length * this.hourlyRate;
                 },
 
                 get formattedTotal() {
@@ -557,10 +698,9 @@ Laravel 11 + Blade + Tailwind CSS (Dark Slate Theme)
                 },
 
                 prepareSubmit(event) {
-                    if (!this.bookingDate || !this.courtId || !this.startTime || !this.endTime) return;
-                    if (this.durationMinutes < 30) {
+                    if (!this.bookingDate || !this.courtId || this.selectedSlots.length === 0) {
                         event.preventDefault();
-                        alert('A booking must be at least 30 minutes long.');
+                        alert('Please select at least one time slot.');
                         return;
                     }
                     this.submitting = true;
