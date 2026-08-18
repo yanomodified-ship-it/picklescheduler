@@ -11,8 +11,16 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    // Fetch active courts and future/today bookings for availability display
+    // Fetch active courts and future/today bookings for the home page display
     public function index(): View
+    {
+        $courts = Court::where('status', 'active')->orderBy('id')->get();
+
+        return view('welcome', compact('courts'));
+    }
+
+    // Load the dedicated booking form page
+    public function create(): View
     {
         $courts = Court::where('status', 'active')->orderBy('id')->get();
 
@@ -20,7 +28,7 @@ class BookingController extends Controller
             ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
             ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
 
-        return view('welcome', compact('courts', 'existingBookings'));
+        return view('booking', compact('courts', 'existingBookings'));
     }
 
     // Store a new booking with receipt upload support
@@ -35,8 +43,7 @@ class BookingController extends Controller
             'start_time'         => 'required',
             'end_time'           => 'required|after:start_time',
             'number_of_players'  => 'nullable|integer|min:1|max:30',
-            'payment_reference' => 'required|string|max:100',
-            'payment_receipt'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'payment_receipt'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         // 1. Strict Double-Booking Overlap Check
@@ -84,7 +91,6 @@ class BookingController extends Controller
             'duration'          => $durationHours,
             'total_price'       => $totalAmount,
             'total_amount'      => $totalAmount,
-            'payment_reference' => $validated['payment_reference'],
             'receipt_path'      => $receiptPath,
             'booking_status'    => 'Pending Verification',
             'payment_status'    => 'For Verification',
@@ -110,7 +116,8 @@ class BookingController extends Controller
             ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
             ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
 
-        return view('welcome', [
+        // Changed from 'welcome' to 'booking' to show confirmation on the new page
+        return view('booking', [
             'courts'              => $courts,
             'existingBookings'    => $existingBookings,
             'confirmationBooking' => $booking,
