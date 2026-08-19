@@ -69,14 +69,14 @@ class BookingController extends Controller
             $receiptPath = $request->file('payment_receipt')->store('receipts', 'public');
         }
 
-        // 4. Create or find Customer
-        $customer = Customer::firstOrCreate(
-            ['contact_number' => $validated['contact_number']],
-            [
-                'name'  => $validated['name'],
-                'email' => $validated['email'] ?? null,
-            ]
-        );
+// 4. Create or find Customer
+$customer = Customer::firstOrCreate(
+    ['contact_number' => $validated['contact_number']],
+    [
+        'full_name' => $validated['full_name'] ?? $validated['name'] ?? 'Guest Customer',
+        'email'     => $validated['email'] ?? null,
+    ]
+);
 
         // 5. Create Booking
         $reference = $this->generateBookingReference();
@@ -110,18 +110,7 @@ class BookingController extends Controller
             ->where('booking_reference', $booking_reference)
             ->firstOrFail();
 
-        $courts = Court::where('status', 'active')->orderBy('id')->get();
-
-        $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
-            ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
-            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
-
-        // Changed from 'welcome' to 'booking' to show confirmation on the new page
-        return view('booking', [
-            'courts'              => $courts,
-            'existingBookings'    => $existingBookings,
-            'confirmationBooking' => $booking,
-        ]);
+        return view('confirmation', compact('booking'));
     }
 
     /**

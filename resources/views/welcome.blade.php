@@ -141,7 +141,14 @@
                             <div class="p-5">
                                 <div class="flex items-start justify-between gap-3">
                                     <h3 class="text-lg font-bold text-white">{{ $court->name }}</h3>
-                                    <span class="rounded-full bg-lime-400/10 px-2.5 py-1 text-xs font-bold text-lime-400 border border-lime-400/20">Active</span>
+                                    
+                                    <!-- Dynamic Status Badge -->
+                                    @if($court->is_fully_booked)
+                                        <span class="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-bold text-red-400 border border-red-500/20">Fully Booked</span>
+                                    @else
+                                        <span class="rounded-full bg-lime-400/10 px-2.5 py-1 text-xs font-bold text-lime-400 border border-lime-400/20">Active</span>
+                                    @endif
+
                                 </div>
                                 <p class="mt-2 text-sm leading-relaxed text-slate-400">
                                     {{ $court->description ?? 'Professional pickleball court available for scheduled games.' }}
@@ -149,11 +156,17 @@
                             </div>
                         </div>
                         <div class="p-5 pt-0">
-                            <!-- Passing court_id to the booking page via URL parameter -->
-                            <a href="{{ route('booking.create', ['court_id' => $court->id]) }}" 
-                               class="inline-flex w-full items-center justify-center rounded-xl border border-lime-400/30 bg-lime-400/10 py-2.5 text-sm font-bold text-lime-400 transition hover:bg-lime-400 hover:text-slate-950">
-                                Book this court
-                            </a>
+                            <!-- Dynamic Booking Button -->
+                            @if($court->is_fully_booked)
+                                <button disabled class="inline-flex w-full items-center justify-center rounded-xl border border-slate-700 bg-slate-800/50 py-2.5 text-sm font-bold text-slate-500 cursor-not-allowed">
+                                    Unavailable
+                                </button>
+                            @else
+                                <a href="{{ route('booking.create', ['court_id' => $court->id]) }}" 
+                                class="inline-flex w-full items-center justify-center rounded-xl border border-lime-400/30 bg-lime-400/10 py-2.5 text-sm font-bold text-lime-400 transition hover:bg-lime-400 hover:text-slate-950">
+                                    Book this court
+                                </a>
+                            @endif
                         </div>
                     </article>
                 @empty

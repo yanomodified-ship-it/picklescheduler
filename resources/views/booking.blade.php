@@ -195,14 +195,17 @@
                                     </div>
                                     <div>
                                         <label for="court_id" class="mb-2 block text-sm font-semibold text-slate-300">Court</label>
-                                        <select id="court_id" name="court_id" required x-model="courtId" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-                                            <option value="">Select a court</option>
-                                            @foreach ($courts as $court)
-                                                <option value="{{ $court->id }}" data-rate="{{ $court->price_per_hour ?? $court->hourly_rate ?? $court->rate ?? env('PICKLEBALL_HOURLY_RATE', 500) }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
-                                                    {{ $court->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+                                        <option value="">Select a court</option>
+                                        @foreach ($courts as $court)
+                                            @php
+                                                $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
+                                            @endphp
+                                            <option value="{{ $court->id }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
+                                                {{ $court->name }} — {{ $type }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     </div>
                                 </div>
 
