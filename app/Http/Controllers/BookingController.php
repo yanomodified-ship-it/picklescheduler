@@ -64,13 +64,12 @@ class BookingController extends Controller
         
         $totalAmount = $hourlyRate * $durationHours;
 
-        // 3. Create or find Customer
+// 3. Create or find Customer
         $customer = Customer::firstOrCreate(
             ['contact_number' => $validated['contact_number']],
             [
-                'name'      => $validated['name'],
                 'full_name' => $validated['name'],
-                'email'     => $validated['email'] ?? null,
+                'email'     => $email = $validated['email'] ?? null,
             ]
         );
 
