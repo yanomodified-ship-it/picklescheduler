@@ -33,7 +33,6 @@
                     HomeCourt<span class="text-white">PickleHouse</span>
                 </span>
             </a>
-            <!-- Removed hidden md:flex to make it visible on mobile -->
             <div class="flex items-center space-x-3">
                 <a href="{{ route('home') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition">Home</a>
             </div>
@@ -155,7 +154,6 @@
                 <form id="bookingForm" 
                       method="POST" 
                       action="{{ route('booking.store') }}" 
-                      enctype="multipart/form-data" 
                       x-data="bookingForm()" 
                       @submit="prepareSubmit">
                     @csrf
@@ -195,17 +193,19 @@
                                     </div>
                                     <div>
                                         <label for="court_id" class="mb-2 block text-sm font-semibold text-slate-300">Court</label>
-                                        <select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-                                        <option value="">Select a court</option>
-                                        @foreach ($courts as $court)
-                                            @php
-                                                $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
-                                            @endphp
-                                            <option value="{{ $court->id }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
-                                                {{ $court->name }} — {{ $type }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+<select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+    <option value="">Select a court</option>
+    @foreach ($courts as $court)
+        @php
+            $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
+            // Fallback to 500 if the database column is empty
+            $rate = $court->price_per_hour ?? 500; 
+        @endphp
+        <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
+            {{ $court->name }} — {{ $type }}
+        </option>
+    @endforeach
+</select>
                                     </div>
                                 </div>
 
@@ -305,10 +305,14 @@
                                         <div class="text-sm font-bold text-white mt-1">Account Name: HomeCourt PickleHouse</div>
                                     </div>
 
-                                    
-                                    <div>
-                                        <label for="payment_receipt" class="mb-2 block text-sm font-semibold text-slate-300">Payment Receipt File</label>
-                                        <input id="payment_receipt" name="payment_receipt" type="file" required accept=".jpg,.jpeg,.png,.pdf" class="block w-full text-sm text-slate-400 border border-slate-700 rounded-xl bg-slate-800 cursor-pointer file:mr-4 file:py-3 file:px-4 file:border-0 file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600">
+                                    <!-- NEW: Facebook Verification Instructions -->
+                                    <div class="mt-4 rounded-xl border border-blue-500/30 bg-blue-900/10 p-4">
+                                        <p class="text-sm text-slate-300 font-semibold mb-2">📸 Next Steps:</p>
+                                        <p class="text-xs text-slate-400">
+                                            Before clicking "Submit Booking", please send a screenshot of your payment to our 
+                                            <a href="https://facebook.com/yourpage" target="_blank" class="text-blue-400 font-bold underline">Facebook Page</a>. 
+                                            We will manually verify it and send you a confirmation text!
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -384,7 +388,7 @@
                 selectedSlots: [],
                 customerName: @js(old('name', '')),
                 players: @js((int) old('number_of_players', 2)),
-                paymentMethod: 'GCash', // <-- Added to manage payment method visibility
+                paymentMethod: 'GCash', 
                 submitting: false,
                 existingBookings: @js($existingBookings ?? []),
 

@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
 
-    <!-- Navigation Header (Matched to booking layout) -->
+    <!-- Navigation Header -->
     <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="flex items-center space-x-2">
@@ -22,7 +22,7 @@
         </div>
     </header>
 
-    <!-- Main Content Wrapper for Mobile Centering -->
+    <!-- Main Content Wrapper -->
     <main class="flex-grow flex flex-col items-center justify-center p-4 sm:p-6 w-full">
         
         @if (session('success'))
@@ -52,11 +52,11 @@
                 <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Please save this code for your records.</p>
             </div>
 
-            <!-- Booking Details Grid (Responsive 1-col mobile to 2-col desktop) -->
+            <!-- Booking Details Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-left bg-slate-950 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8">
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Customer</p>
-                    <p class="text-sm font-bold text-white break-words">{{ $booking->customer->full_name ?? $booking->customer->name ?? 'N/A' }}</p>
+                    <p class="text-sm font-bold text-white break-words">{{ $booking->customer->name ?? $booking->customer->full_name ?? 'Guest Customer' }}</p>
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Court</p>
@@ -71,7 +71,9 @@
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Total</p>
-                    <p class="text-sm font-black text-lime-400">₱{{ number_format($booking->total_amount ?? 0, 2) }}</p>
+                    <p class="text-sm font-black text-lime-400">
+                        ₱{{ number_format((float) (($booking->duration ?? 1) * 500), 2) }}
+                    </p>
                 </div>
             </div>
 

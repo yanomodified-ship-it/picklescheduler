@@ -98,7 +98,6 @@
                             <th class="p-4">Amount</th>
                             <th class="p-4">Payment Status</th>
                             <th class="p-4">Booking Status</th>
-                            <th class="p-4">Receipt</th>
                             <th class="p-4 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -124,13 +123,6 @@
                                         {{ $b->booking_status }}
                                     </span>
                                 </td>
-                                <td class="p-4">
-                                    @if ($b->receipt_path)
-                                        <a href="{{ route('admin.receipt.show', $b->id) }}" target="_blank" class="text-lime-400 underline hover:text-lime-300 font-bold">View Receipt</a>
-                                    @else
-                                        <span class="text-slate-500">None</span>
-                                    @endif
-                                </td>
                                 <td class="p-4 text-right space-x-1">
                                     <button @click="selectedBooking = {{ json_encode($b->load(['customer', 'court'])) }}" class="bg-slate-800 hover:bg-slate-700 text-white text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700">
                                         View
@@ -144,7 +136,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="p-8 text-center text-slate-500">No bookings available.</td>
+                                <td colspan="10" class="p-8 text-center text-slate-500">No bookings available.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -190,8 +182,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 font-semibold mb-1">Close Time</label>
-                                <input type="time" name="operating_hours_end" value="{{ $court->operating_hours_end }}" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py```html
-                                    text-white text-xs outline-none">
+                                <input type="time" name="operating_hours_end" value="{{ $court->operating_hours_end }}" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-xs outline-none">
                             </div>
                         </div>
 
@@ -249,19 +240,11 @@
                     </div>
 
                     <div class="space-y-4">
-                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 h-full flex flex-col">
-                            <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Payment Receipt</h3>
-                            <div class="flex-grow flex items-center justify-center border-2 border-dashed border-slate-800 rounded-lg bg-slate-900/50 p-2 overflow-hidden">
-                                <template x-if="selectedBooking?.receipt_path">
-                                    <img :src="'/admin/receipt/' + selectedBooking?.id" class="max-h-48 object-contain rounded" alt="Receipt">
-                                </template>
-                                <template x-if="!selectedBooking?.receipt_path">
-                                    <span class="text-slate-500 text-sm">No receipt uploaded</span>
-                                </template>
-                            </div>
-                            <template x-if="selectedBooking?.receipt_path">
-                                <a :href="'/admin/receipt/' + selectedBooking?.id" target="_blank" class="mt-3 block text-center text-xs font-bold text-lime-400 hover:text-lime-300">View Full Image ↗</a>
-                            </template>
+                        <div class="bg-slate-950 border border-blue-800 rounded-xl p-4 h-full flex flex-col justify-center text-center">
+                            <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Verification Required</h3>
+                            <div class="text-4xl mb-3">💬</div>
+                            <p class="text-sm font-bold text-white mb-1">Check Facebook Inbox</p>
+                            <p class="text-xs text-slate-400">Match the customer's name and reference number with the screenshot sent to the page.</p>
                         </div>
                     </div>
                 </div>
@@ -289,7 +272,7 @@
                     <form :action="'/admin/bookings/' + selectedBooking?.id + '/reject'" method="POST" class="flex flex-col gap-3">
                         @csrf @method('PATCH')
                         <label class="text-sm font-bold text-red-400">Reason for rejection:</label>
-                        <textarea name="rejection_reason" required rows="2" class="w-full rounded-xl border border-red-900 bg-slate-950 px-4 py-3 text-white outline-none focus:border-red-500" placeholder="e.g., Receipt is blurry, or payment amount is incorrect..."></textarea>
+                        <textarea name="rejection_reason" required rows="2" class="w-full rounded-xl border border-red-900 bg-slate-950 px-4 py-3 text-white outline-none focus:border-red-500" placeholder="e.g., Did not receive message on Facebook, or incorrect amount..."></textarea>
                         <div class="flex justify-end gap-3 mt-2">
                             <button type="button" @click="showRejectModal = false" class="px-4 py-2 text-slate-400 text-sm font-bold">Cancel</button>
                             <button type="submit" class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-500 shadow-lg shadow-red-600/20">Confirm Rejection</button>

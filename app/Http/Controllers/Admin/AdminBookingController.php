@@ -6,16 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Court;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class AdminBookingController extends Controller
 {
     public function dashboard()
     {
         // Metric Calculations
-        $totalBookings      = Booking::count();$pendingCount       = Booking::where('payment_status', 'For Verification')->orWhere('booking_status', 'Pending Verification')->count();
-        $confirmedCount     = Booking::where('booking_status', 'Confirmed')->count();$todaysCount        = Booking::whereDate('booking_date', now()->format('Y-m-d'))->count();
-        $cancelledCount     = Booking::whereIn('booking_status', ['Cancelled', 'Rejected'])->count();$totalRevenue       = Booking::where('payment_status', 'Verified')->sum('total_price');
+        $totalBookings      = Booking::count();
+        $pendingCount       = Booking::where('payment_status', 'For Verification')->orWhere('booking_status', 'Pending Verification')->count();
+        $confirmedCount     = Booking::where('booking_status', 'Confirmed')->count();
+        $todaysCount        = Booking::whereDate('booking_date', now()->format('Y-m-d'))->count();
+        $cancelledCount     = Booking::whereIn('booking_status', ['Cancelled', 'Rejected'])->count();
+        $totalRevenue       = Booking::where('payment_status', 'Verified')->sum('total_price');
 
         // Fetch All Bookings with relationships
         $bookings = Booking::with(['customer', 'court'])
@@ -50,9 +52,9 @@ class AdminBookingController extends Controller
     }
 
     // Reject Payment with Reason
-    public function rejectPayment(Request $request, Booking$booking)
+    public function rejectPayment(Request $request, Booking $booking)
     {
-        $validated =$request->validate([
+        $validated = $request->validate([
             'rejection_reason' => 'required|string|max:255',
         ]);
 
@@ -80,21 +82,7 @@ class AdminBookingController extends Controller
 
     public function deleteBooking(Booking $booking)
     {
-        if ($booking->receipt_path && Storage::disk('public')->exists($booking->receipt_path)) {
-            Storage::disk('public')->delete($booking->receipt_path);
-        }
         $booking->delete();
-
         return back()->with('success', 'Booking deleted permanently.');
     }
-
-// Secure Receipt Delivery
-public function viewReceipt(Booking $booking)
-{
-    if (!$booking->receipt_path || !Storage::disk('public')->exists($booking->receipt_path)) {
-        abort(404, 'Receipt image not found.');
-    }
-
-    return response()->file(Storage::disk('public')->path($booking->receipt_path));
-}
 }

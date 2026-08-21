@@ -31,19 +31,18 @@ class BookingController extends Controller
         return view('booking', compact('courts', 'existingBookings'));
     }
 
-    // Store a new booking with receipt upload support
+    // Store a new booking
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'               => 'required|string|max:100',
-            'email'              => 'nullable|email|max:150',
-            'contact_number'     => 'required|string|max:30',
-            'court_id'           => 'required|exists:courts,id',
-            'booking_date'       => 'required|date|after_or_equal:today',
-            'start_time'         => 'required',
-            'end_time'           => 'required|after:start_time',
-            'number_of_players'  => 'nullable|integer|min:1|max:30',
-            'payment_receipt'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'name'              => 'required|string|max:100',
+            'email'             => 'nullable|email|max:150',
+            'contact_number'    => 'required|string|max:30',
+            'court_id'          => 'required|exists:courts,id',
+            'booking_date'      => 'required|date|after_or_equal:today',
+            'start_time'        => 'required',
+            'end_time'          => 'required|after:start_time',
+            'number_of_players' => 'nullable|integer|min:1|max:30',
         ]);
 
         // 1. Strict Double-Booking Overlap Check
@@ -53,32 +52,29 @@ class BookingController extends Controller
             }
         }
 
-        // 2. Calculate Pricing based on duration
+        // 2. Calculate Pricing and Duration correctly based on start and end time gaps
         $court = Court::findOrFail($validated['court_id']);
         $hourlyRate = $this->getCourtHourlyRate($court);
 
         $start = \Carbon\Carbon::parse($validated['start_time']);
         $end = \Carbon\Carbon::parse($validated['end_time']);
-        $durationMinutes = $end->diffInMinutes($start);
-        $durationHours = max(0.5, $durationMinutes / 60);
+        
+        $durationMinutes = $start->diffInMinutes($end);
+        $durationHours = max(1, $durationMinutes / 60); 
+        
         $totalAmount = $hourlyRate * $durationHours;
 
-        // 3. Handle Receipt Upload
-        $receiptPath = null;
-        if ($request->hasFile('payment_receipt')) {
-            $receiptPath = $request->file('payment_receipt')->store('receipts', 'public');
-        }
+        // 3. Create or find Customer
+        $customer = Customer::firstOrCreate(
+            ['contact_number' => $validated['contact_number']],
+            [
+                'name'      => $validated['name'],
+                'full_name' => $validated['name'],
+                'email'     => $validated['email'] ?? null,
+            ]
+        );
 
-// 4. Create or find Customer
-$customer = Customer::firstOrCreate(
-    ['contact_number' => $validated['contact_number']],
-    [
-        'full_name' => $validated['full_name'] ?? $validated['name'] ?? 'Guest Customer',
-        'email'     => $validated['email'] ?? null,
-    ]
-);
-
-        // 5. Create Booking
+        // 4. Create Booking
         $reference = $this->generateBookingReference();
         Booking::create([
             'booking_reference' => $reference,
@@ -91,7 +87,6 @@ $customer = Customer::firstOrCreate(
             'duration'          => $durationHours,
             'total_price'       => $totalAmount,
             'total_amount'      => $totalAmount,
-            'receipt_path'      => $receiptPath,
             'booking_status'    => 'Pending Verification',
             'payment_status'    => 'For Verification',
         ]);
@@ -130,16 +125,10 @@ $customer = Customer::firstOrCreate(
     }
 
     /**
-     * Resolve the hourly rate.
+     * Resolve the hourly rate dynamically.
      */
     private function getCourtHourlyRate(Court $court): float
     {
-        foreach (['price_per_hour', 'hourly_rate', 'rate'] as $attribute) {
-            if (array_key_exists($attribute, $court->getAttributes()) && $court->{$attribute} !== null) {
-                return (float) $court->{$attribute};
-            }
-        }
-
-        return (float) env('PICKLEBALL_HOURLY_RATE', 500);
+        return 500.00;
     }
 }
