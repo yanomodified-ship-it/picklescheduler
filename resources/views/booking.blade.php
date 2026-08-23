@@ -305,15 +305,6 @@
                                         <div class="text-sm font-bold text-white mt-1">Account Name: HomeCourt PickleHouse</div>
                                     </div>
 
-                                    <!-- NEW: Facebook Verification Instructions -->
-                                    <div class="mt-4 rounded-xl border border-blue-500/30 bg-blue-900/10 p-4">
-                                        <p class="text-sm text-slate-300 font-semibold mb-2">📸 Next Steps:</p>
-                                        <p class="text-xs text-slate-400">
-                                            Before clicking "Submit Booking", please send a screenshot of your payment to our 
-                                            <a href="https://facebook.com/yourpage" target="_blank" class="text-blue-400 font-bold underline">Facebook Page</a>. 
-                                            We will manually verify it and send you a confirmation text!
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
 

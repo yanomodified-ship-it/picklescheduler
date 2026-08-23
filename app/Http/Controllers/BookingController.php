@@ -43,6 +43,7 @@ class BookingController extends Controller
             'start_time'        => 'required',
             'end_time'          => 'required|after:start_time',
             'number_of_players' => 'nullable|integer|min:1|max:30',
+            'payment_method'    => 'required|string',
         ]);
 
         // 1. Strict Double-Booking Overlap Check
@@ -88,6 +89,7 @@ class BookingController extends Controller
             'total_amount'      => $totalAmount,
             'booking_status'    => 'Pending Verification',
             'payment_status'    => 'For Verification',
+            'payment_method'    => $validated['payment_method'],
         ]);
 
         return redirect()->route('bookings.confirmation', ['booking_reference' => $reference])

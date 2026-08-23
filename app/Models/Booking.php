@@ -19,7 +19,8 @@ class Booking extends Model
         'end_time',
         'duration',
         'total_amount',
-        'booking_status'
+        'booking_status',
+        'payment_method'
     ];
 
     public function customer(): BelongsTo

@@ -41,15 +41,14 @@
             <!-- Success Message -->
             <h1 class="text-2xl sm:text-3xl font-black text-white mb-3">Booking Request Submitted!</h1>
             <p class="text-sm sm:text-base text-slate-300 mb-8 leading-relaxed">
-                Thank you for choosing HomeCourt. <br class="hidden sm:block">
-                <strong class="text-lime-400 font-bold block mt-2">We will send you a text message once your booking and payment are fully confirmed.</strong>
+                Thank you for choosing PickleHouse. <br class="hidden sm:block">
             </p>
 
             <!-- Booking Reference Box -->
             <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 shadow-inner">
                 <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Your Booking Reference</p>
                 <p class="text-2xl sm:text-3xl font-black text-lime-400 tracking-widest mb-2 sm:mb-3">{{ $booking->booking_reference }}</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Please save this code for your records.</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Please screenshot this code for your records.</p>
             </div>
 
             <!-- Booking Details Grid -->
@@ -76,6 +75,35 @@
                     </p>
                 </div>
             </div>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-6 text-left shadow-inner">
+    <h3 class="text-xs font-bold uppercase tracking-widest text-lime-400 mb-3">Payment Details</h3>
+    
+    @if(($booking->payment_method ?? '') === 'Bank')
+        <div class="mb-4 pb-4 border-b border-slate-800">
+            <p class="text-xs text-slate-400">Send payment via Bank Transfer:</p>
+            <p class="text-lg sm:text-xl font-black text-lime-400 mt-1">BDO: 001234567890</p>
+            <p class="text-xs font-semibold text-slate-300">Account Name: HomeCourt PickleHouse</p>
+        </div>
+    @else
+        <div class="mb-4 pb-4 border-b border-slate-800">
+            <p class="text-xs text-slate-400">Send payment via GCash:</p>
+            <p class="text-lg sm:text-xl font-black text-lime-400 mt-1">0912 345 6789</p>
+            <p class="text-xs font-semibold text-slate-300">Account Name: HomeCourt PickleHouse</p>
+        </div>
+    @endif
+
+    <div class="space-y-3">
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Please send your payment screenshot and reservation info to our facebook page to verify your booking.
+        </p>
+
+        <a href="https://facebook.com/yourpage" target="_blank" class="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Click here to redirect to our facebook page
+        </a>
+    </div>
+</div>
 
             <!-- Return Home Button -->
             <a href="/" class="inline-flex w-full sm:w-auto items-center justify-center px-8 py-3.5 bg-lime-400 text-slate-950 font-bold rounded-xl hover:bg-lime-300 transition shadow-lg shadow-lime-400/20">
