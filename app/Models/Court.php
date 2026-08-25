@@ -10,14 +10,21 @@ class Court extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'status'];
+    protected $fillable = [
+        'name',
+        'status',
+        'classification',
+        'price_per_hour',
+        'operating_hours_start',
+        'operating_hours_end',
+    ];
 
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
     }
 
-/**
+    /**
      * Check if the court is fully booked for today.
      * Usage in Blade: $court->is_fully_booked
      */

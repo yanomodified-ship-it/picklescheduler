@@ -193,19 +193,18 @@
                                     </div>
                                     <div>
                                         <label for="court_id" class="mb-2 block text-sm font-semibold text-slate-300">Court</label>
-<select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
-    <option value="">Select a court</option>
-    @foreach ($courts as $court)
-        @php
-            $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
-            // Fallback to 500 if the database column is empty
-            $rate = $court->price_per_hour ?? 500; 
-        @endphp
-        <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
-            {{ $court->name }} — {{ $type }}
-        </option>
-    @endforeach
-</select>
+                                        <select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-lime-400">
+                                            <option value="">Select a court</option>
+                                            @foreach ($courts as $court)
+                                                @php
+                                                    $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
+                                                    $rate = $court->price_per_hour ?? 500; 
+                                                @endphp
+                                                <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
+                                                    {{ $court->name }} — {{ $type }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
 
@@ -384,9 +383,9 @@
                 existingBookings: @js($existingBookings ?? []),
 
                 allSlots: [
-                    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+                    '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
                     '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-                    '18:00', '19:00', '20:00', '21:00', '22:00'
+                    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
                 ],
 
                 get startTime() {
@@ -400,7 +399,13 @@
                     const sorted = [...this.selectedSlots].sort();
                     const lastSlot = sorted[sorted.length - 1];
                     const [hour, minute] = lastSlot.split(':').map(Number);
-                    return `${String(hour + 1).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    const endHour = hour + 1;
+
+                    if (endHour === 24 && minute === 0) {
+                        return '23:59';
+                    }
+
+                    return `${String(endHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
                 },
 
                 getSlotEndTime(slotTime) {
@@ -458,11 +463,14 @@
                     );
                 },
 
+                // EXPLICITLY CHECK CONFIRMED STATUS ONLY TO BLOCK PUBLIC SLOTS
                 isSlotBooked(slotTime) {
                     return this.activeBookingsForSelected.some(b => {
                         const start = b.start_time.substring(0, 5);
                         const end = b.end_time.substring(0, 5);
-                        return slotTime >= start && slotTime < end;
+                        const status = (b.booking_status || '').toLowerCase();
+                        const isConfirmed = status === 'confirmed';
+                        return isConfirmed && slotTime >= start && slotTime < end;
                     });
                 },
 
@@ -505,7 +513,7 @@
                 formatTime(time) {
                     if (!time) return '';
                     const [hour, minute] = time.split(':').map(Number);
-                    const suffix = hour >= 12 ? 'PM' : 'AM';
+                    const suffix = (hour >= 12 && hour < 24) ? 'PM' : 'AM';
                     const displayHour = hour % 12 || 12;
                     return `${displayHour}:${String(minute).padStart(2, '0')} ${suffix}`;
                 },
@@ -516,7 +524,11 @@
                 },
 
                 get totalPrice() {
-                    return this.selectedSlots.length * this.hourlyRate;
+                    return this.selectedSlots.reduce((total, slot) => {
+                        const hour = parseInt(slot.split(':')[0], 10);
+                        const rate = (hour >= 5 && hour < 17) ? 150 : 300;
+                        return total + rate;
+                    }, 0);
                 },
 
                 get formattedTotal() {

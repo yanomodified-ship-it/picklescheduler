@@ -35,6 +35,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/bookings/{booking}', [AdminBookingController::class, 'deleteBooking'])->name('bookings.delete');
 
         // Court Actions
+        Route::post('/courts', [AdminCourtController::class, 'store'])->name('courts.store');
         Route::put('/courts/{court}', [AdminCourtController::class, 'update'])->name('courts.update');
+        Route::delete('/courts/{court}', [AdminCourtController::class, 'destroy'])->name('courts.destroy');
     });
 });

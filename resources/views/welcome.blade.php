@@ -184,15 +184,39 @@
                     <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Rates</div>
                     <h2 class="mt-1 text-3xl font-extrabold text-white sm:text-4xl">Simple and transparent pricing</h2>
                 </div>
-                <div class="max-w-lg mx-auto mt-10">
-                    <div class="rounded-3xl border border-slate-800 bg-slate-900 p-8 text-center shadow-xl">
-                        <div class="text-xs font-bold uppercase tracking-widest text-slate-400">Standard Court Rate</div>
-                        <div class="mt-3 text-5xl font-black text-lime-400">
-                            ₱{{ number_format((float) env('PICKLEBALL_HOURLY_RATE', 500), 2) }}
+
+                <div class="max-w-3xl mx-auto mt-10 grid gap-6 sm:grid-cols-2">
+                    <!-- Daytime Rate -->
+                    <div class="rounded-3xl border border-slate-800 bg-slate-900 p-8 text-center shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="inline-block bg-amber-500/10 text-amber-400 text-xs font-bold px-3 py-1 rounded-full mb-3 border border-amber-500/20">
+                                ☀️ Day Slot
+                            </div>
+                            <div class="text-xs font-bold uppercase tracking-widest text-slate-400">5:00 AM – 4:00 PM</div>
+                            <div class="mt-3 text-5xl font-black text-lime-400">
+                                ₱150
+                            </div>
+                            <div class="mt-2 text-slate-400">per hour</div>
                         </div>
-                        <div class="mt-2 text-slate-400">per hour</div>
-                        <a href="{{ route('booking.create') }}" class="mt-8 inline-block bg-lime-400 text-slate-950 font-bold px-8 py-3 rounded-xl hover:bg-lime-300 transition">
-                            Book Now
+                        <a href="{{ route('booking.create') }}" class="mt-8 inline-block bg-lime-400 text-slate-950 font-bold px-6 py-3 rounded-xl hover:bg-lime-300 transition">
+                            Book Day Slot
+                        </a>
+                    </div>
+
+                    <!-- Night-time Rate -->
+                    <div class="rounded-3xl border border-slate-800 bg-slate-900 p-8 text-center shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="inline-block bg-indigo-500/10 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full mb-3 border border-indigo-500/20">
+                                🌙 Night Slot
+                            </div>
+                            <div class="text-xs font-bold uppercase tracking-widest text-slate-400">5:00 PM – 12:00 AM</div>
+                            <div class="mt-3 text-5xl font-black text-lime-400">
+                                ₱300
+                            </div>
+                            <div class="mt-2 text-slate-400">per hour</div>
+                        </div>
+                        <a href="{{ route('booking.create') }}" class="mt-8 inline-block bg-lime-400 text-slate-950 font-bold px-6 py-3 rounded-xl hover:bg-lime-300 transition">
+                            Book Night Slot
                         </a>
                     </div>
                 </div>
@@ -226,11 +250,6 @@
     <footer class="border-t border-slate-800 py-8 bg-slate-950">
         <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500">
             <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
-            <div class="flex space-x-6">
-                <a href="#" class="hover:text-slate-300 transition">Privacy Policy</a>
-                <a href="#" class="hover:text-slate-300 transition">Terms of Service</a>
-                <a href="#" class="hover:text-slate-300 transition">Contact Support</a>
-            </div>
         </div>
     </footer>
 

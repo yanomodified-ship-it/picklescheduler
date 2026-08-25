@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Court;
 use App\Models\Customer;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,8 +25,9 @@ class BookingController extends Controller
     {
         $courts = Court::where('status', 'active')->orderBy('id')->get();
 
+        // ONLY FETCH CONFIRMED BOOKINGS TO BLOCK SLOTS ON PUBLIC SITE
         $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
-            ->whereNotIn('booking_status', ['cancelled', 'rejected', 'Cancelled', 'Rejected'])
+            ->whereIn('booking_status', ['Confirmed', 'confirmed'])
             ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
 
         return view('booking', compact('courts', 'existingBookings'));
@@ -35,15 +37,14 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'              => 'required|string|max:100',
-            'email'             => 'nullable|email|max:150',
-            'contact_number'    => 'required|string|max:30',
-            'court_id'          => 'required|exists:courts,id',
             'booking_date'      => 'required|date|after_or_equal:today',
-            'start_time'        => 'required',
-            'end_time'          => 'required|after:start_time',
-            'number_of_players' => 'nullable|integer|min:1|max:30',
-            'payment_method'    => 'required|string',
+            'court_id'          => 'required|exists:courts,id',
+            'start_time'        => 'required|date_format:H:i|after_or_equal:05:00',
+            'end_time'          => 'required|date_format:H:i|after:start_time',
+            'name'              => 'required|string|max:100',
+            'contact_number'    => 'required|string|max:30',
+            'number_of_players' => 'required|integer|min:1|max:30',
+            'payment_method'    => 'required|in:GCash,Bank',
         ]);
 
         // 1. Strict Double-Booking Overlap Check
@@ -53,28 +54,39 @@ class BookingController extends Controller
             }
         }
 
-        // 2. Calculate Pricing and Duration correctly based on start and end time gaps
-        $court = Court::findOrFail($validated['court_id']);
-        $hourlyRate = $this->getCourtHourlyRate($court);
+        // 2. Parse times & calculate duration (handles 23:59 as full hour ending at midnight)
+        $startCarbon = Carbon::parse($validated['start_time']);
+        $endCarbon   = Carbon::parse($validated['end_time']);
 
-        $start = \Carbon\Carbon::parse($validated['start_time']);
-        $end = \Carbon\Carbon::parse($validated['end_time']);
-        
-        $durationMinutes = $start->diffInMinutes($end);
-        $durationHours = max(1, $durationMinutes / 60); 
-        
-        $totalAmount = $hourlyRate * $durationHours;
+        if ($validated['end_time'] === '23:59') {
+            $endCarbon = Carbon::parse('23:59')->addMinute();
+        }
 
-// 3. Create or find Customer
+        $durationHours = (int) $startCarbon->diffInHours($endCarbon);
+
+        // 3. Calculate total price dynamically based on time slots
+        $startHour = (int) $startCarbon->format('H');
+        $endHour   = ($validated['end_time'] === '23:59') ? 24 : (int) $endCarbon->format('H');
+
+        $totalAmount = 0;
+        for ($hour = $startHour; $hour < $endHour; $hour++) {
+            if ($hour >= 5 && $hour < 17) {
+                $totalAmount += 150; // 5:00 AM to 4:59 PM slot (₱150/hr)
+            } else {
+                $totalAmount += 300; // 5:00 PM to 12:00 AM slot (₱300/hr)
+            }
+        }
+
+        // 4. Create or find Customer
         $customer = Customer::firstOrCreate(
             ['contact_number' => $validated['contact_number']],
             [
                 'full_name' => $validated['name'],
-                'email'     => $email = $validated['email'] ?? null,
+                'email'     => $validated['email'] ?? null,
             ]
         );
 
-        // 4. Create Booking
+        // 5. Create Booking
         $reference = $this->generateBookingReference();
         Booking::create([
             'booking_reference' => $reference,

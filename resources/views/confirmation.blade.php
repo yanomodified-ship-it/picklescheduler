@@ -71,7 +71,7 @@
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Total</p>
                     <p class="text-sm font-black text-lime-400">
-                        ₱{{ number_format((float) (($booking->duration ?? 1) * 500), 2) }}
+                        ₱{{ number_format((float) ($booking->total_price ?? $booking->total_amount ?? 0), 2) }}
                     </p>
                 </div>
             </div>
@@ -95,7 +95,7 @@
 
     <div class="space-y-3">
         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Please send your payment screenshot and reservation info to our facebook page to verify your booking.
+            Please send your payment screenshot and reservation infor to our facebook page to verify your booking.
         </p>
 
         <a href="https://facebook.com/yourpage" target="_blank" class="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl transition">
