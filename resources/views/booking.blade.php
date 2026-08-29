@@ -152,10 +152,10 @@
                 </div>
 
                 <form id="bookingForm" 
-                      method="POST" 
-                      action="{{ route('booking.store') }}" 
-                      x-data="bookingForm()" 
-                      @submit="prepareSubmit">
+      method="POST" 
+      action="{{ route('booking.store') }}" 
+      x-data="bookingForm({{ json_encode($courts) }})" 
+      @submit="prepareSubmit">
                     @csrf
 
                     <!-- Hidden Inputs for Form Submission -->
@@ -197,12 +197,12 @@
                                             <option value="">Select a court</option>
                                             @foreach ($courts as $court)
                                                 @php
-                                                    $type = $court->id <= 4 ? 'Outdoor' : 'Indoor';
-                                                    $rate = $court->price_per_hour ?? 500; 
-                                                @endphp
-                                                <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
-                                                    {{ $court->name }} — {{ $type }}
-                                                </option>
+    $type = $court->classification ?? 'Outdoor';
+    $rate = $court->price_per_hour ?? 500; 
+@endphp
+<option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
+    {{ $court->name }} — {{ ucfirst($type) }}
+</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -371,8 +371,9 @@
     <!-- Alpine.js Script -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        function bookingForm() {
+        function bookingForm(courtsData) {
             return {
+                courts: courtsData,
                 bookingDate: @js(old('booking_date', now()->format('Y-m-d'))),
                 courtId: new URLSearchParams(window.location.search).get('court_id') || @js(old('court_id', '')),
                 selectedSlots: [],
@@ -382,11 +383,27 @@
                 submitting: false,
                 existingBookings: @js($existingBookings ?? []),
 
-                allSlots: [
-                    '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-                    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-                    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-                ],
+                // Replace the static array with this dynamic getter
+        get allSlots() {
+    if (!this.courtId) return [];
+    const court = this.courts.find(c => String(c.id) === String(this.courtId));
+    if (!court) return [];
+
+    let startHour = parseInt((court.operating_hours_start || '05:00').substring(0, 2), 10);
+    let endHour = parseInt((court.operating_hours_end || '23:00').substring(0, 2), 10);
+
+    // If close time is 00:00 (midnight), treat it as 24
+    if (endHour === 0 && (court.operating_hours_end || '').startsWith('00')) {
+        endHour = 24;
+    }
+
+    let slots = [];
+    for (let i = startHour; i <= endHour; i++) {
+        let hourString = String(i === 24 ? 0 : i).padStart(2, '0');
+        slots.push(hourString + ':00');
+    }
+    return slots;
+},
 
                 get startTime() {
                     if (this.selectedSlots.length === 0) return '';

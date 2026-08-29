@@ -95,7 +95,7 @@
                     <p class="mt-2 text-slate-400">Select between our available outdoor and indoor courts below.</p>
                 </div>
 
-                <!-- Filter Buttons -->
+                <!-- Dynamic Filter Buttons -->
                 <div class="inline-flex p-1.5 rounded-xl bg-slate-800 border border-slate-700/60 text-sm font-semibold">
                     <button 
                         type="button" 
@@ -103,7 +103,9 @@
                         :class="courtFilter === 'outdoor' ? 'bg-lime-400 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'" 
                         class="px-5 py-2 rounded-lg transition duration-200 flex items-center gap-2">
                         <span>☀️ Outdoor</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'outdoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">4</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'outdoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">
+                            {{ $courts->filter(fn($c) => strtolower($c->classification) === 'outdoor')->count() }}
+                        </span>
                     </button>
 
                     <button 
@@ -112,7 +114,9 @@
                         :class="courtFilter === 'indoor' ? 'bg-lime-400 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'" 
                         class="px-5 py-2 rounded-lg transition duration-200 flex items-center gap-2">
                         <span>🏢 Indoor</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'indoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">3</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full" :class="courtFilter === 'indoor' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-700 text-slate-300'">
+                            {{ $courts->filter(fn($c) => strtolower($c->classification) === 'indoor')->count() }}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -121,10 +125,8 @@
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse ($courts as $court)
                     @php
-                        $type = strtolower($court->type ?? '');
-                        if (!$type) {
-                            $type = ($loop->iteration <= 4) ? 'outdoor' : 'indoor';
-                        }
+                        // Read directly from classification column and normalize to lowercase for Alpine filtering
+                        $type = strtolower($court->classification ?? 'outdoor');
                     @endphp
 
                     <article 
@@ -135,7 +137,7 @@
                             <div class="flex h-36 items-center justify-center bg-slate-800 relative">
                                 <span class="text-6xl transition group-hover:scale-110">🏓</span>
                                 <span class="absolute top-3 right-3 text-xs font-bold px-2.5 py-1 rounded-md bg-slate-900/80 text-slate-300 border border-slate-700/50 uppercase tracking-wider">
-                                    {{ $type }}
+                                    {{ $court->classification ?? 'Outdoor' }}
                                 </span>
                             </div>
                             <div class="p-5">
@@ -247,11 +249,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-800 py-8 bg-slate-950">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-            <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
-        </div>
-    </footer>
+<footer class="border-t border-slate-800 py-8 bg-slate-950">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+        <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+
+        <!-- Facebook Social Link -->
+        <a href="https://facebook.com/yourpage" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="hover:text-slate-300 transition-colors">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+        </a>
+    </div>
+</footer>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>

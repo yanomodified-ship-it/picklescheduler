@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Court;
+use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AdminBookingController extends Controller
 {
@@ -37,6 +40,66 @@ class AdminBookingController extends Controller
             'bookings',
             'courts'
         ));
+    }
+    
+    // Store Walk-in Booking
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name'  => 'required|string|max:255',
+            'contact_number' => 'nullable|string|max:50',
+            'court_id'       => 'required|exists:courts,id',
+            'booking_date'   => 'required|date',
+            'start_time'     => 'required|string',
+            'end_time'       => 'required|string',
+            'total_price'    => 'required|numeric|min:0',
+            'payment_status' => 'required|string',
+            'booking_status' => 'required|string',
+        ]);
+
+        // 1. Prevent overlapping bookings
+        $hasOverlap = Booking::hasOverlap(
+            $validated['court_id'],
+            $validated['booking_date'],
+            $validated['start_time'],
+            $validated['end_time']
+        );
+
+        if ($hasOverlap) {
+            return redirect()->back()->with('error', 'This time slot is already booked for the selected court.')->withInput();
+        }
+
+        // 2. Create or retrieve the customer record
+        $customer = Customer::firstOrCreate(
+            ['full_name' => $validated['customer_name']],
+            ['contact_number' => $validated['contact_number'] ?? 'N/A']
+        );
+
+        // 3. Generate a unique reference number
+        $reference = 'WK-' . strtoupper(Str::random(6));
+
+        // 4. Calculate duration in hours
+        $start = Carbon::parse($validated['start_time']);
+        $end   = Carbon::parse($validated['end_time']);
+        $duration = $start->diffInHours($end) ?: 1;
+
+        // 5. Save the booking
+        Booking::create([
+            'booking_reference' => $reference,
+            'customer_id'       => $customer->id,
+            'court_id'          => $validated['court_id'],
+            'booking_date'      => $validated['booking_date'],
+            'start_time'        => $validated['start_time'],
+            'end_time'          => $validated['end_time'],
+            'duration'          => $duration,
+            'total_price'       => $validated['total_price'],
+            'total_amount'      => $validated['total_price'], // Included to fulfill NOT NULL column constraint
+            'payment_method'    => 'Cash / Walk-in',
+            'payment_status'    => $validated['payment_status'],
+            'booking_status'    => $validated['booking_status'],
+        ]);
+
+        return redirect()->back()->with('success', 'Walk-in booking added! Reference: ' . $reference);
     }
 
     // Approve Payment

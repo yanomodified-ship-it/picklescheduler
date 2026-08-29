@@ -39,7 +39,7 @@
 
     <main class="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
         
-        <!-- Flash Alert -->
+        <!-- Flash Alerts -->
         @if (session('success'))
             <div class="mb-6 rounded-2xl border border-lime-500/30 bg-lime-900/20 p-4 text-lime-300 font-bold text-sm">
                 ✓ {{ session('success') }}
@@ -74,16 +74,17 @@
                 <div class="text-2xl font-black text-red-400 mt-1">{{ $cancelledCount }}</div>
             </div>
             
-            <!-- REVENUE TRACKER WITH FILTERS -->
+            <!-- REVENUE TRACKER WITH CLEAR FILTER BUTTON -->
             <div class="bg-slate-900 border border-lime-500/40 rounded-2xl p-4 bg-lime-500/5 col-span-2 flex flex-col justify-between">
                 <div class="flex justify-between items-start mb-2 gap-2">
                     <div class="text-[10px] font-bold uppercase tracking-wider text-lime-400">Revenue Tracker</div>
-                    <div class="flex gap-1">
+                    <div class="flex gap-1 items-center">
                         <input type="date" x-model="revenueFilterDate" class="bg-slate-950 border border-lime-500/30 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-lime-400" title="Filter by Date">
                         <select x-model="revenueFilterCourt" class="bg-slate-950 border border-lime-500/30 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-lime-400" title="Filter by Court">
                             <option value="">All Courts</option>
                             <template x-for="c in courts" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
                         </select>
+                        <button type="button" @click="revenueFilterDate = ''; revenueFilterCourt = ''" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded border border-slate-700 transition" title="Clear Filters">Clear</button>
                     </div>
                 </div>
                 <div class="text-2xl font-black text-lime-400 mt-1" x-text="calculatedRevenue"></div>
@@ -97,7 +98,7 @@
             <button @click="activeTab = 'courts'" :class="activeTab === 'courts' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">⚙️ Court Settings</button>
         </div>
 
-        <!-- SECTION 1: INTERACTIVE SCHEDULE GRID (UNCHANGED) -->
+        <!-- SECTION 1: INTERACTIVE SCHEDULE GRID -->
         <div x-show="activeTab === 'schedule'" x-cloak class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
             <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -120,14 +121,14 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Court</label>
-                        <select x-model="selectedCourtId" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
+                        <select x-model="selectedCourtId" @change="$dispatch('court-changed')" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
                             <template x-for="c in courts" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <!-- Enhanced Slot Grid -->
+            <!-- Slot Grid -->
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 <template x-for="slot in allSlots" :key="slot">
                     <button @click="handleSlotClick(slot)" :class="getSlotStyle(slot)" class="p-3 rounded-2xl border text-center transition flex flex-col items-center justify-between min-h-[105px] relative overflow-hidden group">
@@ -140,7 +141,7 @@
                                 </div>
                             </template>
                             <template x-if="!getBookingForSlot(slot)">
-                                <span class="text-[11px] font-medium text-slate-600 group-hover:text-slate-400 transition">Open</span>
+                                <span class="text-[11px] font-medium text-slate-600 group-hover:text-lime-400 transition">+ Walk-In</span>
                             </template>
                         </div>
                         <span class="text-[9px] uppercase px-2 py-0.5 rounded-md truncate max-w-full font-extrabold tracking-wide" :class="getBadgeStyle(slot)" x-text="getSlotStatusLabel(slot)"></span>
@@ -149,9 +150,8 @@
             </div>
         </div>
 
-        <!-- SECTION 2: BOOKING HISTORY TABLE WITH FILTERS -->
+        <!-- SECTION 2: BOOKING HISTORY TABLE -->
         <div x-show="activeTab === 'bookings'" x-cloak class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-            <!-- Filter Bar -->
             <div class="bg-slate-950 p-4 border-b border-slate-800 flex flex-wrap gap-4 items-end">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Date</label>
@@ -212,7 +212,7 @@
             </div>
         </div>
 
-        <!-- SECTION 3: COURT MANAGEMENT WITH ADD/REMOVE -->
+        <!-- SECTION 3: COURT MANAGEMENT -->
         <div x-show="activeTab === 'courts'" x-cloak>
             <div class="mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
                 <div>
@@ -249,8 +249,11 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs text-slate-400 font-semibold mb-1">Hourly Rate (₱)</label>
-                                <input type="number" step="0.01" name="price_per_hour" value="{{ $court->price_per_hour }}" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-xs outline-none">
+                                <label class="block text-xs text-slate-400 font-semibold mb-1">Classification</label>
+                                <select name="classification" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-xs outline-none">
+                                    <option value="Indoor" {{ $court->classification === 'Indoor' ? 'selected' : '' }}>Indoor</option>
+                                    <option value="Outdoor" {{ $court->classification === 'Outdoor' ? 'selected' : '' }}>Outdoor</option>
+                                </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
@@ -273,6 +276,54 @@
 
     </main>
 
+    <!-- MODAL: WALK-IN BOOKING -->
+    <div x-show="showWalkInModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div @click.away="showWalkInModal = false" class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md flex flex-col overflow-hidden shadow-2xl relative p-6">
+            <button @click="showWalkInModal = false" class="absolute top-5 right-5 text-slate-400 hover:text-white">✕</button>
+            <h2 class="text-xl font-black text-white mb-2">Walk-In Booking</h2>
+            <div class="text-xs text-slate-400 mb-6 flex gap-2">
+                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Date: ' + selectedDate"></span>
+                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Time: ' + formatTime(walkInSlot)"></span>
+            </div>
+            
+            <form method="POST" action="{{ route('admin.bookings.store') }}" class="space-y-4">
+                @csrf
+                <input type="hidden" name="booking_date" :value="selectedDate">
+                <input type="hidden" name="court_id" :value="selectedCourtId">
+                <input type="hidden" name="start_time" :value="walkInSlot">
+                <input type="hidden" name="end_time" :value="walkInSlot ? (parseInt(walkInSlot.split(':')[0]) + 1).toString().padStart(2, '0') + ':00' : ''">
+                <input type="hidden" name="booking_status" value="Confirmed">
+                
+                <div>
+                    <label class="block text-xs text-slate-400 font-semibold mb-1">Customer Name</label>
+                    <input type="text" name="customer_name" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400" placeholder="Walk-in Customer Name">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 font-semibold mb-1">Contact Number (Optional)</label>
+                    <input type="text" name="contact_number" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400" placeholder="e.g. 09123456789">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 font-semibold mb-1">Amount Paid (₱)</label>
+                        <input type="number" step="0.01" name="total_price" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400" placeholder="150.00">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 font-semibold mb-1">Payment Status</label>
+                        <select name="payment_status" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400">
+                            <option value="Verified">Paid (Verified)</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex justify-end gap-3 mt-4">
+                    <button type="button" @click="showWalkInModal = false" class="px-4 py-2 text-slate-400 text-sm font-bold hover:text-white">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300">Confirm Walk-In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: ADD NEW COURT -->
     <div x-show="showAddCourtModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div @click.away="showAddCourtModal = false" class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md flex flex-col overflow-hidden shadow-2xl relative p-6">
@@ -293,8 +344,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 font-semibold mb-1">Hourly Rate (₱)</label>
-                    <input type="number" step="0.01" name="price_per_hour" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400">
+                    <label class="block text-xs text-slate-400 font-semibold mb-1">Classification</label>
+                    <select name="classification" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400">
+                        <option value="Indoor">Indoor</option>
+                        <option value="Outdoor">Outdoor</option>
+                    </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -314,7 +368,7 @@
         </div>
     </div>
 
-    <!-- MODAL: BOOKING VERIFICATION (UNCHANGED EXTERNALLY, logic moved into component) -->
+    <!-- MODAL: BOOKING VERIFICATION -->
     <div x-show="selectedBooking !== null" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div @click.away="selectedBooking = null; showRejectModal = false;" class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative">
             <button @click="selectedBooking = null; showRejectModal = false;" class="absolute top-5 right-5 text-slate-400 hover:text-white">✕</button>
@@ -334,11 +388,11 @@
                             <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Court</span> <span class="font-bold text-white" x-text="selectedBooking?.court?.name"></span></div>
                             <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Date</span> <span class="font-bold text-white" x-text="selectedBooking?.booking_date"></span></div>
                             <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Time</span> <span class="font-bold text-white" x-text="selectedBooking?.start_time + ' - ' + selectedBooking?.end_time"></span></div>
-                            <div class="flex justify-between text-sm"><span class="text-slate-400">Players</span> <span class="font-bold text-white" x-text="selectedBooking?.number_of_players"></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-slate-400">Players</span> <span class="font-bold text-white" x-text="selectedBooking?.number_of_players || 4"></span></div>
                         </div>
                         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                             <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Payment Details</h3>
-                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Method</span> <span class="font-bold text-white" x-text="selectedBooking?.payment_method || 'GCash'"></span></div>
+                            <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Method</span> <span class="font-bold text-white" x-text="selectedBooking?.payment_method || 'Cash / Walk-in'"></span></div>
                             <div class="flex justify-between text-sm mb-2"><span class="text-slate-400">Total Due</span> <span class="font-black text-lime-400" x-text="'₱' + selectedBooking?.total_price"></span></div>
                             
                             <template x-if="selectedBooking?.payment_status === 'Verified'"><span class="inline-block px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">VERIFIED</span></template>
@@ -390,7 +444,7 @@
         </div>
     </div>
 
-    <!-- CLEANED UP ALPINE COMPONENT -->
+    <!-- ALPINE COMPONENT -->
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('adminDashboard', (allBookings, allCourts) => ({
@@ -398,6 +452,8 @@
                 selectedBooking: null,
                 showRejectModal: false,
                 showAddCourtModal: false,
+                showWalkInModal: false,
+                walkInSlot: null,
 
                 bookings: allBookings,
                 courts: allCourts,
@@ -405,7 +461,37 @@
                 // Schedule Variables
                 selectedDate: new Date().toISOString().split('T')[0],
                 selectedCourtId: allCourts.length > 0 ? String(allCourts[0].id) : '1',
-                allSlots: ['05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+                get allSlots() {
+    const court = this.courts.find(c => String(c.id) === String(this.selectedCourtId)); // Use this.courtId for public booking view
+    if (!court) return [];
+
+    let startHour = parseInt((court.operating_hours_start || '00:00').substring(0, 2), 10);
+    let endHour = parseInt((court.operating_hours_end || '00:00').substring(0, 2), 10);
+
+    // 1. Handle 24-Hour Open (00:00 to 00:00)
+    if (startHour === 0 && endHour === 0 && (court.operating_hours_start === court.operating_hours_end)) {
+        let slots = [];
+        for (let i = 0; i < 24; i++) {
+            slots.push(String(i).padStart(2, '0') + ':00');
+        }
+        return slots;
+    }
+
+    // 2. Handle Overnight Schedules (e.g., 5:00 AM to 2:00 AM next day)
+    if (endHour <= startHour) {
+        endHour += 24;
+    }
+
+    // 3. Generate Slots
+    let slots = [];
+    for (let i = startHour; i <= endHour; i++) {
+        let displayHour = i % 24;
+        let hourString = String(displayHour).padStart(2, '0');
+        slots.push(hourString + ':00');
+    }
+
+    return slots;
+},
 
                 // History Filters
                 historyFilterDate: '',
@@ -414,8 +500,6 @@
                 // Revenue Filters
                 revenueFilterDate: '',
                 revenueFilterCourt: '',
-
-                // --- COMPUTED / METHODS ---
 
                 showHistoryRow(rowDate, rowCourtId) {
                     const matchDate = this.historyFilterDate === '' || rowDate === this.historyFilterDate;
@@ -429,16 +513,13 @@
                         const matchDate = this.revenueFilterDate === '' || b.booking_date === this.revenueFilterDate;
                         const matchCourt = this.revenueFilterCourt === '' || String(b.court_id) === String(this.revenueFilterCourt);
                         
-                        // Count revenue if payment is Verified OR if no verification system exists, change this logic
                         if (matchDate && matchCourt && b.payment_status === 'Verified') {
                             rev += parseFloat(b.total_price || 0);
                         }
                     });
-                    // Format to Philippine Peso
                     return '₱' + rev.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 },
 
-                // (Schedule specific methods remain the same)
                 changeDate(offsetDays) {
                     let current = new Date(this.selectedDate);
                     current.setDate(current.getDate() + offsetDays);
@@ -471,8 +552,12 @@
                 },
                 handleSlotClick(slotTime) {
                     const booking = this.getBookingForSlot(slotTime);
-                    if (booking) this.selectedBooking = booking;
-                    else alert('This slot is currently open/available.');
+                    if (booking) {
+                        this.selectedBooking = booking;
+                    } else {
+                        this.walkInSlot = slotTime;
+                        this.showWalkInModal = true;
+                    }
                 },
                 formatTime(time) {
                     if (!time) return '';

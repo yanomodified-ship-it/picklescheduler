@@ -28,6 +28,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/receipt/{booking}', [AdminBookingController::class, 'viewReceipt'])->name('receipt.show');
 
         // Booking Actions
+        Route::post('/bookings', [AdminBookingController::class, 'store'])->name('bookings.store'); // NEW WALK-IN ROUTE
         Route::patch('/bookings/{booking}/approve', [AdminBookingController::class, 'approvePayment'])->name('bookings.approve');
         Route::patch('/bookings/{booking}/reject', [AdminBookingController::class, 'rejectPayment'])->name('bookings.reject');
         Route::patch('/bookings/{booking}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('bookings.confirm');
