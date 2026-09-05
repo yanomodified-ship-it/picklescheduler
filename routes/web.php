@@ -12,6 +12,12 @@ Route::get('/booking', [BookingController::class, 'create'])->name('booking.crea
 Route::post('/bookings', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/confirmation/{booking_reference}', [BookingController::class, 'confirmation'])->name('bookings.confirmation');
 
+// --- KEEP ALIVE ROUTE ---
+Route::get('/api/keep-alive', function () {
+    \Illuminate\Support\Facades\DB::select('SELECT 1');
+    return response()->json(['status' => 'alive']);
+});
+
 // --- ADMIN SYSTEM ---
 Route::prefix('admin')->name('admin.')->group(function () {
     

@@ -11,6 +11,12 @@
     { "src": "/build/(.*)", "dest": "/public/build/$1" },
     { "src": "/(.*)", "dest": "/api/index.php" }
   ],
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 0 */3 * *"
+    }
+  ],
   "env": {
     "APP_ENV": "production",
     "APP_DEBUG": "true",
