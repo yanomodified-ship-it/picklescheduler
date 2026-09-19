@@ -33,10 +33,15 @@ class Court extends Model
         // Your system has 17 hourly time slots per day (6:00 AM to 10:00 PM)
         $totalDailySlots = 17; 
 
-        // Get all non-cancelled bookings for TODAY
+        // Only CONFIRMED bookings should count as taking up a slot.
+        // "Pending" bookings are still awaiting payment verification and
+        // must NOT mark the court as fully booked until an admin approves them.
+        $activeStatuses = ['Confirmed'];
+
+        // Get all confirmed bookings for TODAY
         $todayBookings = $this->bookings()
             ->whereDate('booking_date', today())
-            ->where('booking_status', '!=', 'Cancelled')
+            ->whereIn('booking_status', $activeStatuses)
             ->get();
 
         $bookedHours = 0;

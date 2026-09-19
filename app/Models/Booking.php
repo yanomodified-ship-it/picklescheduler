@@ -24,6 +24,7 @@ class Booking extends Model
     'booking_status',
     'payment_status',
     'payment_method',
+    'rejection_reason',
 ];
 
     public function customer(): BelongsTo
@@ -44,7 +45,7 @@ class Booking extends Model
     {
         return self::where('court_id', $courtId)
             ->where('booking_date', $date)
-            ->whereNotIn('booking_status', ['rejected', 'cancelled'])
+            ->whereNotIn('booking_status', ['Rejected', 'Cancelled'])
             ->where(function ($query) use ($startTime, $endTime) {
                 $query->where('start_time', '<', $endTime)
                       ->where('end_time', '>', $startTime);
