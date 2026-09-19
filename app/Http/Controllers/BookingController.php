@@ -14,9 +14,15 @@ use Illuminate\Support\Str;
 class BookingController extends Controller
 {
     // Fetch active courts for the home page display
-    public function index(): View
+        public function index(): View
     {
-        $courts = Court::where('status', 'active')->orderBy('id')->get();
+        $courts = Court::where('status', 'active')
+            ->with(['bookings' => function ($query) {
+                $query->whereDate('booking_date', today())
+                      ->where('booking_status', 'Confirmed');
+            }])
+            ->orderBy('id')
+            ->get();
 
         return view('welcome', compact('courts'));
     }
