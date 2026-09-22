@@ -117,14 +117,12 @@ class BookingController extends Controller
         try {
             DB::transaction(function () use ($slots, $validated, $customer, $baseReference) {
 
-                // Lock existing bookings for this court+date. Any other
-                // request trying to book the same court+date waits here
-                // until this transaction commits or rolls back.
-                DB::table('bookings')
-                    ->where('court_id', $validated['court_id'])
-                    ->where('booking_date', $validated['booking_date'])
-                    ->lockForUpdate()
-                    ->get();
+                // Lock the court row itself. Unlike locking existing bookings,
+                // the court row is guaranteed to exist even when this is the
+                // very first booking for this date, so this reliably
+                // serializes concurrent requests for the same court no
+                // matter what (or how little) is already booked.
+                Court::where('id', $validated['court_id'])->lockForUpdate()->firstOrFail();
 
                 foreach ($slots as $slot) {
                     $slotEnd = Carbon::parse($slot)->addHour()->format('H:i');
@@ -169,6 +167,16 @@ class BookingController extends Controller
         } catch (\RuntimeException $e) {
             return back()
                 ->withErrors(['time_slot' => $e->getMessage()])
+                ->withInput();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // A real DB-level conflict slipped past the checks above
+            // (e.g. a duplicate booking_reference, a deadlock, or a lock
+            // timeout under heavy concurrent load). Log it so you can see
+            // if/how often it happens, but never let it surface as a raw 500.
+            report($e);
+
+            return back()
+                ->withErrors(['time_slot' => 'That slot was just booked by someone else, or something went wrong. Please try again.'])
                 ->withInput();
         }
 
