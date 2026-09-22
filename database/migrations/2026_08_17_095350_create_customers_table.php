@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('full_name');
             $table->string('email')->nullable();
-            $table->string('contact_number');
+            $table->string('contact_number')->index();
             $table->timestamps();
         });
     }

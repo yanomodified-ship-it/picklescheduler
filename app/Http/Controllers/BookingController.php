@@ -14,12 +14,12 @@ use Illuminate\Support\Str;
 class BookingController extends Controller
 {
     // Fetch active courts for the home page display
-        public function index(): View
+    public function index(): View
     {
         $courts = Court::where('status', 'active')
             ->with(['bookings' => function ($query) {
                 $query->whereDate('booking_date', today())
-                      ->where('booking_status', 'Confirmed');
+                    ->where('booking_status', 'Confirmed');
             }])
             ->orderBy('id')
             ->get();
@@ -30,14 +30,25 @@ class BookingController extends Controller
     // Load the dedicated booking form page
     public function create(): View
     {
-        $courts = Court::where('status', 'active')->orderBy('id')->get();
+        $courts = Court::where('status', 'active')
+            ->orderBy('id')
+            ->get();
 
-        // Fetch CONFIRMED and PENDING bookings so the picker can grey out
-        // confirmed slots and clearly flag pending ones (only cancelled/
-        // rejected bookings should free up a slot again).
-        $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
+        // Fetch confirmed and pending bookings
+        // Cancelled and rejected bookings are available again
+        $existingBookings = Booking::where(
+                'booking_date',
+                '>=',
+                now()->format('Y-m-d')
+            )
             ->whereNotIn('booking_status', ['Cancelled', 'Rejected'])
-            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
+            ->get([
+                'court_id',
+                'booking_date',
+                'start_time',
+                'end_time',
+                'booking_status'
+            ]);
 
         return view('booking', compact('courts', 'existingBookings'));
     }
@@ -56,30 +67,33 @@ class BookingController extends Controller
             'payment_method'    => 'required|in:GCash,Bank',
         ]);
 
-        // Clean up the selected hour slots: unique + sorted (e.g. ["06:00","09:00"])
+        // Clean selected slots: remove duplicates and sort
         $slots = collect($validated['slots'])
             ->unique()
             ->sort()
             ->values();
 
-        // STEP 13: Confirm the court is active and every slot falls within its
-        // operating hours. This mirrors the frontend's own slot-generating
-        // loop in booking.blade.php exactly: it compares whole hours, and it
-        // is INCLUSIVE of the closing hour itself (a court closing at 23:00
-        // still offers a bookable 11 PM–12 AM slot), and a closing hour of
-        // "00:00" means "open through the end of the day" (treated as 24).
+        // Get the selected court
         $court = Court::findOrFail($validated['court_id']);
 
+        // Make sure the court is active
         if ($court->status !== 'active') {
             return back()
-                ->withErrors(['court_id' => 'This court is not currently available for booking.'])
+                ->withErrors([
+                    'court_id' => 'This court is not currently available for booking.'
+                ])
                 ->withInput();
         }
 
+        // Check operating hours
         $startHour = (int) substr($court->operating_hours_start, 0, 2);
         $endHour   = (int) substr($court->operating_hours_end, 0, 2);
 
-        if ($endHour === 0 && str_starts_with($court->operating_hours_end, '00')) {
+        // 00:00 means the court is open through the end of the day
+        if (
+            $endHour === 0 &&
+            str_starts_with($court->operating_hours_end, '00')
+        ) {
             $endHour = 24;
         }
 
@@ -88,61 +102,134 @@ class BookingController extends Controller
 
             if ($slotHour < $startHour || $slotHour > $endHour) {
                 return back()
-                    ->withErrors(['time_slot' => "The {$slot} slot is outside this court's operating hours."])
+                    ->withErrors([
+                        'time_slot' =>
+                            "The {$slot} slot is outside this court's operating hours."
+                    ])
                     ->withInput();
             }
         }
 
-        // 2. Create or update the Customer.
-        // IMPORTANT: use updateOrCreate (not firstOrCreate) so that if this
-        // contact number already has a customer record, the name/email are
-        // refreshed to what was just typed. firstOrCreate would silently keep
-        // whatever name was saved the very first time that number was used.
+        // Create or update customer
         $customer = Customer::updateOrCreate(
-            ['contact_number' => $validated['contact_number']],
+            [
+                'contact_number' => $validated['contact_number']
+            ],
             [
                 'full_name' => $validated['name'],
                 'email'     => $validated['email'] ?? null,
             ]
         );
 
-        // 3. Generate base booking reference
+        // Generate booking reference
         $baseReference = $this->generateBookingReference();
 
-        // STEP 12: The overlap check now happens INSIDE the transaction, with
-        // a row lock on this court+date, so two concurrent requests can no
-        // longer both pass the check and both create a booking for the same
-        // slot. If a conflict is found, we throw to trigger a rollback and
-        // catch it right after to show the same error message as before.
         try {
-            DB::transaction(function () use ($slots, $validated, $customer, $baseReference) {
+            DB::transaction(function () use (
+                $slots,
+                $validated,
+                $customer,
+                $baseReference
+            ) {
 
-                // Lock the court row itself. Unlike locking existing bookings,
-                // the court row is guaranteed to exist even when this is the
-                // very first booking for this date, so this reliably
-                // serializes concurrent requests for the same court no
-                // matter what (or how little) is already booked.
-                Court::where('id', $validated['court_id'])->lockForUpdate()->firstOrFail();
+                /*
+                 * Lock the court row.
+                 *
+                 * This prevents two people from booking the same
+                 * court at the same time.
+                 */
+                Court::where('id', $validated['court_id'])
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
+                /*
+                 * IMPORTANT PERFORMANCE CHANGE:
+                 *
+                 * Get all existing bookings for this court/date
+                 * ONCE instead of running Booking::hasOverlap()
+                 * once for every selected slot.
+                 */
+                $existingBookings = Booking::where(
+                        'court_id',
+                        $validated['court_id']
+                    )
+                    ->where(
+                        'booking_date',
+                        $validated['booking_date']
+                    )
+                    ->whereNotIn(
+                        'booking_status',
+                        ['Rejected', 'Cancelled']
+                    )
+                    ->get([
+                        'start_time',
+                        'end_time'
+                    ]);
+
+                /*
+                 * Check all selected slots in PHP.
+                 *
+                 * This avoids multiple database queries.
+                 */
                 foreach ($slots as $slot) {
-                    $slotEnd = Carbon::parse($slot)->addHour()->format('H:i');
 
-                    if (Booking::hasOverlap($validated['court_id'], $validated['booking_date'], $slot, $slotEnd)) {
-                        throw new \RuntimeException("The {$slot} slot is already booked for this court. Please choose another time or court.");
+                    $slotStart = Carbon::parse($slot);
+                    $slotEnd   = $slotStart->copy()->addHour();
+
+                    foreach ($existingBookings as $existing) {
+
+                        $existingStart = Carbon::parse(
+                            $existing->start_time
+                        );
+
+                        $existingEnd = Carbon::parse(
+                            $existing->end_time
+                        );
+
+                        // Overlap exists
+                        if (
+                            $existingStart->lt($slotEnd) &&
+                            $existingEnd->gt($slotStart)
+                        ) {
+                            throw new \RuntimeException(
+                                "The {$slot} slot is already booked for this court. Please choose another time or court."
+                            );
+                        }
                     }
                 }
 
+                // Create booking records
                 $totalSlots = $slots->count();
 
                 foreach ($slots as $index => $slot) {
-                    $slotStartHour = (int) Carbon::parse($slot)->format('H');
-                    $rate = ($slotStartHour >= 5 && $slotStartHour < 17) ? 150 : 300;
 
+                    $slotStartHour = (int) Carbon::parse($slot)->format('H');
+
+                    // Daytime = ₱150
+                    // Evening = ₱300
+                    $rate = (
+                        $slotStartHour >= 5 &&
+                        $slotStartHour < 17
+                    )
+                        ? 150
+                        : 300;
+
+                    // Handle 11 PM slot
                     $slotEnd = ($slotStartHour === 23)
                         ? '23:59'
-                        : Carbon::parse($slot)->addHour()->format('H:i');
+                        : Carbon::parse($slot)
+                            ->addHour()
+                            ->format('H:i');
 
-                    // Append index suffix if multiple slots selected to prevent database unique constraint violation
+                    /*
+                     * If multiple slots are selected:
+                     *
+                     * PKL-ABC123-1
+                     * PKL-ABC123-2
+                     * PKL-ABC123-3
+                     *
+                     * This keeps booking_reference unique.
+                     */
                     $uniqueSlotReference = $totalSlots > 1
                         ? "{$baseReference}-" . ($index + 1)
                         : $baseReference;
@@ -164,24 +251,40 @@ class BookingController extends Controller
                     ]);
                 }
             });
+
         } catch (\RuntimeException $e) {
+
             return back()
-                ->withErrors(['time_slot' => $e->getMessage()])
+                ->withErrors([
+                    'time_slot' => $e->getMessage()
+                ])
                 ->withInput();
+
         } catch (\Illuminate\Database\QueryException $e) {
-            // A real DB-level conflict slipped past the checks above
-            // (e.g. a duplicate booking_reference, a deadlock, or a lock
-            // timeout under heavy concurrent load). Log it so you can see
-            // if/how often it happens, but never let it surface as a raw 500.
+
+            // Database-level conflict/error
             report($e);
 
             return back()
-                ->withErrors(['time_slot' => 'That slot was just booked by someone else, or something went wrong. Please try again.'])
+                ->withErrors([
+                    'time_slot' =>
+                        'That slot was just booked by someone else, or something went wrong. Please try again.'
+                ])
                 ->withInput();
         }
 
-        return redirect()->route('bookings.confirmation', ['booking_reference' => $baseReference])
-            ->with('success', "Booking submitted successfully!");
+        // Send customer to confirmation page
+        return redirect()
+            ->route(
+                'bookings.confirmation',
+                [
+                    'booking_reference' => $baseReference
+                ]
+            )
+            ->with(
+                'success',
+                'Booking submitted successfully!'
+            );
     }
 
     /**
@@ -189,10 +292,14 @@ class BookingController extends Controller
      */
     public function confirmation(string $booking_reference): View
     {
-        // Query all slots using LIKE to catch base reference and appended suffixes (e.g. PKL-4F8A21, PKL-4F8A21-1, PKL-4F8A21-2)
+        // Get all slots belonging to this booking reference
         $bookings = Booking::query()
             ->with(['court', 'customer'])
-            ->where('booking_reference', 'LIKE', $booking_reference . '%')
+            ->where(
+                'booking_reference',
+                'LIKE',
+                $booking_reference . '%'
+            )
             ->orderBy('start_time')
             ->get();
 
@@ -201,23 +308,52 @@ class BookingController extends Controller
         }
 
         $booking = $bookings->first();
-        $booking->booking_reference = $booking_reference; // Retain base reference for clean UI display
-        $totalAmount = $bookings->sum(fn ($b) => (float) ($b->total_price ?? $b->total_amount ?? 0));
 
-        return view('confirmation', compact('booking', 'bookings', 'totalAmount'));
+        // Display the base reference without the -1, -2 suffix
+        $booking->booking_reference = $booking_reference;
+
+        // Calculate total amount
+        $totalAmount = $bookings->sum(
+            fn ($b) => (float) (
+                $b->total_price ??
+                $b->total_amount ??
+                0
+            )
+        );
+
+        return view(
+            'confirmation',
+            compact(
+                'booking',
+                'bookings',
+                'totalAmount'
+            )
+        );
     }
 
     /**
-     * Generate a unique booking reference such as PKL-4F8A21.
+     * Generate a unique booking reference.
+     *
+     * Example:
+     * PKL-4F8A21
      */
     private function generateBookingReference(): string
     {
         do {
-            $reference = 'PKL-' . strtoupper(Str::random(6));
+
+            $reference = 'PKL-' .
+                strtoupper(
+                    Str::random(6)
+                );
 
             $exists = Booking::query()
-                ->where('booking_reference', 'LIKE', $reference . '%')
+                ->where(
+                    'booking_reference',
+                    'LIKE',
+                    $reference . '%'
+                )
                 ->exists();
+
         } while ($exists);
 
         return $reference;
