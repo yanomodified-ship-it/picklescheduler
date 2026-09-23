@@ -670,6 +670,10 @@ async function downloadInvoice(booking) {
     }
 }
 
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
         async function apiPatch(url, body = {}) {
             const res = await fetch(url, {
                 method: 'PATCH',
@@ -974,6 +978,7 @@ get pendingByCourt() {
     });
     return map;
 },
+
             }));
         });
     </script>
