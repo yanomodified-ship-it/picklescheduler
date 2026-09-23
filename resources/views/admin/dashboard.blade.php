@@ -70,9 +70,16 @@
                 <div class="text-2xl font-black text-white mt-1">{{ $totalBookings }}</div>
             </div>
             <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-4 bg-amber-500/5">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending</div>
-                <div class="text-2xl font-black text-amber-400 mt-1">{{ $pendingCount }}</div>
-            </div>
+    <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending</div>
+    <div class="text-2xl font-black text-amber-400 mt-1">{{ $pendingCount }}</div>
+    <template x-if="Object.keys(pendingByCourt).length > 0">
+        <div class="flex flex-wrap gap-1 mt-2">
+            <template x-for="(count, courtName) in pendingByCourt" :key="courtName">
+                <button @click="activeTab = 'bookings'" class="text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded hover:bg-amber-500/20 transition" x-text="courtName + ' (' + count + ')'"></button>
+            </template>
+        </div>
+    </template>
+</div>
             <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 bg-emerald-500/5">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Confirmed</div>
                 <div class="text-2xl font-black text-emerald-400 mt-1">{{ $confirmedCount }}</div>
@@ -433,7 +440,7 @@
                 </div>
 
                 <div class="mt-8 pt-6 border-t border-slate-800 flex flex-wrap gap-3" x-show="!showRejectModal" data-html2canvas-ignore>
-                    <button type="button" onclick="downloadInvoice()" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition">📄 Download PDF</button>
+                    <button type="button" @click="downloadInvoice(selectedBooking)" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition">📄 Download PDF</button>
                     <div class="ml-auto flex gap-3">
                         <template x-if="selectedBooking?.payment_status !== 'Verified'">
                             <button type="button" @click="approveBooking(selectedBooking.id)" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Approve Payment</button>
@@ -526,46 +533,142 @@
 
     <!-- ALPINE COMPONENT -->
     <script>
-        function loadHtml2Pdf() {
-            return new Promise((resolve, reject) => {
-                if (window.html2pdf) { resolve(); return; }
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                script.onload = () => resolve();
-                script.onerror = () => reject(new Error('Could not load the PDF library.'));
-                document.head.appendChild(script);
-            });
-        }
+        function loadPdfLibs() {
+    return new Promise((resolve, reject) => {
+        if (window.html2canvas && window.jspdf) { resolve(); return; }
+        const load = (src) => new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = res;
+            s.onerror = () => rej(new Error('Could not load PDF library: ' + src));
+            document.head.appendChild(s);
+        });
+        Promise.all([
+            load('https://unpkg.com/html2canvas-pro@1.5.8/dist/html2canvas-pro.min.js'),
+            load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+        ]).then(resolve).catch(reject);
+    });
+}
 
-        async function downloadInvoice() {
-            try {
-                await loadHtml2Pdf();
-            } catch (e) {
-                alert('Could not load the PDF library. Check your internet connection and try again.');
-                return;
-            }
+        function formatInvoiceTime(time) {
+    if (!time) return '';
+    const [hour, minute] = time.split(':').map(Number);
+    return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 && hour < 24 ? 'PM' : 'AM'}`;
+}
 
-            const receiptElement = document.getElementById('printable-receipt');
-            const refName = receiptElement.querySelector('h2')?.innerText || 'Invoice';
+function buildInvoiceHtml(booking) {
+    const courtName    = booking.court?.name || 'N/A';
+    const customerName = booking.customer?.full_name || booking.customer_name || 'Walk-In Customer';
+    const contact       = booking.customer?.contact_number || booking.contact_number || 'No contact provided';
+    const amount        = parseFloat(booking.total_price || booking.total_amount || 0).toFixed(2);
 
-            const opt = {
-                margin:       0.5,
-                filename:     `Invoice_${refName.trim()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#020617'
-                },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+    const dateIssued = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const bookingDate = booking.booking_date
+        ? new Date(booking.booking_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+        : 'N/A';
 
-            html2pdf().set(opt).from(receiptElement).save();
-        }
+    const statusLabel = booking.payment_status === 'Verified' ? 'PAID'
+        : booking.payment_status === 'Rejected' ? 'REJECTED' : 'PENDING';
+    const statusColor = booking.payment_status === 'Verified' ? '#16a34a'
+        : booking.payment_status === 'Rejected' ? '#dc2626' : '#d97706';
 
-        function getCsrfToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        }
+    const startTime = formatInvoiceTime((booking.start_time || '').substring(0, 5));
+    const endTime   = formatInvoiceTime((booking.end_time || '').substring(0, 5));
+
+    return `
+    <div style="width:800px;padding:48px;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #65a30d;padding-bottom:24px;margin-bottom:32px;">
+            <div>
+                <div style="font-size:24px;font-weight:800;">HomeCourt <span style="color:#65a30d;">PickleHouse</span></div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">Premium Pickleball Court Rentals</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:28px;font-weight:800;letter-spacing:2px;">INVOICE</div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">#${booking.booking_reference}</div>
+            </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-bottom:32px;">
+            <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#999;letter-spacing:1px;margin-bottom:6px;">Billed To</div>
+                <div style="font-size:15px;font-weight:700;">${customerName}</div>
+                <div style="font-size:13px;color:#555;margin-top:2px;">${contact}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px;color:#999;">Invoice Date: <span style="color:#1a1a1a;font-weight:600;">${dateIssued}</span></div>
+                <div style="font-size:11px;color:#999;margin-top:6px;">Status: <span style="color:${statusColor};font-weight:700;">${statusLabel}</span></div>
+            </div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+            <thead>
+                <tr style="background:#f4f4f5;">
+                    <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;color:#666;border-bottom:2px solid #e4e4e7;">Description</th>
+                    <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;color:#666;border-bottom:2px solid #e4e4e7;">Date</th>
+                    <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;color:#666;border-bottom:2px solid #e4e4e7;">Time</th>
+                    <th style="text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;color:#666;border-bottom:2px solid #e4e4e7;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${courtName} Rental (${booking.number_of_players || 2} players)</td>
+                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${bookingDate}</td>
+                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${startTime} - ${endTime}</td>
+                    <td style="padding:12px;font-size:13px;text-align:right;border-bottom:1px solid #f0f0f0;">₱${amount}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:40px;">
+            <div style="width:240px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;">
+                    <span>Subtotal</span><span>₱${amount}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:6px;border-top:2px solid #1a1a1a;font-size:16px;font-weight:800;">
+                    <span>Total Due</span><span>₱${amount}</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top:1px solid #e4e4e7;padding-top:20px;">
+            <div style="font-size:11px;color:#999;">Payment Method: <span style="color:#1a1a1a;font-weight:600;">${booking.payment_method || 'N/A'}</span></div>
+            <div style="font-size:12px;color:#999;margin-top:16px;">Thank you for choosing HomeCourt PickleHouse. See you on the court!</div>
+        </div>
+    </div>`;
+}
+
+async function downloadInvoice(booking) {
+    if (!booking) return;
+
+    try {
+        await loadPdfLibs();
+    } catch (e) {
+        alert('Could not load the PDF library. Check your internet connection and try again.');
+        return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildInvoiceHtml(booking);
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '0';
+    wrapper.style.left = '-99999px';
+    document.body.appendChild(wrapper);
+
+    try {
+        const canvas = await html2canvas(wrapper, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait' });
+
+        const pageWidth = pdf.internal.pageSize.getWidth() - 1;
+        const pageHeight = (canvas.height * pageWidth) / canvas.width;
+
+        pdf.addImage(imgData, 'JPEG', 0.5, 0.5, pageWidth, pageHeight);
+        pdf.save(`Invoice_${booking.booking_reference}.pdf`);
+    } finally {
+        document.body.removeChild(wrapper);
+    }
+}
 
         async function apiPatch(url, body = {}) {
             const res = await fetch(url, {
@@ -860,6 +963,17 @@
                         this.showFlash(e.message, 'error');
                     }
                 },
+
+                // { 'Court 1': 4, 'Court 2': 1 } — counts pending bookings per court
+get pendingByCourt() {
+    const map = {};
+    this.bookings.forEach(b => {
+        if (b.booking_status !== 'Pending Verification') return;
+        const courtName = b.court?.name || 'Unknown Court';
+        map[courtName] = (map[courtName] || 0) + 1;
+    });
+    return map;
+},
             }));
         });
     </script>
