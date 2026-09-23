@@ -98,7 +98,7 @@ class BookingController extends Controller
         // contact number already has a customer record, the name/email are
         // refreshed to what was just typed. firstOrCreate would silently keep
         // whatever name was saved the very first time that number was used.
-        $customer = Customer::firstOrCreate(
+        $customer = Customer::updateOrCreate(
             ['contact_number' => $validated['contact_number']],
             [
                 'full_name' => $validated['name'],
