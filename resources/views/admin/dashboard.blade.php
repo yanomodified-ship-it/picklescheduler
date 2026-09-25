@@ -154,7 +154,7 @@
                             <template x-if="getBookingForSlot(slot)">
                                 <div class="flex flex-col items-center">
                                     <span class="text-[11px] font-black tracking-wider text-lime-400 truncate max-w-full" x-text="getBookingForSlot(slot).booking_reference"></span>
-                                    <span class="text-[10px] font-medium text-slate-300 truncate max-w-full" x-text="getBookingForSlot(slot).customer?.full_name"></span>
+                                    <span class="text-[10px] font-medium text-slate-300 truncate max-w-full" x-text="getBookingForSlot(slot).customer_name || getBookingForSlot(slot).customer?.full_name"></span>
                                 </div>
                             </template>
                             <template x-if="!getBookingForSlot(slot)">
@@ -190,17 +190,17 @@
                 <div class="p-4 border-b border-slate-800 bg-amber-500/5">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Multiple Pending Bookings — Verify Together</h4>
                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <template x-for="group in pendingByCustomer" :key="group.customer_id">
-                            <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2">
-                                <div>
-                                    <div class="text-sm font-bold text-white" x-text="group.customer_name"></div>
-                                    <div class="text-[11px] text-slate-400" x-text="group.bookings.length + ' pending bookings'"></div>
-                                    <div class="text-[11px] text-lime-400 font-semibold" x-text="group.courts.join(', ')"></div>
-                                    <div class="text-[11px] text-white font-bold mt-0.5" x-text="'Total: ₱' + group.totalPending.toFixed(2)"></div>
-                                </div>
-                                <button @click="selectedGroupId = group.customer_id" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">Review & Verify</button>
-                            </div>
-                        </template>
+                        <template x-for="group in pendingByCustomer" :key="group.customer_id + '-' + group.court_id + '-' + group.customer_name">
+    <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2">
+        <div>
+            <div class="text-sm font-bold text-white" x-text="group.customer_name"></div>
+            <div class="text-[11px] text-slate-400" x-text="group.bookings.length + ' pending bookings'"></div>
+            <div class="text-[11px] text-lime-400 font-semibold" x-text="group.court_name"></div>
+            <div class="text-[11px] text-white font-bold mt-0.5" x-text="'Total: ₱' + group.totalPending.toFixed(2)"></div>
+        </div>
+        <button @click="selectedGroupId = group.customer_id + '-' + group.court_id + '-' + group.customer_name" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">Review & Verify</button>
+    </div>
+</template>
                     </div>
                 </div>
             </template>
@@ -226,7 +226,7 @@
                         <template x-for="b in filteredHistory" :key="b.id">
                             <tr class="hover:bg-slate-800/40 transition">
                                 <td class="p-4 font-extrabold text-lime-400" x-text="b.booking_reference"></td>
-                                <td class="p-4 text-white font-bold" x-text="b.customer?.full_name || 'N/A'"></td>
+                                <td class="p-4 text-white font-bold" x-text="b.customer_name || b.customer?.full_name || 'N/A'"></td>
                                 <td class="p-4" x-text="formatDate(b.booking_date)"></td>
                                 <td class="p-4 text-white font-bold" x-text="b.court?.name || 'N/A'"></td>
                                 <td class="p-4" x-text="formatTime((b.start_time || '').substring(0,5)) + ' - ' + formatTime((b.end_time || '').substring(0,5))"></td>
@@ -413,7 +413,7 @@
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                         <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Customer Info</h3>
-                        <div class="font-bold text-white" x-text="selectedBooking?.customer?.full_name || selectedBooking?.customer_name || 'Walk-In Customer'"></div>
+                        <div class="font-bold text-white" x-text="selectedBooking?.customer_name || selectedBooking?.customer?.full_name || 'Walk-In Customer'"></div>
                         <div class="text-slate-400 text-sm" x-text="selectedBooking?.customer?.contact_number || selectedBooking?.contact_number || 'No contact provided'"></div>
                     </div>
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
@@ -446,7 +446,7 @@
                             <button type="button" @click="approveBooking(selectedBooking.id)" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Approve Payment</button>
                         </template>
                         <template x-if="selectedBooking?.payment_status !== 'Rejected'">
-                            <button @click="showRejectModal = true" type="button" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject</button>
+                            <buttb0on @click="showRejectModal = true" type="button" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject</button>
                         </template>
                     </div>
                 </div>
@@ -458,8 +458,8 @@
                         <div class="flex justify-end gap-3 mt-2">
                             <button type="button" @click="showRejectModal = false" class="px-4 py-2 text-slate-400 text-sm font-bold">Cancel</button>
                             <button type="button"
-                                    @click="if (rejectReason.trim()) { rejectBooking(selectedBooking.id, rejectReason); rejectReason = ''; } else { alert('Please enter a reason.'); }"
-                                    class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-500 shadow-lg shadow-red-600/20">Confirm Rejection</button>
+        @click="if (rejectReason.trim()) { rejectBooking(selectedBooking.id, rejectReason); showRejectModal = false; rejectReason = ''; } else { alert('Please enter a reason.'); }"
+        class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-500 shadow-lg shadow-red-600/20">Confirm Rejection</button>
                         </div>
                     </div>
                 </div>
@@ -490,7 +490,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3" x-show="!showGroupRejectForm">
-                    <button type="button" @click="verifyAllForCustomer(selectedGroup.customer_id); selectedGroupId = null;" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Verify All</button>
+                    <button type="button" @click="verifyAllForCustomer(selectedGroup.customer_id, selectedGroup.court_id, selectedGroup.customer_name); selectedGroupId = null;" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Verify All</button>
                     <button type="button" @click="showGroupRejectForm = true" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject All</button>
                 </div>
 
@@ -501,7 +501,7 @@
                         <div class="flex justify-end gap-3 mt-2">
                             <button type="button" @click="showGroupRejectForm = false" class="px-4 py-2 text-slate-400 text-sm font-bold">Cancel</button>
                             <button type="button"
-                                    @click="if (groupRejectReason.trim()) { rejectAllForCustomer(selectedGroup.customer_id, groupRejectReason); showGroupRejectForm = false; selectedGroupId = null; } else { alert('Please enter a reason.'); }"
+                                    @click="if (groupRejectReason.trim()) { rejectAllForCustomer(selectedGroup.customer_id, selectedGroup.court_id, selectedGroup.customer_name, groupRejectReason); selectedGroupId = null; showGroupRejectForm = false; groupRejectReason = ''; } else { alert('Please enter a reason.'); }"
                                     class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-500 shadow-lg shadow-red-600/20">Confirm Rejection</button>
                         </div>
                     </div>
@@ -558,7 +558,7 @@
 
 function buildInvoiceHtml(booking) {
     const courtName    = booking.court?.name || 'N/A';
-    const customerName = booking.customer?.full_name || booking.customer_name || 'Walk-In Customer';
+    const customerName = booking.customer_name || booking.customer?.full_name || 'Walk-In Customer';
     const contact       = booking.customer?.contact_number || booking.contact_number || 'No contact provided';
     const amount        = parseFloat(booking.total_price || booking.total_amount || 0).toFixed(2);
 
@@ -902,56 +902,51 @@ function getCsrfToken() {
                 // never go stale — it re-reads `this.bookings` fresh every
                 // time it's accessed.
                 get pendingByCustomer() {
-                    const groups = {};
-                    this.bookings.forEach(b => {
-                        if (b.booking_status !== 'Pending Verification') return;
-                        const key = b.customer_id;
-                        if (!groups[key]) {
-                            groups[key] = {
-                                customer_id: key,
-                                customer_name: b.customer?.full_name || 'Unknown Customer',
-                                bookings: [],
-                                courts: [],
-                                totalPending: 0,
-                            };
-                        }
-                        groups[key].bookings.push(b);
-                        groups[key].totalPending += parseFloat(b.total_price || 0);
-                        const courtName = b.court?.name;
-                        if (courtName && !groups[key].courts.includes(courtName)) {
-                            groups[key].courts.push(courtName);
-                        }
-                    });
-                    return Object.values(groups).filter(g => g.bookings.length > 1);
-                },
+    const groups = {};
+    this.bookings.forEach(b => {
+        if (b.booking_status !== 'Pending Verification') return;
+        const name = b.customer_name || b.customer?.full_name || 'Unknown Customer';
+        const key = b.customer_id + '-' + b.court_id + '-' + name;
+        if (!groups[key]) {
+            groups[key] = {
+                customer_id: b.customer_id,
+                court_id: b.court_id,
+                customer_name: name,
+                court_name: b.court?.name || 'Unknown Court',
+                bookings: [],
+                totalPending: 0,
+            };
+        }
+        groups[key].bookings.push(b);
+        groups[key].totalPending += parseFloat(b.total_price || 0);
+    });
+    return Object.values(groups).filter(g => g.bookings.length > 1);
+},
 
-                // The bulk modal is now DERIVED from pendingByCustomer rather
-                // than a stored snapshot, so it can't show stale data no
-                // matter when/how a booking changes elsewhere on the page.
-                get selectedGroup() {
-                    if (this.selectedGroupId === null) return null;
-                    return this.pendingByCustomer.find(g => g.customer_id === this.selectedGroupId) || null;
-                },
+get selectedGroup() {
+    if (this.selectedGroupId === null) return null;
+    return this.pendingByCustomer.find(g => (g.customer_id + '-' + g.court_id + '-' + g.customer_name) === this.selectedGroupId) || null;
+},
 
-                async verifyAllForCustomer(customerId) {
-                    try {
-                        const data = await apiPatch(`/admin/customers/${customerId}/verify-all`);
-                        data.bookings.forEach(b => this.mergeBooking(b));
-                        this.showFlash(data.message);
-                    } catch (e) {
-                        this.showFlash(e.message, 'error');
-                    }
-                },
+                async verifyAllForCustomer(customerId, courtId, customerName) {
+    try {
+        const data = await apiPatch(`/admin/customers/${customerId}/verify-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}`);
+        data.bookings.forEach(b => this.mergeBooking(b));
+        this.showFlash(data.message);
+    } catch (e) {
+        this.showFlash(e.message, 'error');
+    }
+},
 
-                async rejectAllForCustomer(customerId, reason) {
-                    try {
-                        const data = await apiPatch(`/admin/customers/${customerId}/reject-all`, { rejection_reason: reason });
-                        data.bookings.forEach(b => this.mergeBooking(b));
-                        this.showFlash(data.message);
-                    } catch (e) {
-                        this.showFlash(e.message, 'error');
-                    }
-                },
+async rejectAllForCustomer(customerId, courtId, customerName, reason) {
+    try {
+        const data = await apiPatch(`/admin/customers/${customerId}/reject-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}`, { rejection_reason: reason });
+        data.bookings.forEach(b => this.mergeBooking(b));
+        this.showFlash(data.message);
+    } catch (e) {
+        this.showFlash(e.message, 'error');
+    }
+},
 
                 async deleteAllBookingsAction() {
                     if (this.deleteAllConfirmText !== 'DELETE ALL') return;

@@ -91,6 +91,7 @@ class AdminBookingController extends Controller
             'booking_reference' => $reference,
             'customer_id'       => $customer->id,
             'court_id'          => $validated['court_id'],
+            'customer_name'     => $validated['customer_name'],
             'booking_date'      => $validated['booking_date'],
             'start_time'        => $validated['start_time'],
             'end_time'          => $validated['end_time'],
@@ -189,33 +190,39 @@ class AdminBookingController extends Controller
      * in a single request.
      */
     public function verifyAllForCustomer(Request $request, Customer $customer)
-    {
-        $updated = Booking::where('customer_id', $customer->id)
-            ->where('booking_status', 'Pending Verification')
-            ->update([
-                'payment_status'   => 'Verified',
-                'booking_status'   => 'Confirmed',
-                'rejection_reason' => null,
-            ]);
+{
+    $courtId = $request->query('court_id');
+    $customerName = $request->query('customer_name');
 
-        $bookings = Booking::where('customer_id', $customer->id)
-            ->with(['customer', 'court'])
-            ->get();
+    $query = Booking::where('customer_id', $customer->id)
+        ->where('booking_status', 'Pending Verification');
 
-        $message = $updated > 0
-            ? "{$updated} booking(s) approved for {$customer->full_name}."
-            : "No pending bookings found for {$customer->full_name}.";
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success'  => true,
-                'message'  => $message,
-                'bookings' => $bookings,
-            ]);
-        }
-
-        return back()->with('success', $message);
+    if ($courtId) {
+        $query->where('court_id', $courtId);
     }
+
+    if ($customerName) {
+        $query->where('customer_name', $customerName);
+    }
+
+    $updated = $query->update([
+        'payment_status'   => 'Verified',
+        'booking_status'   => 'Confirmed',
+        'rejection_reason' => null,
+    ]);
+
+    $bookings = Booking::where('customer_id', $customer->id)->with(['customer', 'court'])->get();
+
+    $message = $updated > 0
+        ? "{$updated} booking(s) approved for {$customer->full_name}."
+        : "No pending bookings found.";
+
+    if ($request->wantsJson()) {
+        return response()->json(['success' => true, 'message' => $message, 'bookings' => $bookings]);
+    }
+
+    return back()->with('success', $message);
+}
 
     /**
      * Reject every currently-pending booking belonging to one customer

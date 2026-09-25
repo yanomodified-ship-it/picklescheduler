@@ -58,7 +58,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-left bg-gray-50 border border-gray-200 rounded-2xl p-5 sm:p-6 mb-8">
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Customer</p>
-                    <p class="text-sm font-bold text-gray-900 break-words">{{ $booking->customer->name ?? $booking->customer->full_name ?? 'Guest Customer' }}</p>
+                    <p class="text-sm font-bold text-gray-900 break-words">{{ $booking->customer_name ?? $booking->customer->full_name ?? 'Guest Customer' }}</p>
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Contact Number</p>

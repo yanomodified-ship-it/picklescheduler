@@ -150,6 +150,7 @@ class BookingController extends Controller
                     Booking::create([
                         'booking_reference' => $uniqueSlotReference,
                         'customer_id'       => $customer->id,
+                        'customer_name'     => $validated['name'],
                         'court_id'          => $validated['court_id'],
                         'booking_date'      => $validated['booking_date'],
                         'start_time'        => $slot,
