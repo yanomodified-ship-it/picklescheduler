@@ -18,6 +18,12 @@ Route::get('/api/keep-alive', function () {
     return response()->json(['status' => 'alive']);
 });
 
+// --- AUTH REDIRECT BRIDGE ---
+// to protected pages redirect properly instead of erroring.
+Route::get('/login', function () {
+    return redirect()->route('admin.login');
+})->name('login');
+
 // --- ADMIN SYSTEM ---
 Route::prefix('admin')->name('admin.')->group(function () {
 
