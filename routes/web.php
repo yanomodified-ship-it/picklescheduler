@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\AdminCourtController;
 // --- PUBLIC ROUTES ---
 Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
-Route::post('/bookings', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
 Route::get('/confirmation/{booking_reference}', [BookingController::class, 'confirmation'])->name('bookings.confirmation');
 
 // --- KEEP ALIVE ROUTE ---
