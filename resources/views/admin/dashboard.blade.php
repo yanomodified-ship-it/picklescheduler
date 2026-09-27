@@ -868,7 +868,10 @@ function getCsrfToken() {
                     if (!booking) return [];
                     const baseRef = booking.booking_reference.replace(/-\d+$/, '');
                     return this.bookings
-                        .filter(b => b.booking_reference === baseRef || b.booking_reference.startsWith(baseRef + '-'))
+                        .filter(b =>
+                            (b.booking_reference === baseRef || b.booking_reference.startsWith(baseRef + '-')) &&
+                            b.payment_status === booking.payment_status
+                        )
                         .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
                 },
 
