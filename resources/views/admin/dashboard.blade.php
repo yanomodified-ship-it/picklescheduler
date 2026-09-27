@@ -440,7 +440,7 @@
                 </div>
 
                 <div class="mt-8 pt-6 border-t border-slate-800 flex flex-wrap gap-3" x-show="!showRejectModal" data-html2canvas-ignore>
-                    <button type="button" @click="downloadInvoice(selectedBooking)" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition">📄 Download PDF</button>
+                    <button type="button" @click="downloadInvoice(getInvoiceGroup(selectedBooking))" class="px-4 py-2 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition">📄 Download PDF</button>
                     <div class="ml-auto flex gap-3">
                         <template x-if="selectedBooking?.payment_status !== 'Verified'">
                             <button type="button" @click="approveBooking(selectedBooking.id)" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Approve Payment</button>
@@ -556,24 +556,37 @@
     return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 && hour < 24 ? 'PM' : 'AM'}`;
 }
 
-function buildInvoiceHtml(booking) {
-    const courtName    = booking.court?.name || 'N/A';
-    const customerName = booking.customer_name || booking.customer?.full_name || 'Walk-In Customer';
-    const contact       = booking.customer?.contact_number || booking.contact_number || 'No contact provided';
-    const amount        = parseFloat(booking.total_price || booking.total_amount || 0).toFixed(2);
+function buildInvoiceHtml(bookings) {
+    const first = bookings[0];
+    const courtName    = first.court?.name || 'N/A';
+    const customerName = first.customer_name || first.customer?.full_name || 'Walk-In Customer';
+    const contact       = first.customer?.contact_number || first.contact_number || 'No contact provided';
+    const baseRef        = first.booking_reference.replace(/-\d+$/, '');
 
     const dateIssued = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const bookingDate = booking.booking_date
-        ? new Date(booking.booking_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    const bookingDate = first.booking_date
+        ? new Date(first.booking_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
         : 'N/A';
 
-    const statusLabel = booking.payment_status === 'Verified' ? 'PAID'
-        : booking.payment_status === 'Rejected' ? 'REJECTED' : 'PENDING';
-    const statusColor = booking.payment_status === 'Verified' ? '#16a34a'
-        : booking.payment_status === 'Rejected' ? '#dc2626' : '#d97706';
+    const allVerified = bookings.every(b => b.payment_status === 'Verified');
+    const anyRejected  = bookings.some(b => b.payment_status === 'Rejected');
+    const statusLabel = allVerified ? 'PAID' : anyRejected ? 'PARTIALLY REJECTED' : 'PENDING';
+    const statusColor = allVerified ? '#16a34a' : anyRejected ? '#dc2626' : '#d97706';
 
-    const startTime = formatInvoiceTime((booking.start_time || '').substring(0, 5));
-    const endTime   = formatInvoiceTime((booking.end_time || '').substring(0, 5));
+    const grandTotal = bookings.reduce((sum, b) => sum + parseFloat(b.total_price || b.total_amount || 0), 0);
+
+    const rows = bookings.map(b => {
+        const startTime = formatInvoiceTime((b.start_time || '').substring(0, 5));
+        const endTime   = formatInvoiceTime((b.end_time || '').substring(0, 5));
+        const amount    = parseFloat(b.total_price || b.total_amount || 0).toFixed(2);
+        return `
+            <tr>
+                <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${courtName} Rental (${b.number_of_players || 2} players)</td>
+                <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${bookingDate}</td>
+                <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${startTime} - ${endTime}</td>
+                <td style="padding:12px;font-size:13px;text-align:right;border-bottom:1px solid #f0f0f0;">₱${amount}</td>
+            </tr>`;
+    }).join('');
 
     return `
     <div style="width:800px;padding:48px;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
@@ -584,7 +597,7 @@ function buildInvoiceHtml(booking) {
             </div>
             <div style="text-align:right;">
                 <div style="font-size:28px;font-weight:800;letter-spacing:2px;">INVOICE</div>
-                <div style="font-size:12px;color:#666;margin-top:4px;">#${booking.booking_reference}</div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">#${baseRef}</div>
             </div>
         </div>
 
@@ -609,36 +622,29 @@ function buildInvoiceHtml(booking) {
                     <th style="text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;color:#666;border-bottom:2px solid #e4e4e7;">Amount</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${courtName} Rental (${booking.number_of_players || 2} players)</td>
-                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${bookingDate}</td>
-                    <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${startTime} - ${endTime}</td>
-                    <td style="padding:12px;font-size:13px;text-align:right;border-bottom:1px solid #f0f0f0;">₱${amount}</td>
-                </tr>
-            </tbody>
+            <tbody>${rows}</tbody>
         </table>
 
         <div style="display:flex;justify-content:flex-end;margin-bottom:40px;">
             <div style="width:240px;">
                 <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;">
-                    <span>Subtotal</span><span>₱${amount}</span>
+                    <span>Subtotal</span><span>₱${grandTotal.toFixed(2)}</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:6px;border-top:2px solid #1a1a1a;font-size:16px;font-weight:800;">
-                    <span>Total Due</span><span>₱${amount}</span>
+                    <span>Total Due</span><span>₱${grandTotal.toFixed(2)}</span>
                 </div>
             </div>
         </div>
 
         <div style="border-top:1px solid #e4e4e7;padding-top:20px;">
-            <div style="font-size:11px;color:#999;">Payment Method: <span style="color:#1a1a1a;font-weight:600;">${booking.payment_method || 'N/A'}</span></div>
+            <div style="font-size:11px;color:#999;">Payment Method: <span style="color:#1a1a1a;font-weight:600;">${first.payment_method || 'N/A'}</span></div>
             <div style="font-size:12px;color:#999;margin-top:16px;">Thank you for choosing HomeCourt PickleHouse. See you on the court!</div>
         </div>
     </div>`;
 }
 
-async function downloadInvoice(booking) {
-    if (!booking) return;
+async function downloadInvoice(bookings) {
+    if (!bookings || bookings.length === 0) return;
 
     try {
         await loadPdfLibs();
@@ -648,7 +654,7 @@ async function downloadInvoice(booking) {
     }
 
     const wrapper = document.createElement('div');
-    wrapper.innerHTML = buildInvoiceHtml(booking);
+    wrapper.innerHTML = buildInvoiceHtml(bookings);
     wrapper.style.position = 'fixed';
     wrapper.style.top = '0';
     wrapper.style.left = '-99999px';
@@ -664,7 +670,7 @@ async function downloadInvoice(booking) {
         const pageHeight = (canvas.height * pageWidth) / canvas.width;
 
         pdf.addImage(imgData, 'JPEG', 0.5, 0.5, pageWidth, pageHeight);
-        pdf.save(`Invoice_${booking.booking_reference}.pdf`);
+        pdf.save(`Invoice_${bookings[0].booking_reference.replace(/-\d+$/, '')}.pdf`);
     } finally {
         document.body.removeChild(wrapper);
     }
@@ -856,6 +862,14 @@ function getCsrfToken() {
                     if (this.selectedBooking && this.selectedBooking.id === updated.id) {
                         this.selectedBooking = updated;
                     }
+                },
+
+                getInvoiceGroup(booking) {
+                    if (!booking) return [];
+                    const baseRef = booking.booking_reference.replace(/-\d+$/, '');
+                    return this.bookings
+                        .filter(b => b.booking_reference === baseRef || b.booking_reference.startsWith(baseRef + '-'))
+                        .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
                 },
 
                 removeBooking(id) {

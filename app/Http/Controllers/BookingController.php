@@ -51,7 +51,7 @@ class BookingController extends Controller
             'slots'             => 'required|array|min:1',
             'slots.*'           => 'date_format:H:i|after_or_equal:05:00',
             'name'              => 'required|string|max:100',
-            'contact_number'    => 'required|string|max:30',
+            'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
             'number_of_players' => 'required|integer|min:1|max:30',
             'payment_method'    => 'required|in:GCash,Bank',
         ]);

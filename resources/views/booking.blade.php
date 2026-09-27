@@ -267,7 +267,19 @@
                                     </div>
                                     <div>
                                         <label for="contact_number" class="mb-2 block text-sm font-semibold text-gray-700">Contact Number</label>
-                                        <input id="contact_number" name="contact_number" type="tel" maxlength="30" autocomplete="tel" value="{{ old('contact_number') }}" required x-model="contactNumber" placeholder="09XXXXXXXXX" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 outline-none focus:border-lime-500 focus:bg-white">
+                                        <input id="contact_number"
+                                            name="contact_number"
+                                            type="tel"
+                                            inputmode="numeric"
+                                            pattern="[0-9+\-\s]*"
+                                            maxlength="30"
+                                            autocomplete="tel"
+                                            value="{{ old('contact_number') }}"
+                                            required
+                                            x-model="contactNumber"
+                                            @input="contactNumber = contactNumber.replace(/[^0-9+\-\s]/g, '')"
+                                            placeholder="09XXXXXXXXX"
+                                            class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 outline-none focus:border-lime-500 focus:bg-white">
                                     </div>
                                     <div class="sm:col-span-2">
                                         <label for="number_of_players" class="mb-2 block text-sm font-semibold text-gray-700">Number of Players</label>

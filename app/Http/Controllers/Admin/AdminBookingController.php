@@ -48,7 +48,7 @@ class AdminBookingController extends Controller
     {
         $validated = $request->validate([
             'customer_name'  => 'required|string|max:255',
-            'contact_number' => 'nullable|string|max:50',
+            'contact_number' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]*$/'],
             'court_id'       => 'required|exists:courts,id',
             'booking_date'   => 'required|date',
             'start_time'     => 'required|string',
