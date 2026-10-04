@@ -72,13 +72,23 @@
             <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-4 bg-amber-500/5">
     <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending</div>
     <div class="text-2xl font-black text-amber-400 mt-1">{{ $pendingCount }}</div>
-    <template x-if="Object.keys(pendingByCourt).length > 0">
-        <div class="flex flex-wrap gap-1 mt-2">
-            <template x-for="(count, courtName) in pendingByCourt" :key="courtName">
-                <button @click="activeTab = 'bookings'" class="text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded hover:bg-amber-500/20 transition" x-text="courtName + ' (' + count + ')'"></button>
-            </template>
-        </div>
-    </template>
+        <template x-if="Object.keys(pendingByCourt).length > 0">
+    <div class="flex flex-col gap-1.5 mt-2">
+        <template x-for="(data, courtName) in pendingByCourt" :key="courtName">
+            <div>
+                <button @click="expandedPendingCourt = (expandedPendingCourt === courtName ? null : courtName)" class="w-full text-left text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:border-amber-400 px-2 py-1 rounded-lg transition" x-text="courtName + ' (' + data.count + ')'"></button>
+                <template x-if="expandedPendingCourt === courtName">
+                    <select @change="goToPendingDate($event.target.value)" class="mt-1 w-full text-[9px] bg-slate-950 border border-amber-500/30 rounded-lg px-2 py-1 text-amber-300 outline-none focus:border-amber-400">
+                        <option value="">Select a date...</option>
+                        <template x-for="d in data.dates" :key="courtName + d.date">
+                            <option :value="d.date" x-text="formatDateShort(d.date) + ' — ' + d.count + ' slot' + (d.count > 1 ? 's' : '')"></option>
+                        </template>
+                    </select>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>
 </div>
             <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 bg-emerald-500/5">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Confirmed</div>
@@ -723,6 +733,7 @@ function getCsrfToken() {
                 activeTab: 'schedule',
                 selectedBooking: null,
                 selectedGroupId: null,
+                expandedPendingCourt: null,
                 showRejectModal: false,
                 showGroupRejectForm: false,
                 showAddCourtModal: false,
@@ -922,6 +933,7 @@ function getCsrfToken() {
     const groups = {};
     this.bookings.forEach(b => {
         if (b.booking_status !== 'Pending Verification') return;
+        if (!this.showHistoryRow(b.booking_date, b.court_id)) return;
         const name = b.customer_name || b.customer?.full_name || 'Unknown Customer';
         const key = b.customer_id + '-' + b.court_id + '-' + name;
         if (!groups[key]) {
@@ -938,6 +950,13 @@ function getCsrfToken() {
         groups[key].totalPending += parseFloat(b.total_price || 0);
     });
     return Object.values(groups).filter(g => g.bookings.length > 1);
+},
+
+goToPendingDate(date) {
+    if (!date) return;
+    this.historyFilterDate = date;
+    this.expandedPendingCourt = null;
+    this.activeTab = 'bookings';
 },
 
 get selectedGroup() {
@@ -981,14 +1000,29 @@ async rejectAllForCustomer(customerId, courtId, customerName, reason) {
                 },
 
                 // { 'Court 1': 4, 'Court 2': 1 } — counts pending bookings per court
+// { 'Court 1': { count: 10, dates: [{date: '2026-10-05', count: 2}, {date: '2026-10-09', count: 1}, ...] } }
 get pendingByCourt() {
     const map = {};
     this.bookings.forEach(b => {
         if (b.booking_status !== 'Pending Verification') return;
         const courtName = b.court?.name || 'Unknown Court';
-        map[courtName] = (map[courtName] || 0) + 1;
+        if (!map[courtName]) map[courtName] = { count: 0, byDate: {} };
+        map[courtName].count++;
+        map[courtName].byDate[b.booking_date] = (map[courtName].byDate[b.booking_date] || 0) + 1;
+    });
+    Object.keys(map).forEach(court => {
+        map[court].dates = Object.entries(map[court].byDate)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([date, count]) => ({ date, count }));
     });
     return map;
+},
+
+// '2026-10-05' -> '10/05/2026'
+formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${m}/${d}/${y}`;
 },
 
             }));
