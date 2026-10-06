@@ -179,21 +179,25 @@
 
         <!-- SECTION 2: BOOKING HISTORY TABLE -->
         <div x-show="activeTab === 'bookings'" x-cloak class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-            <div class="bg-slate-950 p-4 border-b border-slate-800 flex flex-wrap gap-4 items-end">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Date</label>
-                    <input type="date" x-model="historyFilterDate" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Court</label>
-                    <select x-model="historyFilterCourt" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
-                        <option value="">All Courts</option>
-                        <template x-for="c in courts" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
-                    </select>
-                </div>
-                <button @click="historyFilterDate = ''; historyFilterCourt = ''" class="px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 rounded-lg">Clear Filters</button>
-                <button type="button" @click="showDeleteAllModal = true" class="ml-auto px-3 py-1.5 text-xs font-bold text-red-300 hover:text-white bg-red-900/40 hover:bg-red-800/60 rounded-lg border border-red-700/50">🗑 Delete All Bookings</button>
-            </div>
+    <div class="bg-slate-950 p-4 border-b border-slate-800 flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Date</label>
+            <input type="date" x-model="historyFilterDate" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Filter by Court</label>
+            <select x-model="historyFilterCourt" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400">
+                <option value="">All Courts</option>
+                <template x-for="c in courts" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Search Reference / Name</label>
+            <input type="text" x-model="historySearchQuery" placeholder="e.g. PKL-XOPCOD or name" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-white text-xs outline-none focus:border-lime-400 w-56">
+        </div>
+        <button @click="historyFilterDate = ''; historyFilterCourt = ''; historySearchQuery = ''" class="px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-white bg-slate-800 rounded-lg">Clear Filters</button>
+        <button type="button" @click="showDeleteAllModal = true" class="ml-auto px-3 py-1.5 text-xs font-bold text-red-300 hover:text-white bg-red-900/40 hover:bg-red-800/60 rounded-lg border border-red-700/50">🗑 Delete All Bookings</button>
+    </div>
 
             <!-- BULK VERIFICATION PANEL: customers with more than one pending booking -->
             <template x-if="pendingByCustomer.length > 0">
@@ -785,6 +789,7 @@ function getCsrfToken() {
                 },
 
                 historyFilterDate: '',
+                historySearchQuery: '',
                 historyFilterCourt: '',
                 revenueFilterDate: '',
                 revenueFilterCourt: '',
@@ -796,7 +801,15 @@ function getCsrfToken() {
                 },
 
                 get filteredHistory() {
-                    return this.bookings.filter(b => this.showHistoryRow(b.booking_date, b.court_id));
+                    return this.bookings.filter(b => {
+                        if (!this.showHistoryRow(b.booking_date, b.court_id)) return false;
+                        if (this.historySearchQuery.trim() === '') return true;
+                        const q = this.historySearchQuery.trim().toLowerCase();
+                        const ref = (b.booking_reference || '').toLowerCase();
+                        const name = (b.customer_name || b.customer?.full_name || '').toLowerCase();
+                        const contact = (b.customer?.contact_number || b.contact_number || '').toLowerCase();
+                        return ref.includes(q) || name.includes(q) || contact.includes(q);
+                    });
                 },
 
                 formatDate(dateStr) {

@@ -307,7 +307,7 @@
                                     <!-- Account details are shown on the confirmation page after
                                          submitting, to avoid presenting payment info twice. -->
                                     <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                                        You'll see the account details to send your payment to right after you submit this booking.
+                                        You'll see the account details to send your payment right after you submit this booking.
                                     </div>
                                 </div>
                             </div>
