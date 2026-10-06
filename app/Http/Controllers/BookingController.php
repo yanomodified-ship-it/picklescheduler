@@ -53,7 +53,7 @@ class BookingController extends Controller
             'name'              => 'required|string|max:100',
             'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
             'number_of_players' => 'required|integer|min:1|max:30',
-            'payment_method'    => 'required|in:GCash,Bank',
+            'payment_method'    => 'required|in:GCash,Maya',
         ]);
 
         // Clean up the selected hour slots: unique + sorted (e.g. ["06:00","09:00"])

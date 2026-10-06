@@ -300,7 +300,7 @@
                                         <label for="payment_method" class="mb-2 block text-sm font-semibold text-gray-700">Mode of Payment</label>
                                         <select id="payment_method" name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 outline-none focus:border-lime-500 focus:bg-white">
                                             <option value="GCash">GCash</option>
-                                            <option value="Bank">Bank Transfer</option>
+                                            <option value="Maya">Maya</option>
                                         </select>
                                     </div>
 

@@ -72,15 +72,15 @@
             <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-4 bg-amber-500/5">
     <div class="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending</div>
     <div class="text-2xl font-black text-amber-400 mt-1">{{ $pendingCount }}</div>
-        <template x-if="Object.keys(pendingByCourt).length > 0">
+        <template x-if="pendingByCourt.length > 0">
     <div class="flex flex-col gap-1.5 mt-2">
-        <template x-for="(data, courtName) in pendingByCourt" :key="courtName">
+        <template x-for="data in pendingByCourt" :key="data.courtName">
             <div>
-                <button @click="expandedPendingCourt = (expandedPendingCourt === courtName ? null : courtName)" class="w-full text-left text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:border-amber-400 px-2 py-1 rounded-lg transition" x-text="courtName + ' (' + data.count + ')'"></button>
-                <template x-if="expandedPendingCourt === courtName">
+                <button @click="expandedPendingCourt = (expandedPendingCourt === data.courtName ? null : data.courtName)" class="w-full text-left text-[9px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:border-amber-400 px-2 py-1 rounded-lg transition" x-text="data.courtName + ' (' + data.count + ')'"></button>
+                <template x-if="expandedPendingCourt === data.courtName">
                     <select @change="goToPendingDate($event.target.value)" class="mt-1 w-full text-[9px] bg-slate-950 border border-amber-500/30 rounded-lg px-2 py-1 text-amber-300 outline-none focus:border-amber-400">
                         <option value="">Select a date...</option>
-                        <template x-for="d in data.dates" :key="courtName + d.date">
+                        <template x-for="d in data.dates" :key="data.courtName + d.date">
                             <option :value="d.date" x-text="formatDateShort(d.date) + ' — ' + d.count + ' slot' + (d.count > 1 ? 's' : '')"></option>
                         </template>
                     </select>
@@ -116,8 +116,36 @@
                     </div>
                 </div>
                 <div class="text-2xl font-black text-lime-400 mt-1" x-text="calculatedRevenue"></div>
+                
             </div>
+            
         </div>
+
+        <button type="button" @click="showRevenueBreakdown = !showRevenueBreakdown" class="mt-2 text-[10px] font-bold text-lime-400/70 hover:text-lime-400 underline">
+    <span x-text="showRevenueBreakdown ? 'Hide monthly breakdown' : 'View monthly breakdown'"></span>
+</button>
+
+<template x-if="showRevenueBreakdown">
+    <div class="mt-3 pt-3 border-t border-lime-500/20">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold text-lime-400/70 uppercase">Year</span>
+            <select x-model.number="revenueBreakdownYear" class="bg-slate-950 border border-lime-500/30 rounded-lg px-2 py-1 text-[11px] text-white outline-none focus:border-lime-400">
+                <template x-for="y in availableRevenueYears" :key="y">
+                    <option :value="y" x-text="y"></option>
+                </template>
+            </select>
+        </div>
+        <div class="flex flex-col gap-1 max-h-48 overflow-y-auto pr-1">
+            <template x-for="m in monthlyRevenueBreakdown" :key="m.month">
+                <div class="flex justify-between items-center text-[11px] py-1 px-2 rounded-lg" :class="m.total > 0 ? 'bg-lime-500/10' : 'opacity-40'">
+                    <span class="text-slate-300" x-text="m.month"></span>
+                    <span class="text-slate-500" x-text="m.count + ' booking' + (m.count !== 1 ? 's' : '')"></span>
+                    <span class="font-bold text-lime-400" x-text="'₱' + m.total.toFixed(2)"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
 
         <!-- NAVIGATION CONTROLS -->
         <div class="flex space-x-3 mb-6 border-b border-slate-800 pb-3">
@@ -604,10 +632,14 @@ function buildInvoiceHtml(bookings) {
 
     return `
     <div style="width:800px;padding:48px;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #65a30d;padding-bottom:24px;margin-bottom:32px;">
-            <div>
-                <div style="font-size:24px;font-weight:800;">HomeCourt <span style="color:#65a30d;">PickleHouse</span></div>
-                <div style="font-size:12px;color:#666;margin-top:4px;">Premium Pickleball Court Rentals</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #65a30d;padding-bottom:20px;margin-bottom:32px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" style="height:56px;width:auto;" crossorigin="anonymous">
+                <div>
+                    <div style="font-size:22px;font-weight:800;">HomeCourt <span style="color:#65a30d;">PickleHouse</span></div>
+                    <div style="font-size:11px;color:#666;margin-top:2px;">Premium Pickleball Court Rentals</div>
+                    <div style="font-size:11px;color:#666;margin-top:2px;">📍 Purok 7, San Vicente, Panabo City, Panabo, Philippines, 8105</div>
+                </div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:28px;font-weight:800;letter-spacing:2px;">INVOICE</div>
@@ -739,6 +771,8 @@ function getCsrfToken() {
                 selectedGroupId: null,
                 expandedPendingCourt: null,
                 showRejectModal: false,
+                showRevenueBreakdown: false,
+                revenueBreakdownYear: new Date().getFullYear(),
                 showGroupRejectForm: false,
                 showAddCourtModal: false,
                 showWalkInModal: false,
@@ -947,6 +981,15 @@ function getCsrfToken() {
     this.bookings.forEach(b => {
         if (b.booking_status !== 'Pending Verification') return;
         if (!this.showHistoryRow(b.booking_date, b.court_id)) return;
+
+        if (this.historySearchQuery.trim() !== '') {
+            const q = this.historySearchQuery.trim().toLowerCase();
+            const ref = (b.booking_reference || '').toLowerCase();
+            const name = (b.customer_name || b.customer?.full_name || '').toLowerCase();
+            const contact = (b.customer?.contact_number || b.contact_number || '').toLowerCase();
+            if (!ref.includes(q) && !name.includes(q) && !contact.includes(q)) return;
+        }
+
         const name = b.customer_name || b.customer?.full_name || 'Unknown Customer';
         const key = b.customer_id + '-' + b.court_id + '-' + name;
         if (!groups[key]) {
@@ -1019,16 +1062,26 @@ get pendingByCourt() {
     this.bookings.forEach(b => {
         if (b.booking_status !== 'Pending Verification') return;
         const courtName = b.court?.name || 'Unknown Court';
-        if (!map[courtName]) map[courtName] = { count: 0, byDate: {} };
+        if (!map[courtName]) map[courtName] = { count: 0, byDate: {}, latestId: 0 };
         map[courtName].count++;
         map[courtName].byDate[b.booking_date] = (map[courtName].byDate[b.booking_date] || 0) + 1;
+        // Track the highest booking id in this court's pending list — a
+        // higher id means it was created more recently.
+        if (b.id > map[courtName].latestId) map[courtName].latestId = b.id;
     });
+
+    // Build each court's date breakdown (unchanged)
     Object.keys(map).forEach(court => {
         map[court].dates = Object.entries(map[court].byDate)
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([date, count]) => ({ date, count }));
     });
-    return map;
+
+    // Convert to an array and sort courts so whichever has the newest
+    // pending booking appears first — new submissions are easy to spot.
+    return Object.entries(map)
+        .map(([courtName, data]) => ({ courtName, ...data }))
+        .sort((a, b) => b.latestId - a.latestId);
 },
 
 // '2026-10-05' -> '10/05/2026'
@@ -1036,6 +1089,39 @@ formatDateShort(dateStr) {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
     return `${m}/${d}/${y}`;
+},
+
+// Every year that has at least one Verified booking, newest first
+get availableRevenueYears() {
+    const years = new Set();
+    this.bookings.forEach(b => {
+        if (b.payment_status !== 'Verified') return;
+        years.add(parseInt(b.booking_date.substring(0, 4), 10));
+    });
+    if (years.size === 0) years.add(new Date().getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+},
+
+// 12-month breakdown for the selected year
+get monthlyRevenueBreakdown() {
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const totals = Array(12).fill(0);
+    const counts = Array(12).fill(0);
+
+    this.bookings.forEach(b => {
+        if (b.payment_status !== 'Verified') return;
+        const year = parseInt(b.booking_date.substring(0, 4), 10);
+        if (year !== this.revenueBreakdownYear) return;
+        const month = parseInt(b.booking_date.substring(5, 7), 10) - 1;
+        totals[month] += parseFloat(b.total_price || b.total_amount || 0);
+        counts[month]++;
+    });
+
+    return monthNames.map((name, i) => ({
+        month: name,
+        total: totals[i],
+        count: counts[i],
+    }));
 },
 
             }));

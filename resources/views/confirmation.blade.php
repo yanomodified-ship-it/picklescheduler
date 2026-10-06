@@ -95,10 +95,10 @@
             <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 sm:p-6 mb-6 text-left shadow-inner">
     <h3 class="text-xs font-bold uppercase tracking-widest text-lime-600 mb-3">Payment Details</h3>
     
-    @if(($booking->payment_method ?? '') === 'Bank')
+    @if(($booking->payment_method ?? '') === 'Maya')
         <div class="mb-4 pb-4 border-b border-gray-200">
-            <p class="text-xs text-gray-500">Send payment via Bank Transfer:</p>
-            <p class="text-lg sm:text-xl font-black text-lime-600 mt-1">BDO: 001234567890</p>
+            <p class="text-xs text-gray-500">Send payment via Maya:</p>
+            <p class="text-lg sm:text-xl font-black text-lime-600 mt-1">0912 345 6789</p>
             <p class="text-xs font-semibold text-gray-600">Account Name: HomeCourt PickleHouse</p>
         </div>
     @else
