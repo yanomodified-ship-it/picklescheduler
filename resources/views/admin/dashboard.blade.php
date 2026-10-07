@@ -227,10 +227,13 @@
         <button type="button" @click="showDeleteAllModal = true" class="ml-auto px-3 py-1.5 text-xs font-bold text-red-300 hover:text-white bg-red-900/40 hover:bg-red-800/60 rounded-lg border border-red-700/50">🗑 Delete All Bookings</button>
     </div>
 
+    
+
             <!-- BULK VERIFICATION PANEL: customers with more than one pending booking -->
             <template x-if="pendingByCustomer.length > 0">
                 <div class="p-4 border-b border-slate-800 bg-amber-500/5">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Multiple Pending Bookings — Verify Together</h4>
+                    
                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <template x-for="group in pendingByCustomer" :key="group.customer_id + '-' + group.court_id + '-' + group.customer_name">
     <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2">
@@ -246,6 +249,26 @@
                     </div>
                 </div>
             </template>
+
+            <!-- RECENTLY CONFIRMED PANEL: quick-download invoices right after verifying -->
+<template x-if="recentlyConfirmed.length > 0">
+    <div class="p-4 border-b border-slate-800 bg-emerald-500/5">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3">Recently Confirmed — Quick Download</h4>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <template x-for="group in recentlyConfirmed" :key="group.baseRef">
+                <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-3 flex flex-col gap-2">
+                    <div>
+                        <div class="text-sm font-bold text-white" x-text="group.customer_name"></div>
+                        <div class="text-[11px] text-slate-400" x-text="group.bookings.length + ' slot' + (group.bookings.length > 1 ? 's' : '') + ' — ' + group.court_name"></div>
+                        <div class="text-[11px] text-slate-500" x-text="formatDate(group.booking_date)"></div>
+                        <div class="text-[11px] text-emerald-400 font-bold mt-0.5" x-text="'₱' + group.total.toFixed(2)"></div>
+                    </div>
+                    <button @click="downloadInvoice(group.bookings)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg">📄 Download Invoice</button>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-slate-300">
@@ -1015,6 +1038,33 @@ goToPendingDate(date) {
     this.activeTab = 'bookings';
 },
 
+// Groups the 5 most recently confirmed bookings by their base reference
+// (so a 3-slot booking shows as ONE entry, not three), newest first.
+get recentlyConfirmed() {
+    const groups = {};
+    this.bookings.forEach(b => {
+        if (b.payment_status !== 'Verified') return;
+        const baseRef = b.booking_reference.replace(/-\d+$/, '');
+        if (!groups[baseRef]) {
+            groups[baseRef] = {
+                baseRef,
+                customer_name: b.customer_name || b.customer?.full_name || 'N/A',
+                court_name: b.court?.name || 'N/A',
+                booking_date: b.booking_date,
+                bookings: [],
+                total: 0,
+                maxId: 0,
+            };
+        }
+        groups[baseRef].bookings.push(b);
+        groups[baseRef].total += parseFloat(b.total_price || b.total_amount || 0);
+        if (b.id > groups[baseRef].maxId) groups[baseRef].maxId = b.id;
+    });
+    return Object.values(groups)
+        .sort((a, b) => b.maxId - a.maxId)
+        .slice(0, 3);
+},
+
 get selectedGroup() {
     if (this.selectedGroupId === null) return null;
     return this.pendingByCustomer.find(g => (g.customer_id + '-' + g.court_id + '-' + g.customer_name) === this.selectedGroupId) || null;
@@ -1095,7 +1145,7 @@ formatDateShort(dateStr) {
 get availableRevenueYears() {
     const years = new Set();
     this.bookings.forEach(b => {
-        if (b.payment_status !== 'Verified') return;
+        if (!b.booking_date) return;
         years.add(parseInt(b.booking_date.substring(0, 4), 10));
     });
     if (years.size === 0) years.add(new Date().getFullYear());
