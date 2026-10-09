@@ -46,15 +46,18 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'booking_date'      => 'required|date|after_or_equal:today',
-            'court_id'          => 'required|exists:courts,id',
-            'slots'             => 'required|array|min:1',
-            'slots.*'           => 'date_format:H:i|after_or_equal:05:00',
-            'name'              => 'required|string|max:100',
-            'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'number_of_players' => 'required|integer|min:1|max:30',
-            'payment_method'    => 'required|in:GCash,Maya',
-        ]);
+    'booking_date'      => 'required|date|after_or_equal:today',
+    'court_id'          => 'required|exists:courts,id',
+    'slots'             => 'required|array|min:1',
+    'slots.*'           => 'date_format:H:i|after_or_equal:05:00',
+    'name'              => 'required|string|max:100',
+    'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
+    'number_of_players' => 'required|integer|min:1|max:30',
+    'payment_method'    => 'required|in:GCash,Maya',
+    'agree_terms'       => 'accepted',
+], [
+    'agree_terms.accepted' => 'Please tick the box to agree to the booking terms and privacy policy.',
+]);
 
         // Clean up the selected hour slots: unique + sorted (e.g. ["06:00","09:00"])
         $slots = collect($validated['slots'])
