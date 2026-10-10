@@ -42,6 +42,16 @@ class Booking extends Model
      * Prevents double bookings by checking for overlapping time slots.
      * Overlap condition: (StartA < EndB) AND (EndA > StartB)
      */
+
+        /**
+     * Hourly rate by the hour the slot STARTS.
+     * 4:00 AM – 4:59 PM = 200, 5:00 PM – 1:59 AM = 300
+     */
+    public static function rateForHour(int $hour): int
+    {
+        return ($hour >= 4 && $hour < 17) ? 200 : 300;
+    }
+    
     public static function hasOverlap($courtId, $date, $startTime, $endTime, $ignoreBookingId = null): bool
     {
         return self::where('court_id', $courtId)

@@ -31,7 +31,7 @@ class Court extends Model
     public function getIsFullyBookedAttribute(): bool
 {
     // Your system has 17 hourly time slots per day (6:00 AM to 10:00 PM)
-    $totalDailySlots = 17;
+    $totalDailySlots = 22;
 
     // Only CONFIRMED bookings should count as taking up a slot.
     // "Pending" bookings are still awaiting payment verification and

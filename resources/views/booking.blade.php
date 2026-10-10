@@ -500,17 +500,17 @@
     const court = this.courts.find(c => String(c.id) === String(this.courtId));
     if (!court) return [];
 
-    let startHour = parseInt((court.operating_hours_start || '05:00').substring(0, 2), 10);
-    let endHour = parseInt((court.operating_hours_end || '23:00').substring(0, 2), 10);
+    let startHour = parseInt((court.operating_hours_start || '04:00').substring(0, 2), 10);
+    let endHour = parseInt((court.operating_hours_end || '01:00').substring(0, 2), 10);
 
-    // If close time is 00:00 (midnight), treat it as 24
-    if (endHour === 0 && (court.operating_hours_end || '').startsWith('00')) {
-        endHour = 24;
+    // Closing earlier than opening means it runs past midnight (04:00 -> 01:00 becomes 4 -> 25)
+    if (endHour < startHour) {
+        endHour += 24;
     }
 
     let slots = [];
-    for (let i = startHour; i <= endHour; i++) {
-        let hourString = String(i === 24 ? 0 : i).padStart(2, '0');
+        for (let i = startHour; i <= endHour; i++) {
+        let hourString = String(i % 24).padStart(2, '0');
         slots.push(hourString + ':00');
     }
     return slots;
@@ -619,14 +619,18 @@
 
                 get formattedTime() {
                     if (this.selectedSlots.length === 0) return 'Not selected';
-                    const sorted = [...this.selectedSlots].sort();
+                                        const dayOrder = s => {
+                        const h = parseInt(s.split(':')[0], 10);
+                        return h < 4 ? h + 24 : h;
+                    };
+                    const sorted = [...this.selectedSlots].sort((a, b) => dayOrder(a) - dayOrder(b));
                     return sorted.map(slot => this.getSlotRangeLabel(slot)).join(', ');
                 },
 
                 get totalPrice() {
                     return this.selectedSlots.reduce((total, slot) => {
                         const hour = parseInt(slot.split(':')[0], 10);
-                        const rate = (hour >= 5 && hour < 17) ? 150 : 300;
+                        const rate = (hour >= 4 && hour < 17) ? 200 : 300;
                         return total + rate;
                     }, 0);
                 },

@@ -49,7 +49,7 @@ class BookingController extends Controller
     'booking_date'      => 'required|date|after_or_equal:today',
     'court_id'          => 'required|exists:courts,id',
     'slots'             => 'required|array|min:1',
-    'slots.*'           => 'date_format:H:i|after_or_equal:05:00',
+    'slots.*'           => 'date_format:H:i',
     'name'              => 'required|string|max:100',
     'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
     'number_of_players' => 'required|integer|min:1|max:30',
@@ -79,15 +79,21 @@ class BookingController extends Controller
                 ->withInput();
         }
 
-        $startHour = (int) substr($court->operating_hours_start, 0, 2);
+                $startHour = (int) substr($court->operating_hours_start, 0, 2);
         $endHour   = (int) substr($court->operating_hours_end, 0, 2);
 
-        if ($endHour === 0 && str_starts_with($court->operating_hours_end, '00')) {
-            $endHour = 24;
+        // Closing earlier than opening means it runs past midnight (e.g. 04:00 -> 01:00)
+        if ($endHour < $startHour) {
+            $endHour += 24;
         }
 
         foreach ($slots as $slot) {
             $slotHour = (int) substr($slot, 0, 2);
+
+            // 00:00 and 01:00 slots count as after 11 PM of the same booking day
+            if ($slotHour < $startHour) {
+                $slotHour += 24;
+            }
 
             if ($slotHour < $startHour || $slotHour > $endHour) {
                 return back()
@@ -128,7 +134,9 @@ class BookingController extends Controller
                 Court::where('id', $validated['court_id'])->lockForUpdate()->firstOrFail();
 
                 foreach ($slots as $slot) {
-                    $slotEnd = Carbon::parse($slot)->addHour()->format('H:i');
+                    $slotEnd = ((int) substr($slot, 0, 2) === 23)
+                        ? '23:59'
+                        : Carbon::parse($slot)->addHour()->format('H:i');
 
                     if (Booking::hasOverlap($validated['court_id'], $validated['booking_date'], $slot, $slotEnd)) {
                         throw new \RuntimeException("The {$slot} slot is already booked for this court. Please choose another time or court.");
@@ -139,7 +147,7 @@ class BookingController extends Controller
 
                 foreach ($slots as $index => $slot) {
                     $slotStartHour = (int) Carbon::parse($slot)->format('H');
-                    $rate = ($slotStartHour >= 5 && $slotStartHour < 17) ? 150 : 300;
+                    $rate = Booking::rateForHour($slotStartHour);
 
                     $slotEnd = ($slotStartHour === 23)
                         ? '23:59'
@@ -197,7 +205,7 @@ class BookingController extends Controller
         $bookings = Booking::query()
             ->with(['court', 'customer'])
             ->where('booking_reference', 'LIKE', $booking_reference . '%')
-            ->orderBy('start_time')
+            ->orderByRaw("CASE WHEN start_time < '04:00:00' THEN 1 ELSE 0 END, start_time")
             ->get();
 
         if ($bookings->isEmpty()) {

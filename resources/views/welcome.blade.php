@@ -330,10 +330,10 @@
                                 </span>
                                 <div>
                                     <p class="font-bold text-[#1B2B1C]">Day slot</p>
-                                    <p class="text-sm text-[#1B2B1C]/70">5:00 AM – 4:00 PM</p>
+                                    <p class="text-sm text-[#1B2B1C]/70">4:00 AM – 5:00 PM</p>
                                 </div>
                             </div>
-                            <p class="hc-display mt-8 text-6xl font-extrabold text-[#2F5D34]">₱150</p>
+                            <p class="hc-display mt-8 text-6xl font-extrabold text-[#2F5D34]">₱200</p>
                             <p class="mt-1 text-[#1B2B1C]/70">per hour</p>
                         </div>
                         <a href="{{ route('booking.create') }}" class="mt-8 inline-flex items-center justify-center rounded-full bg-[#2F5D34] px-6 py-3 font-bold text-white transition hover:bg-[#1F3F24]">
@@ -352,7 +352,7 @@
                                 </span>
                                 <div>
                                     <p class="font-bold text-white">Night slot</p>
-                                    <p class="text-sm text-[#CFDDAE]">5:00 PM – 12:00 AM</p>
+                                    <p class="text-sm text-[#CFDDAE]">5:00 PM – 2:00 AM</p>
                                 </div>
                             </div>
                             <p class="hc-display mt-8 text-6xl font-extrabold text-[#E4F03A]">₱300</p>
@@ -414,7 +414,7 @@
                         <svg class="h-5 w-5 text-[#2F5D34]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        <span>Courts open 5:00 AM to 12:00 AM</span>
+                        <span>Courts open 4:00 AM to 2:00 AM</span>
                     </p>
                     <div class="flex flex-col gap-3 sm:flex-row">
                         <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener noreferrer"

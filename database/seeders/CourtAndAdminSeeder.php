@@ -30,8 +30,8 @@ class CourtAndAdminSeeder extends Seeder
                     'description' => "Professional {$type} pickleball court.",
                     'status' => 'active',
                     'price_per_hour' => 500.00,
-                    'operating_hours_start' => '06:00:00',
-                    'operating_hours_end' => '22:00:00',
+                    'operating_hours_start' => '04:00:00',
+                    'operating_hours_end' => '01:00:00',
                 ]
             );
         }
