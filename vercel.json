@@ -10,7 +10,21 @@
   },
   "routes": [
     {
-      "src": "/(.*\\.(?:css|js|map|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|txt))$",
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/(?:\\.env.*|\\.git.*|composer\\.(?:json|lock)|package(?:-lock)?\\.json|artisan|vite\\.config\\.js|(?:storage|vendor|database|bootstrap|config|app|routes|resources|tests)/.*)$",
+      "status": 404
+    },
+    {
+      "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|txt))$",
       "dest": "/$1"
     },
     {

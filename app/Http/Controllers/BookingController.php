@@ -201,10 +201,18 @@ class BookingController extends Controller
      */
     public function confirmation(string $booking_reference): View
     {
-        // Query all slots using LIKE to catch base reference and appended suffixes (e.g. PKL-4F8A21, PKL-4F8A21-1, PKL-4F8A21-2)
+        // Only accept a complete, correctly formatted reference such as PKL-4F8A21.
+        // Without this, a partial address like /confirmation/PKL- would match many
+        // bookings and show a stranger's name and phone number.
+        abort_unless(preg_match('/^PKL-[A-Z0-9]{6}$/', $booking_reference), 404);
+
+        // The booking itself (PKL-4F8A21) plus its multi-slot siblings (PKL-4F8A21-1, -2, ...)
         $bookings = Booking::query()
             ->with(['court', 'customer'])
-            ->where('booking_reference', 'LIKE', $booking_reference . '%')
+            ->where(function ($query) use ($booking_reference) {
+                $query->where('booking_reference', $booking_reference)
+                      ->orWhere('booking_reference', 'LIKE', $booking_reference . '-%');
+            })
             ->orderByRaw("CASE WHEN start_time < '04:00:00' THEN 1 ELSE 0 END, start_time")
             ->get();
 

@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\AdminCourtController;
 Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
-Route::get('/confirmation/{booking_reference}', [BookingController::class, 'confirmation'])->name('bookings.confirmation');
+Route::get('/confirmation/{booking_reference}', [BookingController::class, 'confirmation'])->middleware('throttle:30,1')->name('bookings.confirmation');
 
 // --- KEEP ALIVE ROUTE ---
 Route::get('/api/keep-alive', function () {
