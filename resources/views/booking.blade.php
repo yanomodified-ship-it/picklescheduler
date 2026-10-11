@@ -560,7 +560,14 @@
                 },
 
                 isSlotBooked(slotTime) {
-                    if (this.isSlotPast(slotTime)) return true;
+                    return this.activeBookingsForSelected.some(b => {
+                        const start = b.start_time.substring(0, 5);
+                        const end = b.end_time.substring(0, 5);
+                        const status = (b.booking_status || '').toLowerCase();
+                        const isTaken = status === 'confirmed' || status.includes('pending');
+                        return isTaken && slotTime >= start && slotTime < end;
+                    });
+                },
 
                 // Distinguishes a "Pending" slot from a fully "Confirmed" one so the
                 // UI can label it correctly instead of just showing "Booked".
