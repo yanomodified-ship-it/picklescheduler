@@ -550,17 +550,17 @@
                 // A slot is unavailable to new customers if it's already CONFIRMED
                 // or still PENDING verification (prevents two customers submitting
                 // the same slot while the first is awaiting approval).
-                isSlotBooked(slotTime) {
-                    return this.activeBookingsForSelected.some(b => {
-                        const start = b.start_time.substring(0, 5);
-                        const end = b.end_time.substring(0, 5);
-                        const status = (b.booking_status || '').toLowerCase();
-                        // Actual status string is "Pending Verification", so match with
-                        // includes() rather than an exact equality check.
-                        const isTaken = status === 'confirmed' || status.includes('pending');
-                        return isTaken && slotTime >= start && slotTime < end;
-                    });
+                isSlotPast(slotTime) {
+                    // Current time in the Philippines, regardless of the visitor's device timezone
+                    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+                    const [h] = slotTime.split(':').map(Number);
+                    const slotStart = new Date(`${this.bookingDate}T00:00:00`);
+                    slotStart.setHours(h < 4 ? h + 24 : h, 0, 0, 0);   // 00:00 and 01:00 belong to the same night
+                    return slotStart.getTime() + 3600000 <= now.getTime();
                 },
+
+                isSlotBooked(slotTime) {
+                    if (this.isSlotPast(slotTime)) return true;
 
                 // Distinguishes a "Pending" slot from a fully "Confirmed" one so the
                 // UI can label it correctly instead of just showing "Booked".

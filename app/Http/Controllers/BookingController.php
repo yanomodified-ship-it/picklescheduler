@@ -65,12 +65,11 @@ class BookingController extends Controller
             ->sort()
             ->values();
 
-        // STEP 13: Confirm the court is active and every slot falls within its
-        // operating hours. This mirrors the frontend's own slot-generating
-        // loop in booking.blade.php exactly: it compares whole hours, and it
-        // is INCLUSIVE of the closing hour itself (a court closing at 23:00
-        // still offers a bookable 11 PM–12 AM slot), and a closing hour of
-        // "00:00" means "open through the end of the day" (treated as 24).
+                // STEP 13: Confirm the court is active and every slot falls within its
+        // operating hours. Hours are compared as whole hours and the closing
+        // hour is INCLUSIVE (a court closing at 01:00 still offers the
+        // 1 AM - 2 AM slot). A closing time earlier than the opening time
+        // means the court runs past midnight.
         $court = Court::findOrFail($validated['court_id']);
 
         if ($court->status !== 'active') {
@@ -79,7 +78,7 @@ class BookingController extends Controller
                 ->withInput();
         }
 
-                $startHour = (int) substr($court->operating_hours_start, 0, 2);
+        $startHour = (int) substr($court->operating_hours_start, 0, 2);
         $endHour   = (int) substr($court->operating_hours_end, 0, 2);
 
         // Closing earlier than opening means it runs past midnight (e.g. 04:00 -> 01:00)
@@ -98,6 +97,24 @@ class BookingController extends Controller
             if ($slotHour < $startHour || $slotHour > $endHour) {
                 return back()
                     ->withErrors(['time_slot' => "The {$slot} slot is outside this court's operating hours."])
+                    ->withInput();
+            }
+        }
+
+        // Reject slots that have already ended (Philippine time)
+        $now = Carbon::now(config('app.timezone'));
+        foreach ($slots as $slot) {
+            $slotHour  = (int) substr($slot, 0, 2);
+            $slotStart = Carbon::parse($validated['booking_date'] . ' ' . $slot, config('app.timezone'));
+
+            // 00:00 and 01:00 belong to the night that started on booking_date
+            if ($slotHour < $startHour) {
+                $slotStart->addDay();
+            }
+
+            if ($slotStart->copy()->addHour()->lte($now)) {
+                return back()
+                    ->withErrors(['time_slot' => "The {$slot} slot has already passed. Please choose a later time."])
                     ->withInput();
             }
         }
@@ -201,17 +218,17 @@ class BookingController extends Controller
      */
     public function confirmation(string $booking_reference): View
     {
-        // Only accept a complete, correctly formatted reference such as PKL-4F8A21.
-        // Without this, a partial address like /confirmation/PKL- would match many
-        // bookings and show a stranger's name and phone number.
-        abort_unless(preg_match('/^PKL-[A-Z0-9]{6}$/', $booking_reference), 404);
+                // Only accept a full, well-formed reference (blocks "PKL-" or "P" wildcard guessing)
+        if (! preg_match('/^PKL-[A-Z0-9]{6}$/', $booking_reference)) {
+            abort(404);
+        }
 
         // The booking itself (PKL-4F8A21) plus its multi-slot siblings (PKL-4F8A21-1, -2, ...)
         $bookings = Booking::query()
             ->with(['court', 'customer'])
-            ->where(function ($query) use ($booking_reference) {
-                $query->where('booking_reference', $booking_reference)
-                      ->orWhere('booking_reference', 'LIKE', $booking_reference . '-%');
+            ->where(function ($q) use ($booking_reference) {
+                $q->where('booking_reference', $booking_reference)
+                  ->orWhere('booking_reference', 'LIKE', $booking_reference . '-%');
             })
             ->orderByRaw("CASE WHEN start_time < '04:00:00' THEN 1 ELSE 0 END, start_time")
             ->get();
@@ -233,7 +250,12 @@ class BookingController extends Controller
     private function generateBookingReference(): string
     {
         do {
-            $reference = 'PKL-' . strtoupper(Str::random(6));
+                        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0, O, 1 or I
+            $code = '';
+            for ($i = 0; $i < 6; $i++) {
+                $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+            $reference = 'PKL-' . $code;
 
             $exists = Booking::query()
                 ->where('booking_reference', 'LIKE', $reference . '%')

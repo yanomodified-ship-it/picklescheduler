@@ -16,7 +16,7 @@ Route::get('/confirmation/{booking_reference}', [BookingController::class, 'conf
 Route::get('/api/keep-alive', function () {
     \Illuminate\Support\Facades\DB::select('SELECT 1');
     return response()->json(['status' => 'alive']);
-});
+})->middleware('throttle:12,1');
 
 // --- AUTH REDIRECT BRIDGE ---
 // to protected pages redirect properly instead of erroring.
