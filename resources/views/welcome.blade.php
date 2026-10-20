@@ -130,7 +130,6 @@
 <div id="hc-loader" role="status" aria-live="polite" aria-label="Loading HomeCourt PickleHouse">
     <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse">
     <div class="hc-ball-wrap"><div class="hc-ball"></div><div class="hc-shadow"></div></div>
-    <p>Getting your court ready</p>
 </div>
 
 <script>
