@@ -513,7 +513,7 @@
         {{-- Footer --}}
         <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.<span style="display:block;margin-top:4px;font-size:12px;opacity:.7;">Built by <strong>jondev</strong></span></p>
+                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
 
                 <div class="flex items-center gap-6">
                     <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
@@ -648,5 +648,10 @@
             </div>
         </div>
     </div>
+    <script>
+    console.log('%cHomeCourt PickleHouse%c  built by jondev',
+        'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
+        'background:#E4F03A;color:#1B2B1C;padding:4px 8px;border-radius:0 4px 4px 0;font-weight:bold');
+</script>
 </body>
 </html>
