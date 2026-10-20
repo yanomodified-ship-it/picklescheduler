@@ -355,10 +355,5 @@
             </div>
         </div>
     </div>
-<script>
-    console.log('%cHomeCourt PickleHouse%c  built by jondev',
-        'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
-        'background:#E4F03A;color:#1B2B1C;padding:4px 8px;border-radius:0 4px 4px 0;font-weight:bold');
-</script>
 </body>
 </html>

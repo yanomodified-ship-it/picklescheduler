@@ -95,14 +95,14 @@
 </head>
 
 @php
-    // Single source for the address: used in the hero, the map, and the directions link.
+    
     $address = 'Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105';
 
-    // Exact pin from the owner's Google Maps link (HomeCourt Pickle House).
+    
     $lat = 7.3144437;
     $lng = 125.6915676;
 
-    // Icon markup is static, trusted SVG (24x24, stroke style).
+    
     $rules = [
         ['icon' => '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 'title' => 'Arrive Early', 'text' => 'Please arrive before your scheduled booking time.'],
         ['icon' => '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>', 'title' => 'Have Fun', 'text' => 'Enjoy your time on the court and bring your best energy!'],
@@ -138,7 +138,7 @@
     var loader = document.getElementById('hc-loader');
     if (!loader) return;
 
-    // Already shown during this visit? Skip it.
+    
     try {
         if (sessionStorage.getItem('hc_loaded') === '1') { loader.remove(); return; }
     } catch (e) {}
@@ -159,7 +159,7 @@
     if (document.readyState === 'complete') hide();
     else window.addEventListener('load', hide);
 
-    setTimeout(hide, MAX); // never keep anyone waiting longer than this
+    setTimeout(hide, MAX); 
 })();
 </script>
 
@@ -318,7 +318,7 @@
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse ($courts as $court)
                     @php
-                        // Read directly from classification column and normalize to lowercase for Alpine filtering
+                        
                         $type = strtolower($court->classification ?? 'outdoor');
                     @endphp
 
@@ -648,10 +648,5 @@
             </div>
         </div>
     </div>
-<script>
-    console.log('%cHomeCourt PickleHouse%c  built by jondev',
-        'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
-        'background:#E4F03A;color:#1B2B1C;padding:4px 8px;border-radius:0 4px 4px 0;font-weight:bold');
-</script>
 </body>
 </html>
