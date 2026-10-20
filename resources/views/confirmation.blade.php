@@ -78,7 +78,7 @@
         </symbol>
     </svg>
 
-    <!-- Navigation Header (kept pure white: the logo file has a white background) -->
+    {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(27,43,28,0.08)]">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
@@ -97,7 +97,7 @@
 
     <main class="flex-grow">
 
-        <!-- Success panel (echoes the home page hero) -->
+        {{-- Success panel (echoes the home page hero) --}}
         <section class="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] md:mx-6 md:rounded-[4rem]">
             <div class="hc-layer" aria-hidden="true">
                 <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="left:6%;top:14px;color:#E4F03A;animation-delay:-1.5s"><use href="#hc-ball"/></svg>
@@ -113,7 +113,7 @@
                 <h1 class="hc-display mt-6 text-3xl font-extrabold text-[#1B2B1C] sm:text-4xl md:text-5xl">Booking Request Submitted!</h1>
                 <p class="mt-3 text-[#1B2B1C]/80">Thank you for choosing PickleHouse.</p>
 
-                <!-- Booking Reference (ticket-stub style) -->
+                {{-- Booking Reference (ticket-stub style) --}}
                 <div class="mt-8 rounded-[1.5rem] border-2 border-dashed border-[#2F5D34]/50 bg-white/85 p-6">
                     <p class="text-sm font-semibold text-[#1B2B1C]/70">Your booking reference</p>
                     <p class="hc-display mt-2 break-all text-4xl font-extrabold tracking-wider text-[#2F5D34] sm:text-5xl">{{ $booking->booking_reference }}</p>
@@ -124,7 +124,7 @@
 
         <div class="mx-auto w-full max-w-2xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
 
-            <!-- Booking Details -->
+            {{-- Booking Details --}}
             <div class="rounded-[2rem] border border-[#1B2B1C]/10 bg-white p-6 sm:p-8">
                 <h2 class="hc-display mb-5 text-xl font-bold text-[#1B2B1C]">Booking details</h2>
                 <dl class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
@@ -165,7 +165,7 @@
                 </dl>
             </div>
 
-            <!-- Payment Details -->
+            {{-- Payment Details --}}
             <div class="hc-on-dark rounded-[2rem] bg-[#1F3F24] p-6 text-left sm:p-8">
                 <h2 class="hc-display text-xl font-bold text-white">Payment details</h2>
 
@@ -197,7 +197,7 @@
                 </div>
             </div>
 
-            <!-- Book Again Button -->
+            {{-- Book Again Button --}}
             <div class="text-center">
                 <a href="{{ route('booking.create') }}" class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] px-8 py-3.5 font-bold text-white transition hover:bg-[#1F3F24] sm:w-auto">
                     Book Again
@@ -217,16 +217,16 @@
          @open-house-rules.window="lastFocus = document.activeElement; open = 'rules'"
          @keydown.escape.window="open = null">
 
-        <!-- Footer -->
+        {{-- Footer --}}
         <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+                                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.<span style="display:block;margin-top:4px;font-size:12px;opacity:.7;">Built by <strong>jondev</strong></span></p>
 
                 <div class="flex items-center gap-6">
                     <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
                     <button type="button" @click="$dispatch('open-privacy')" class="underline-offset-4 transition-colors hover:text-white hover:underline">Privacy Policy</button>
 
-                    <!-- Facebook Social Link -->
+                    {{-- Facebook Social Link --}}
                     <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="transition-colors hover:text-white">
                         <svg width="20" height="20" class="fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                     </a>
@@ -234,7 +234,7 @@
             </div>
         </footer>
 
-        <!-- House Rules popup -->
+        {{-- House Rules popup --}}
         <div class="hc-modal-overlay" x-show="open === 'rules'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rules-title">
                 <div class="hc-modal-head">
@@ -290,7 +290,7 @@
             </div>
         </div>
 
-        <!-- Privacy Policy popup -->
+        {{-- Privacy Policy popup --}}
         <div class="hc-modal-overlay" x-show="open === 'privacy'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
                 <div class="hc-modal-head">
@@ -355,6 +355,10 @@
             </div>
         </div>
     </div>
-
+<script>
+    console.log('%cHomeCourt PickleHouse%c  built by jondev',
+        'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
+        'background:#E4F03A;color:#1B2B1C;padding:4px 8px;border-radius:0 4px 4px 0;font-weight:bold');
+</script>
 </body>
 </html>

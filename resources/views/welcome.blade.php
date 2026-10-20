@@ -1,3 +1,4 @@
+<!-- Website by jondev -->
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -112,7 +113,7 @@
 
 <body class="flex min-h-screen flex-col bg-[#F6F8EE] text-[#1B2B1C] antialiased">
 
-<!-- Loading screen -->
+{{-- Loading screen --}}
 <style>
     #hc-loader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#ffffff;transition:opacity .5s ease,visibility .5s ease}
     #hc-loader.hc-hide{opacity:0;visibility:hidden}
@@ -179,7 +180,7 @@
         </symbol>
     </svg>
 
-    <!-- Navigation Header (kept pure white: the logo file has a white background) -->
+    {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md transition-shadow duration-300"
             :class="scrolled ? 'shadow-[0_8px_24px_-12px_rgba(27,43,28,0.35)]' : 'shadow-[0_1px_0_rgba(27,43,28,0.08)]'"
             x-data="{ mobileMenu: false, scrolled: false }"
@@ -189,7 +190,7 @@
                 <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
             </a>
 
-            <!-- Desktop Navigation -->
+            {{-- Desktop Navigation --}}
             <nav class="hidden items-center gap-9 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
                 <a href="#courts" class="group relative py-1 transition hover:text-[#2F5D34]">Courts<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
                 <a href="#rates" class="group relative py-1 transition hover:text-[#2F5D34]">Rates<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
@@ -206,7 +207,7 @@
                 </a>
             </div>
 
-            <!-- Mobile Menu Button -->
+            {{-- Mobile Menu Button --}}
             <button type="button" @click="mobileMenu = !mobileMenu" :aria-expanded="mobileMenu" aria-label="Toggle menu" class="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B2B1C]/15 text-[#1B2B1C]/80 transition hover:bg-[#E5ECD2] hover:text-[#1B2B1C] md:hidden">
                 <svg x-show="!mobileMenu" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -217,7 +218,7 @@
             </button>
         </div>
 
-        <!-- Mobile Navigation -->
+        {{-- Mobile Navigation --}}
         <nav x-show="mobileMenu" x-cloak
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 -translate-y-2"
@@ -235,9 +236,9 @@
 
     <main class="flex-grow">
 
-        <!-- Hero Section -->
+        {{-- Hero Section --}}
         <section class="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] md:mx-6 md:rounded-[4rem]">
-            <!-- Decoration layer: big ball + floating pickleballs (motion is switched off for reduced-motion users) -->
+            {{-- Decoration layer: big ball + floating pickleballs (motion is switched off for reduced-motion users) --}}
             <div class="hc-layer" aria-hidden="true">
                 <svg class="hc-float hc-hero-ball" viewBox="0 0 200 200" width="480" height="480"><use href="#hc-ball"/></svg>
                 <svg class="hc-float hc-hop hc-sm-up" viewBox="0 0 200 200" width="40" height="40" style="left:4%;top:12px;color:#F6F8EE;opacity:.8;animation-delay:-1s"><use href="#hc-ball"/></svg>
@@ -277,7 +278,7 @@
             </div>
         </section>
 
-        <!-- Courts Section -->
+        {{-- Courts Section --}}
         <section id="courts" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data="{ courtFilter: 'outdoor' }">
             <div class="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                 <div>
@@ -285,7 +286,7 @@
                     <p class="mt-3 max-w-md text-[#1B2B1C]/75">Select between our available outdoor and indoor courts below.</p>
                 </div>
 
-                <!-- Dynamic Filter Buttons -->
+                {{-- Dynamic Filter Buttons --}}
                 <div class="inline-flex self-start rounded-full bg-[#E5ECD2] p-1.5 text-sm font-bold md:self-auto" role="group" aria-label="Court type">
                     <button
                         type="button"
@@ -313,7 +314,7 @@
                 </div>
             </div>
 
-            <!-- Courts Grid -->
+            {{-- Courts Grid --}}
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse ($courts as $court)
                     @php
@@ -326,7 +327,7 @@
                         x-cloak
                         class="flex flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[#1B2B1C]/10 bg-white transition hover:-translate-y-1 hover:border-[#2F5D34]/40">
                         <div>
-                            <!-- Top-down court diagram with a ball in play -->
+                            {{-- Top-down court diagram with a ball in play --}}
                             <div class="relative bg-[#2F5D34] px-6 py-8">
                                 <svg viewBox="0 0 160 100" class="mx-auto block h-auto w-full max-w-[14rem] text-white/80" aria-hidden="true">
                                     <use href="#hc-court"/>
@@ -340,7 +341,7 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <h3 class="hc-display text-xl font-bold text-[#1B2B1C]">{{ $court->name }}</h3>
 
-                                    <!-- Dynamic Status Badge -->
+                                    {{-- Dynamic Status Badge --}}
                                     @if($court->is_fully_booked)
                                         <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">Fully Booked</span>
                                     @else
@@ -354,7 +355,7 @@
                             </div>
                         </div>
                         <div class="p-5 pt-0">
-                            <!-- Dynamic Booking Button -->
+                            {{-- Dynamic Booking Button --}}
                             @if($court->is_fully_booked)
                                 <button disabled class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-gray-200 bg-gray-100 py-2.5 text-sm font-bold text-gray-500">
                                     Unavailable
@@ -375,7 +376,7 @@
             </div>
         </section>
 
-        <!-- Rates Section -->
+        {{-- Rates Section --}}
         <section id="rates" class="scroll-mt-24 bg-[#E5ECD2]">
             <div class="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:py-24 lg:grid-cols-[1fr_1.6fr] lg:items-center">
                 <div>
@@ -386,7 +387,7 @@
                 </div>
 
                 <div class="grid gap-5 sm:grid-cols-2">
-                    <!-- Daytime Rate -->
+                    {{-- Daytime Rate --}}
                     <div class="flex flex-col justify-between rounded-[2rem] border-2 border-[#1B2B1C]/10 bg-white p-8">
                         <div>
                             <div class="flex items-center gap-3">
@@ -408,7 +409,7 @@
                         </a>
                     </div>
 
-                    <!-- Night-time Rate -->
+                    {{-- Night-time Rate --}}
                     <div class="hc-on-dark flex flex-col justify-between rounded-[2rem] bg-[#1F3F24] p-8">
                         <div>
                             <div class="flex items-center gap-3">
@@ -433,7 +434,7 @@
             </div>
         </section>
 
-        <!-- Rules Section -->
+        {{-- Rules Section --}}
         <section id="rules" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data>
             <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Play fair. Play safe.</h2>
             <div class="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -452,9 +453,9 @@
             </p>
         </section>
 
-        <!-- Find Us Section -->
+        {{-- Find Us Section --}}
         <section id="find-us" class="relative mx-3 mb-6 scroll-mt-24 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] px-6 py-16 md:mx-6 md:rounded-[4rem] md:py-20">
-            <!-- Decoration layer: floating pickleballs in the empty top and bottom bands -->
+            {{-- Decoration layer: floating pickleballs in the empty top and bottom bands --}}
             <div class="hc-layer" aria-hidden="true">
                 <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="left:6%;top:12px;color:#E4F03A;animation-delay:-1.5s"><use href="#hc-ball"/></svg>
                 <svg class="hc-float hc-drift hc-md-up" viewBox="0 0 200 200" width="48" height="48" style="right:8%;top:16px;color:#F6F8EE;opacity:.8;animation-delay:-4s"><use href="#hc-ball"/></svg>
@@ -509,16 +510,16 @@
          @open-house-rules.window="lastFocus = document.activeElement; open = 'rules'"
          @keydown.escape.window="open = null">
 
-        <!-- Footer -->
+        {{-- Footer --}}
         <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.<span style="display:block;margin-top:4px;font-size:12px;opacity:.7;">Built by <strong>jondev</strong></span></p>
 
                 <div class="flex items-center gap-6">
                     <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
                     <button type="button" @click="$dispatch('open-privacy')" class="underline-offset-4 transition-colors hover:text-white hover:underline">Privacy Policy</button>
 
-                    <!-- Facebook Social Link -->
+                    {{-- Facebook Social Link --}}
                     <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="transition-colors hover:text-white">
                         <svg width="20" height="20" class="fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                     </a>
@@ -526,7 +527,7 @@
             </div>
         </footer>
 
-        <!-- House Rules popup -->
+        {{-- House Rules popup --}}
         <div class="hc-modal-overlay" x-show="open === 'rules'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rules-title">
                 <div class="hc-modal-head">
@@ -582,7 +583,7 @@
             </div>
         </div>
 
-        <!-- Privacy Policy popup -->
+        {{-- Privacy Policy popup --}}
         <div class="hc-modal-overlay" x-show="open === 'privacy'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
                 <div class="hc-modal-head">
@@ -647,6 +648,10 @@
             </div>
         </div>
     </div>
-
+<script>
+    console.log('%cHomeCourt PickleHouse%c  built by jondev',
+        'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
+        'background:#E4F03A;color:#1B2B1C;padding:4px 8px;border-radius:0 4px 4px 0;font-weight:bold');
+</script>
 </body>
 </html>

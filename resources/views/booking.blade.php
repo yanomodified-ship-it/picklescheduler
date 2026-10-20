@@ -58,7 +58,7 @@
 
 <body class="flex min-h-screen flex-col bg-[#F6F8EE] text-[#1B2B1C] antialiased">
 
-    <!-- Navigation Header (kept pure white: the logo file has a white background) -->
+    {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-[0_1px_0_rgba(27,43,28,0.08)]">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
@@ -81,7 +81,7 @@
         <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
     </header>
 
-    <!-- Flash / Validation Messages -->
+    {{-- Flash / Validation Messages --}}
     @if ($errors->any())
         <div class="mx-auto w-full max-w-7xl px-6 pt-6">
             <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700" role="alert">
@@ -105,7 +105,7 @@
 
     <main class="flex-grow">
 
-        <!-- Page heading panel (echoes the home page hero) -->
+        {{-- Page heading panel (echoes the home page hero) --}}
         <section class="mx-3 mt-3 rounded-[2rem] bg-[#CFDDAE] px-6 py-10 md:mx-6 md:rounded-[3rem] md:px-10">
             <div class="mx-auto max-w-7xl">
                 <h1 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Reserve your court</h1>
@@ -113,7 +113,7 @@
             </div>
         </section>
 
-        <!-- Booking Form Section -->
+        {{-- Booking Form Section --}}
         <section id="booking" class="px-6 py-10">
             <div class="mx-auto max-w-7xl">
 
@@ -124,7 +124,7 @@
                       @submit="prepareSubmit">
                     @csrf
 
-                    <!-- Hidden Inputs for Form Submission: one input per selected hour slot -->
+                    {{-- Hidden Inputs for Form Submission: one input per selected hour slot --}}
                     <template x-for="slot in [...selectedSlots].sort()" :key="slot">
                         <input type="hidden" name="slots[]" :value="slot">
                     </template>
@@ -133,7 +133,7 @@
 
                         <div class="space-y-6 lg:col-span-2">
 
-                            <!-- STEP 1: SCHEDULE & AVAILABILITY GRID -->
+                            {{-- STEP 1: SCHEDULE & AVAILABILITY GRID --}}
                             <div class="rounded-[2rem] border border-[#1B2B1C]/10 bg-white p-6 sm:p-8">
                                 <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                                     <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Select court &amp; schedule</h2>
@@ -172,7 +172,7 @@
                                     </div>
                                 </div>
 
-                                <!-- TIME SLOT GRID -->
+                                {{-- TIME SLOT GRID --}}
                                 <div x-show="courtId && bookingDate" class="mt-6 border-t border-[#1B2B1C]/10 pt-6">
                                     <div class="mb-3 flex items-center justify-between">
                                         <p class="text-sm font-semibold text-[#1B2B1C]">
@@ -219,7 +219,7 @@
                                 </div>
                             </div>
 
-                            <!-- STEP 2: CUSTOMER DETAILS -->
+                            {{-- STEP 2: CUSTOMER DETAILS --}}
                             <div class="rounded-[2rem] border border-[#1B2B1C]/10 bg-white p-6 sm:p-8">
                                 <h2 class="hc-display mb-6 text-xl font-bold text-[#1B2B1C]">Your details</h2>
                                 <div class="grid gap-5 sm:grid-cols-2">
@@ -250,11 +250,11 @@
                                 </div>
                             </div>
 
-                            <!-- STEP 3: PAYMENT METHOD -->
+                            {{-- STEP 3: PAYMENT METHOD --}}
                             <div class="rounded-[2rem] border border-[#1B2B1C]/10 bg-white p-6 sm:p-8">
                                 <h2 class="hc-display mb-6 text-xl font-bold text-[#1B2B1C]">Payment Method</h2>
                                 <div class="space-y-5">
-                                    <!-- Mode of Payment Dropdown -->
+                                    {{-- Mode of Payment Dropdown --}}
                                     <div>
                                         <label for="payment_method" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">Mode of Payment</label>
                                         <select id="payment_method" name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
@@ -273,7 +273,7 @@
 
                         </div>
 
-                        <!-- SIDEBAR SUMMARY -->
+                        {{-- SIDEBAR SUMMARY --}}
                         <aside class="lg:col-span-1">
                             <div class="space-y-5 rounded-[2rem] border-2 border-[#1B2B1C]/10 bg-white p-6 lg:sticky lg:top-24">
                                 <h2 class="hc-display text-2xl font-bold text-[#1B2B1C]">Review booking</h2>
@@ -314,7 +314,7 @@
                                     <div class="hc-display mt-1 text-4xl font-extrabold text-[#E4F03A]" x-text="formattedTotal"></div>
                                 </div>
 
-                                <!-- Agreement: required before the booking can be submitted -->
+                                {{-- Agreement: required before the booking can be submitted --}}
                                 <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-red-200 bg-red-50/70 p-4 text-sm leading-relaxed text-[#1B2B1C]/80" style="background-color:#FEF2F2;border-color:#FECACA">
                                     <input type="checkbox" name="agree_terms" value="1" x-model="agreed" class="mt-1 rounded" style="width:1rem;height:1rem;flex:none;accent-color:#2F5D34">
                                     <span>I understand that this booking is <strong class="font-bold text-red-700">non-refundable and non-cancellable</strong> once submitted. I have reviewed my court, date and time slots and am ready to proceed.</span>
@@ -353,16 +353,16 @@
          @open-house-rules.window="lastFocus = document.activeElement; open = 'rules'"
          @keydown.escape.window="open = null">
 
-        <!-- Footer -->
+        {{-- Footer --}}
         <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
             <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+                                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.<span style="display:block;margin-top:4px;font-size:12px;opacity:.7;">Built by <strong>jondev</strong></span></p>
 
                 <div class="flex items-center gap-6">
                     <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
                     <button type="button" @click="$dispatch('open-privacy')" class="underline-offset-4 transition-colors hover:text-white hover:underline">Privacy Policy</button>
 
-                    <!-- Facebook Social Link -->
+                    {{-- Facebook Social Link --}}
                     <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="transition-colors hover:text-white">
                         <svg width="20" height="20" class="fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                     </a>
@@ -370,7 +370,7 @@
             </div>
         </footer>
 
-        <!-- House Rules popup -->
+        {{-- House Rules popup --}}
         <div class="hc-modal-overlay" x-show="open === 'rules'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rules-title">
                 <div class="hc-modal-head">
@@ -426,7 +426,7 @@
             </div>
         </div>
 
-        <!-- Privacy Policy popup -->
+        {{-- Privacy Policy popup --}}
         <div class="hc-modal-overlay" x-show="open === 'privacy'" x-cloak x-transition.opacity @click.self="open = null">
             <div class="hc-modal-panel" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
                 <div class="hc-modal-head">
@@ -509,7 +509,7 @@
                 serverNow: @js(now()->format('Y-m-d\TH:i:s')),   
                 loadedAt: Date.now(),
 
-                // Replace the static array with this dynamic getter
+                
                 get allSlots() {
     if (!this.courtId) return [];
     const court = this.courts.find(c => String(c.id) === String(this.courtId));
@@ -518,7 +518,7 @@
     let startHour = parseInt((court.operating_hours_start || '04:00').substring(0, 2), 10);
     let endHour = parseInt((court.operating_hours_end || '01:00').substring(0, 2), 10);
 
-    // Closing earlier than opening means it runs past midnight (04:00 -> 01:00 becomes 4 -> 25)
+    
     if (endHour < startHour) {
         endHour += 24;
     }
@@ -546,7 +546,7 @@
                 selectSlot(slot) {
                     if (this.isSlotBooked(slot)) return;
 
-                    // Toggle ONLY the clicked slot - no auto-filling of the hours in between.
+                    
                     if (this.selectedSlots.includes(slot)) {
                         this.selectedSlots = this.selectedSlots.filter(s => s !== slot);
                     } else {
@@ -562,24 +562,19 @@
                     );
                 },
 
-                // A slot is unavailable to new customers if it's already CONFIRMED
-                // or still PENDING verification (prevents two customers submitting
-                // the same slot while the first is awaiting approval).
+                
                 isSlotPast(slotTime) {
-                    // Current time in the Philippines, regardless of the visitor's device timezone
                     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
                     const [h] = slotTime.split(':').map(Number);
                     const slotStart = new Date(`${this.bookingDate}T00:00:00`);
-                    slotStart.setHours(h < 4 ? h + 24 : h, 0, 0, 0);   // 00:00 and 01:00 belong to the same night
+                    slotStart.setHours(h < 4 ? h + 24 : h, 0, 0, 0); 
                     return slotStart.getTime() + 3600000 <= now.getTime();
                 },
 
                 isSlotPast(slotTime) {
-                    // Server's Philippine time, advanced by how long the page has been open
                     const nowMs = new Date(this.serverNow).getTime() + (Date.now() - this.loadedAt);
                     const [h] = slotTime.split(':').map(Number);
                     const start = new Date(`${this.bookingDate}T00:00:00`);
-                    // 00:00 and 01:00 belong to the night that started on this date
                     start.setHours(h < 4 ? h + 24 : h, 0, 0, 0);
                     return start.getTime() + 3600000 <= nowMs;
                 },
@@ -595,8 +590,7 @@
                     });
                 },
 
-                // Distinguishes a "Pending" slot from a fully "Confirmed" one so the
-                // UI can label it correctly instead of just showing "Booked".
+
                 isSlotPending(slotTime) {
                     return this.activeBookingsForSelected.some(b => {
                         const start = b.start_time.substring(0, 5);
