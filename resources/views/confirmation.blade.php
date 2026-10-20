@@ -79,12 +79,20 @@
     </svg>
 
     <!-- Navigation Header (kept pure white: the logo file has a white background) -->
-    <header class="sticky top-0 z-50 border-b border-[#1B2B1C]/10 bg-white/95 backdrop-blur-md">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(27,43,28,0.08)]">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-            <a href="/" class="flex items-center" aria-label="HomeCourt PickleHouse home">
+            <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
                 <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
             </a>
+
+            <a href="{{ route('home') }}" class="group inline-flex items-center gap-2 rounded-full border-2 border-[#2F5D34]/25 px-4 py-2 text-sm font-bold text-[#2F5D34] transition hover:border-[#2F5D34] hover:bg-[#2F5D34] hover:text-white">
+                <svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                Home
+            </a>
         </div>
+        <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
     </header>
 
     <main class="flex-grow">
@@ -189,10 +197,10 @@
                 </div>
             </div>
 
-            <!-- Return Home Button -->
+            <!-- Book Again Button -->
             <div class="text-center">
-                <a href="/" class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] px-8 py-3.5 font-bold text-white transition hover:bg-[#1F3F24] sm:w-auto">
-                    Return to Homepage
+                <a href="{{ route('booking.create') }}" class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] px-8 py-3.5 font-bold text-white transition hover:bg-[#1F3F24] sm:w-auto">
+                    Book Again
                 </a>
             </div>
         </div>

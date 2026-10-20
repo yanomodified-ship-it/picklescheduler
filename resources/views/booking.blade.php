@@ -59,13 +59,26 @@
 <body class="flex min-h-screen flex-col bg-[#F6F8EE] text-[#1B2B1C] antialiased">
 
     <!-- Navigation Header (kept pure white: the logo file has a white background) -->
-    <header class="sticky top-0 z-50 border-b border-[#1B2B1C]/10 bg-white/95 backdrop-blur-md">
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-[0_1px_0_rgba(27,43,28,0.08)]">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
                 <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
             </a>
-            <a href="{{ route('home') }}" class="text-sm font-semibold text-[#1B2B1C]/80 transition hover:text-[#2F5D34]">Home</a>
+
+            <nav class="flex items-center gap-2 sm:gap-6" aria-label="Main">
+                <a href="{{ route('home') }}#rates" class="hidden text-sm font-semibold text-[#1B2B1C]/75 transition hover:text-[#2F5D34] sm:inline">Rates</a>
+                <a href="{{ route('home') }}#rules" class="hidden text-sm font-semibold text-[#1B2B1C]/75 transition hover:text-[#2F5D34] sm:inline">Rules</a>
+                <a href="{{ route('home') }}#find-us" class="hidden text-sm font-semibold text-[#1B2B1C]/75 transition hover:text-[#2F5D34] sm:inline">Find us</a>
+
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 rounded-full border-2 border-[#2F5D34]/25 px-4 py-2 text-sm font-bold text-[#2F5D34] transition hover:border-[#2F5D34] hover:bg-[#2F5D34] hover:text-white">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                    Home
+                </a>
+            </nav>
         </div>
+        <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
     </header>
 
     <!-- Flash / Validation Messages -->
@@ -493,6 +506,8 @@
                 agreed: @js((bool) old('agree_terms')),
                 submitting: false,
                 existingBookings: @js($existingBookings ?? []),
+                serverNow: @js(now()->format('Y-m-d\TH:i:s')),   
+                loadedAt: Date.now(),
 
                 // Replace the static array with this dynamic getter
                 get allSlots() {
@@ -559,7 +574,18 @@
                     return slotStart.getTime() + 3600000 <= now.getTime();
                 },
 
+                isSlotPast(slotTime) {
+                    // Server's Philippine time, advanced by how long the page has been open
+                    const nowMs = new Date(this.serverNow).getTime() + (Date.now() - this.loadedAt);
+                    const [h] = slotTime.split(':').map(Number);
+                    const start = new Date(`${this.bookingDate}T00:00:00`);
+                    // 00:00 and 01:00 belong to the night that started on this date
+                    start.setHours(h < 4 ? h + 24 : h, 0, 0, 0);
+                    return start.getTime() + 3600000 <= nowMs;
+                },
+
                 isSlotBooked(slotTime) {
+                    if (this.isSlotPast(slotTime)) return true;
                     return this.activeBookingsForSelected.some(b => {
                         const start = b.start_time.substring(0, 5);
                         const end = b.end_time.substring(0, 5);

@@ -112,6 +112,57 @@
 
 <body class="flex min-h-screen flex-col bg-[#F6F8EE] text-[#1B2B1C] antialiased">
 
+<!-- Loading screen -->
+<style>
+    #hc-loader{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#ffffff;transition:opacity .5s ease,visibility .5s ease}
+    #hc-loader.hc-hide{opacity:0;visibility:hidden}
+    #hc-loader img{height:64px;width:auto}
+    .hc-ball-wrap{position:relative;width:40px;height:64px}
+    .hc-ball{position:absolute;left:6px;top:0;width:28px;height:28px;border-radius:50%;background:#E4F03A;box-shadow:inset 0 0 0 3px rgba(47,93,52,.25);animation:hc-bounce .6s cubic-bezier(.3,0,.7,1) infinite alternate}
+    .hc-shadow{position:absolute;left:8px;bottom:6px;width:24px;height:6px;border-radius:50%;background:rgba(27,43,28,.18);animation:hc-shadow .6s cubic-bezier(.3,0,.7,1) infinite alternate}
+    @keyframes hc-bounce{from{transform:translateY(0)}to{transform:translateY(26px)}}
+    @keyframes hc-shadow{from{transform:scale(.5);opacity:.3}to{transform:scale(1);opacity:1}}
+    #hc-loader p{margin:0;font:600 13px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#2F5D34}
+    @media (prefers-reduced-motion:reduce){.hc-ball,.hc-shadow{animation:none}}
+</style>
+<noscript><style>#hc-loader{display:none}</style></noscript>
+
+<div id="hc-loader" role="status" aria-live="polite" aria-label="Loading HomeCourt PickleHouse">
+    <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse">
+    <div class="hc-ball-wrap"><div class="hc-ball"></div><div class="hc-shadow"></div></div>
+    <p>Getting your court ready</p>
+</div>
+
+<script>
+(function () {
+    var loader = document.getElementById('hc-loader');
+    if (!loader) return;
+
+    // Already shown during this visit? Skip it.
+    try {
+        if (sessionStorage.getItem('hc_loaded') === '1') { loader.remove(); return; }
+    } catch (e) {}
+
+    var start = Date.now(), MIN = 600, MAX = 2500, done = false;
+
+    function hide() {
+        if (done) return;
+        done = true;
+        var wait = Math.max(0, MIN - (Date.now() - start));
+        setTimeout(function () {
+            loader.classList.add('hc-hide');
+            try { sessionStorage.setItem('hc_loaded', '1'); } catch (e) {}
+            setTimeout(function () { loader.remove(); }, 600);
+        }, wait);
+    }
+
+    if (document.readyState === 'complete') hide();
+    else window.addEventListener('load', hide);
+
+    setTimeout(hide, MAX); // never keep anyone waiting longer than this
+})();
+</script>
+
     {{-- Shared graphics: defined once, reused with <use>. --}}
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
         <symbol id="hc-ball" viewBox="0 0 200 200">
@@ -130,40 +181,57 @@
     </svg>
 
     <!-- Navigation Header (kept pure white: the logo file has a white background) -->
-    <header class="sticky top-0 z-50 border-b border-[#1B2B1C]/10 bg-white/95 backdrop-blur-md" x-data="{ mobileMenu: false }">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md transition-shadow duration-300"
+            :class="scrolled ? 'shadow-[0_8px_24px_-12px_rgba(27,43,28,0.35)]' : 'shadow-[0_1px_0_rgba(27,43,28,0.08)]'"
+            x-data="{ mobileMenu: false, scrolled: false }"
+            @scroll.window="scrolled = window.scrollY > 8">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
                 <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
             </a>
 
             <!-- Desktop Navigation -->
-            <nav class="hidden items-center gap-8 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
-                <a href="#courts" class="transition hover:text-[#2F5D34]">Courts</a>
-                <a href="#rates" class="transition hover:text-[#2F5D34]">Rates</a>
-                <a href="#rules" class="transition hover:text-[#2F5D34]">Rules</a>
-                <a href="#find-us" class="transition hover:text-[#2F5D34]">Find us</a>
+            <nav class="hidden items-center gap-9 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
+                <a href="#courts" class="group relative py-1 transition hover:text-[#2F5D34]">Courts<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
+                <a href="#rates" class="group relative py-1 transition hover:text-[#2F5D34]">Rates<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
+                <a href="#rules" class="group relative py-1 transition hover:text-[#2F5D34]">Rules<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
+                <a href="#find-us" class="group relative py-1 transition hover:text-[#2F5D34]">Find us<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
             </nav>
 
             <div class="hidden items-center md:flex">
-                <a href="{{ route('booking.create') }}" class="rounded-full bg-[#2F5D34] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-[#1F3F24]">Book a court</a>
+                <a href="{{ route('booking.create') }}" class="group inline-flex items-center gap-2 rounded-full bg-[#2F5D34] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#1F3F24] hover:shadow-md">
+                    Book a court
+                    <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
 
             <!-- Mobile Menu Button -->
-            <button type="button" @click="mobileMenu = !mobileMenu" :aria-expanded="mobileMenu" aria-label="Toggle menu" class="text-[#1B2B1C]/80 hover:text-[#1B2B1C] md:hidden">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <button type="button" @click="mobileMenu = !mobileMenu" :aria-expanded="mobileMenu" aria-label="Toggle menu" class="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B2B1C]/15 text-[#1B2B1C]/80 transition hover:bg-[#E5ECD2] hover:text-[#1B2B1C] md:hidden">
+                <svg x-show="!mobileMenu" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg x-show="mobileMenu" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
                 </svg>
             </button>
         </div>
 
         <!-- Mobile Navigation -->
-        <nav x-show="mobileMenu" x-cloak class="space-y-3 border-t border-[#1B2B1C]/10 bg-white px-6 py-4 md:hidden" aria-label="Mobile">
-            <a href="#courts" @click="mobileMenu = false" class="block text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Courts</a>
-            <a href="#rates" @click="mobileMenu = false" class="block text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rates</a>
-            <a href="#rules" @click="mobileMenu = false" class="block text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rules</a>
-            <a href="#find-us" @click="mobileMenu = false" class="block text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Find us</a>
-            <a href="{{ route('booking.create') }}" class="block rounded-full bg-[#2F5D34] px-5 py-2.5 text-center font-bold text-white hover:bg-[#1F3F24]">Book a court</a>
+        <nav x-show="mobileMenu" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="border-t border-[#1B2B1C]/10 bg-white px-6 pb-5 pt-2 md:hidden" aria-label="Mobile">
+            <a href="#courts" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Courts</a>
+            <a href="#rates" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rates</a>
+            <a href="#rules" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rules</a>
+            <a href="#find-us" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Find us</a>
+            <a href="{{ route('booking.create') }}" class="mt-4 block rounded-full bg-[#2F5D34] px-5 py-3 text-center font-bold text-white hover:bg-[#1F3F24]">Book a court</a>
         </nav>
+
+        <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
     </header>
 
     <main class="flex-grow">
