@@ -466,92 +466,161 @@
         </div>
 
 {{-- Courts Section --}}
-        <section id="courts" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data="courtSlider()" x-init="$nextTick(() => { $refs.track.scrollLeft = 0; update(); })" @resize.window.debounce.150ms="update()">
+        <section id="courts" class="hcc scroll-mt-24" x-data="courtSlider()" x-init="$nextTick(() => { $refs.track.scrollLeft = 0; update(); })" @resize.window.debounce.150ms="update()">
             <style>
-                .hc-track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 2px 6px}
-                .hc-track::-webkit-scrollbar{display:none}
-                .hc-slide{flex:0 0 78%;scroll-snap-align:start}
-                @media (min-width:640px){.hc-slide{flex-basis:calc((100% - 16px) / 2)}}
-                @media (min-width:1024px){.hc-slide{flex-basis:calc((100% - 48px) / 4)}}
-                .hc-court-card{display:flex;flex-direction:column;overflow:hidden;height:100%;border-radius:24px;border:1px solid rgba(27,43,28,.1);background:#fff;transition:border-color .2s}
-                .hc-court-card:hover{border-color:rgba(47,93,52,.45)}
-                .hc-court-art{position:relative;background:#2F5D34;padding:24px 16px 18px}
-                .hc-court-art svg{display:block;width:100%;max-width:170px;height:auto;margin:0 auto}
-                .hc-court-tag{position:absolute;left:12px;top:12px;border-radius:9999px;background:#F6F8EE;padding:3px 10px;font-size:11px;font-weight:700;color:#2F5D34;text-transform:capitalize}
-                .hc-court-body{display:flex;flex:1;flex-direction:column;gap:14px;padding:16px}
-                .hc-court-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-                .hc-arrow{width:46px;height:46px;border-radius:9999px;border:2px solid rgba(47,93,52,.3);background:#fff;color:#2F5D34;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,opacity .2s}
-                .hc-arrow:not(:disabled):hover{background:#2F5D34;color:#fff}
+                .hcc{position:relative;margin:40px 12px;overflow:hidden;border-radius:40px;padding:56px 20px 44px;
+                    background-color:#1F3F24;
+                    background-image:
+                        radial-gradient(620px 360px at 92% 0%, rgba(228,240,58,.20), transparent 65%),
+                        radial-gradient(700px 420px at 0% 100%, rgba(95,150,80,.35), transparent 65%)}
+                @media (min-width:768px){.hcc{margin:64px 24px;border-radius:64px;padding:80px 48px 60px}}
+                .hcc-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.07;pointer-events:none}
+                .hcc-inner{position:relative;z-index:2;margin:0 auto;max-width:1200px}
+
+                .hcc-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:rgba(228,240,58,.14);padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
+                .hcc-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcc-pulse 2s ease-in-out infinite}
+
+                .hcc-arrow{width:48px;height:48px;border-radius:9999px;border:2px solid rgba(246,248,238,.35);background:transparent;color:#F6F8EE;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,border-color .2s,opacity .2s}
+                .hcc-arrow:not(:disabled):hover{background:#E4F03A;border-color:#E4F03A;color:#1B2B1C}
+
+                .hcc-track{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:14px 4px 22px}
+                .hcc-track::-webkit-scrollbar{display:none}
+                .hcc-slide{flex:0 0 80%;scroll-snap-align:start}
+                @media (min-width:640px){.hcc-slide{flex-basis:calc((100% - 18px) / 2)}}
+                @media (min-width:1024px){.hcc-slide{flex-basis:calc((100% - 54px) / 4)}}
+
+                .hcc-card{position:relative;display:flex;flex-direction:column;overflow:hidden;height:100%;border-radius:28px;background:#fff;box-shadow:0 22px 40px -26px rgba(0,0,0,.65);transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+                .hcc-card:hover{transform:translateY(-8px);box-shadow:0 34px 52px -26px rgba(0,0,0,.75)}
+
+                .hcc-art{position:relative;overflow:hidden;padding:44px 18px 24px;
+                    background:radial-gradient(260px 160px at 50% 38%, rgba(95,150,80,.55), transparent 70%), #2F5D34}
+                .hcc-art svg{position:relative;z-index:2;display:block;width:100%;max-width:178px;height:auto;margin:0 auto;color:rgba(246,248,238,.85)}
+                .hcc-ball{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+                .hcc-card:hover .hcc-ball{transform:translate(-34px,26px)}
+                .hcc-num{position:absolute;right:12px;bottom:-26px;z-index:1;font-size:130px;font-weight:800;line-height:1;color:rgba(246,248,238,.10);pointer-events:none;font-family:inherit}
+                .hcc-tag{position:absolute;left:14px;top:14px;z-index:3;border-radius:9999px;background:#F6F8EE;padding:4px 11px;font-size:11px;font-weight:800;color:#2F5D34;text-transform:capitalize}
+                .hcc-status{position:absolute;right:14px;top:14px;z-index:3;display:inline-flex;align-items:center;gap:6px;border-radius:9999px;padding:4px 11px;font-size:11px;font-weight:800}
+                .hcc-status.ok{background:rgba(31,63,36,.85);color:#E4F03A}
+                .hcc-status.ok i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcc-pulse 2s ease-in-out infinite}
+                .hcc-status.full{background:#FEE2E2;color:#B91C1C}
+
+                .hcc-body{display:flex;flex:1;flex-direction:column;gap:14px;padding:18px}
+                .hcc-name{margin:0;font-size:22px;font-weight:800;color:#1B2B1C;line-height:1.1}
+                .hcc-chips{display:flex;flex-wrap:wrap;gap:8px}
+                .hcc-chip{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;background:#E5ECD2;padding:6px 11px;font-size:12px;font-weight:700;color:#2F5D34}
+                .hcc-chip svg{flex-shrink:0}
+                .hcc-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;border-radius:9999px;background:#E4F03A;padding:13px 16px;font-size:14px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s,transform .2s}
+                .hcc-btn:hover{background:#2F5D34;color:#fff}
+                .hcc-btn svg{transition:transform .25s}
+                .hcc-btn:hover svg{transform:translateX(4px)}
+                .hcc-btn.off{background:#F1F1F1;color:#9CA3AF;cursor:not-allowed;border:0}
+                .hcc-btn.off:hover{background:#F1F1F1;color:#9CA3AF}
+
+                @keyframes hcc-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcc-eyebrow i,.hcc-status.ok i{animation:none}
+                    .hcc-card,.hcc-ball{transition:none}
+                }
             </style>
 
-            <div class="mb-6 flex items-end justify-between gap-6">
-                <div>
-                    <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Choose your court</h2>
-                    
+            {{-- faint court lines --}}
+            <svg class="hcc-lines" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                <rect x="60" y="60" width="1080" height="480" rx="6"/>
+                <line x1="600" y1="60" x2="600" y2="540" stroke-dasharray="3 10"/>
+                <line x1="428" y1="60" x2="428" y2="540"/>
+                <line x1="772" y1="60" x2="772" y2="540"/>
+                <line x1="60" y1="300" x2="428" y2="300"/>
+                <line x1="772" y1="300" x2="1140" y2="300"/>
+            </svg>
+
+            <div class="hcc-inner">
+                <div class="flex items-end justify-between gap-6" style="margin-bottom:18px;">
+                    <div>
+                        <span class="hcc-eyebrow"><i></i>{{ $courts->count() }} indoor courts</span>
+                        <h2 class="hc-display text-4xl font-extrabold sm:text-5xl" style="margin:14px 0 0;color:#F6F8EE;">Choose your court</h2>
+                    </div>
+
+                    <div class="flex items-center" style="gap:10px;flex-shrink:0;">
+                        <button type="button" class="hcc-arrow" @click="go(-1)" :disabled="atStart" :style="{ opacity: atStart ? '.35' : '1', cursor: atStart ? 'default' : 'pointer' }" aria-label="Previous courts">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                        </button>
+                        <button type="button" class="hcc-arrow" @click="go(1)" :disabled="atEnd" :style="{ opacity: atEnd ? '.35' : '1', cursor: atEnd ? 'default' : 'pointer' }" aria-label="Next courts">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex items-center" style="gap:10px;flex-shrink:0;">
-                    <button type="button" class="hc-arrow" @click="go(-1)" :disabled="atStart" :style="{ opacity: atStart ? '.35' : '1', cursor: atStart ? 'default' : 'pointer' }" aria-label="Previous courts">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-                    </button>
-                    <button type="button" class="hc-arrow" @click="go(1)" :disabled="atEnd" :style="{ opacity: atEnd ? '.35' : '1', cursor: atEnd ? 'default' : 'pointer' }" aria-label="Next courts">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-                    </button>
-                </div>
-            </div>
+                <div class="hcc-track" x-ref="track" @scroll.passive="update()">
+                    @forelse ($courts as $court)
+                        @php
+                            $hoursText = null;
+                            if ($court->operating_hours_start && $court->operating_hours_end) {
+                                $hoursText = \Carbon\Carbon::parse($court->operating_hours_start)->format('g A')
+                                    . ' – '
+                                    . \Carbon\Carbon::parse($court->operating_hours_end)->addHour()->format('g A');
+                            }
+                        @endphp
 
-            <div class="hc-track" x-ref="track" @scroll.passive="update()">
-                @forelse ($courts as $court)
-                    <div class="hc-slide">
-                        <article class="hc-court-card">
-                            <div class="hc-court-art">
-                                <svg viewBox="0 0 160 100" class="text-white/80" aria-hidden="true">
-                                    <use href="#hc-court"/>
-                                    <use href="#hc-ball" x="113" y="31" width="13" height="13" class="text-[#E4F03A]"/>
-                                </svg>
-                                <span class="hc-court-tag">{{ $court->classification ?? 'Indoor' }}</span>
-                            </div>
+                        <div class="hcc-slide">
+                            <article class="hcc-card">
+                                <div class="hcc-art">
+                                    <span class="hcc-num" aria-hidden="true">{{ $loop->iteration }}</span>
 
-                            <div class="hc-court-body">
-                                <div class="hc-court-row">
-                                    <h3 class="hc-display text-xl font-bold text-[#1B2B1C]">{{ $court->name }}</h3>
+                                    <svg viewBox="0 0 160 100" aria-hidden="true">
+                                        <use href="#hc-court"/>
+                                        <g class="hcc-ball"><use href="#hc-ball" x="113" y="31" width="13" height="13" style="color:#E4F03A"/></g>
+                                    </svg>
+
+                                    <span class="hcc-tag">{{ $court->classification ?? 'Indoor' }}</span>
 
                                     @if($court->is_fully_booked)
-                                        <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">Full</span>
+                                        <span class="hcc-status full">Full today</span>
                                     @else
-                                        <span class="rounded-full bg-[#E5ECD2] px-2.5 py-1 text-xs font-bold text-[#2F5D34]">Active</span>
+                                        <span class="hcc-status ok"><i></i>Available</span>
                                     @endif
                                 </div>
 
-                                <div style="margin-top:auto;">
-                                    @if($court->is_fully_booked)
-                                        <button disabled class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-gray-200 bg-gray-100 py-3 text-sm font-bold text-gray-500">
-                                            Unavailable
-                                        </button>
-                                    @else
-                                        <a href="{{ route('booking.create', ['court_id' => $court->id]) }}"
-                                           class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] py-3 text-sm font-bold text-white transition hover:bg-[#1F3F24]">
-                                            Book this court
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                @empty
-                    <div class="hc-slide rounded-[1.75rem] border border-[#1B2B1C]/10 bg-white p-6 text-[#1B2B1C]/75">
-                        No active courts are currently available.
-                    </div>
-                @endforelse
-            </div>
+                                <div class="hcc-body">
+                                    <h3 class="hc-display hcc-name">{{ $court->name }}</h3>
 
-            {{-- Dots --}}
-            <div x-show="pages > 1" class="mt-4 flex items-center justify-center" style="gap:8px;">
-                <template x-for="i in pages" :key="i">
-                    <button type="button" @click="goTo(i - 1)" :aria-label="'Go to position ' + i"
-                            :style="{ width: index === i - 1 ? '22px' : '8px', background: index === i - 1 ? '#2F5D34' : '#CFDDAE' }"
-                            style="height:8px;border-radius:9999px;border:0;padding:0;cursor:pointer;transition:all .25s;"></button>
-                </template>
+                                    <div class="hcc-chips">
+                                        @if($hoursText)
+                                            <span class="hcc-chip">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                {{ $hoursText }}
+                                            </span>
+                                        @endif
+                                        <span class="hcc-chip">₱200–₱300 / hr</span>
+                                    </div>
+
+                                    <div style="margin-top:auto;">
+                                        @if($court->is_fully_booked)
+                                            <button type="button" disabled class="hcc-btn off">Fully booked today</button>
+                                        @else
+                                            <a href="{{ route('booking.create', ['court_id' => $court->id]) }}" class="hcc-btn">
+                                                Book this court
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    @empty
+                        <div class="hcc-slide" style="border-radius:24px;background:#fff;padding:24px;color:#1B2B1C;">
+                            No active courts are currently available.
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Dots --}}
+                <div x-show="pages > 1" class="flex items-center justify-center" style="gap:8px;margin-top:6px;">
+                    <template x-for="i in pages" :key="i">
+                        <button type="button" @click="goTo(i - 1)" :aria-label="'Go to position ' + i"
+                                :style="{ width: index === i - 1 ? '24px' : '8px', background: index === i - 1 ? '#E4F03A' : 'rgba(246,248,238,.3)' }"
+                                style="height:8px;border-radius:9999px;border:0;padding:0;cursor:pointer;transition:all .25s;"></button>
+                    </template>
+                </div>
             </div>
 
             <script>
@@ -563,12 +632,12 @@
                         atEnd: false,
                         step() {
                             const first = this.$refs.track.firstElementChild;
-                            return first ? first.offsetWidth + 16 : 1;
+                            return first ? first.offsetWidth + 18 : 1;
                         },
                         update() {
                             const el = this.$refs.track;
                             const step = this.step();
-                            const perView = Math.max(1, Math.round((el.clientWidth + 16) / step));
+                            const perView = Math.max(1, Math.round((el.clientWidth + 18) / step));
                             this.pages = Math.max(1, el.children.length - perView + 1);
                             this.index = Math.min(this.pages - 1, Math.round(el.scrollLeft / step));
                             this.atStart = el.scrollLeft <= 4;
@@ -586,57 +655,163 @@
         </section>
 
         {{-- Rates Section --}}
-        <section id="rates" class="scroll-mt-24 bg-[#E5ECD2]">
-            <div class="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:py-24 lg:grid-cols-[1fr_1.6fr] lg:items-center">
-                <div>
-                    <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Simple, transparent pricing</h2>
-                    <p class="mt-4 max-w-sm leading-relaxed text-[#1B2B1C]/75">
-                        Rates are per hour. Book as many hours as you need. Pay with GCash or Maya.
-                    </p>
+        @php
+            $dayRate   = 200;
+            $nightRate = 300;
+            $stars = [[8,12,3,0],[22,28,2,.8],[38,9,3,1.6],[54,22,2,.4],[68,11,3,1.2],[80,30,2,2],[12,48,2,1],[30,62,3,.2],[46,44,2,1.8]];
+        @endphp
+
+        <section id="rates" class="hcr scroll-mt-24">
+            <style>
+                .hcr{position:relative;overflow:hidden;padding:64px 0;background-color:#E5ECD2;
+                    background-image:radial-gradient(700px 420px at 100% 0%, rgba(228,240,58,.30), transparent 65%),radial-gradient(640px 420px at 0% 100%, rgba(246,248,238,.95), transparent 65%)}
+                @media (min-width:768px){.hcr{padding:96px 0}}
+                .hcr-inner{position:relative;z-index:2;margin:0 auto;max-width:1200px;padding:0 24px}
+
+                .hcr-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
+                .hcr-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcr-pulse 2s ease-in-out infinite}
+
+                .hcr-grid{display:grid;gap:22px;margin-top:40px}
+                @media (min-width:768px){.hcr-grid{grid-template-columns:1fr 1fr;gap:26px}}
+
+                .hcr-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;border-radius:32px;padding:30px;transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
+                @media (min-width:768px){.hcr-card{padding:38px}}
+                .hcr-card:hover{transform:translateY(-8px)}
+                .hcr-card > *{position:relative;z-index:2}
+
+                .hcr-day{background:linear-gradient(160deg,#FFFFFF 0%,#F6F8EE 52%,#EEF6B0 100%);border:2px solid rgba(27,43,28,.08);box-shadow:0 26px 44px -30px rgba(27,43,28,.45)}
+                .hcr-day:hover{box-shadow:0 36px 54px -30px rgba(27,43,28,.55)}
+                .hcr-sun{position:absolute;right:-46px;top:-46px;z-index:1;width:210px;height:210px;color:#E4F03A;opacity:.9;animation:hcr-spin 45s linear infinite;pointer-events:none}
+
+                .hcr-night{background:radial-gradient(420px 260px at 85% 0%, rgba(95,150,80,.45), transparent 70%),#1F3F24;box-shadow:0 26px 44px -30px rgba(0,0,0,.7)}
+                .hcr-night:hover{box-shadow:0 36px 54px -30px rgba(0,0,0,.8)}
+                .hcr-moon{position:absolute;right:26px;top:22px;z-index:1;width:104px;height:104px;color:#E4F03A;filter:drop-shadow(0 0 22px rgba(228,240,58,.55));animation:hcr-float 6s ease-in-out infinite alternate;pointer-events:none}
+                .hcr-star{position:absolute;z-index:1;border-radius:9999px;background:#F6F8EE;animation:hcr-twinkle 3s ease-in-out infinite;pointer-events:none}
+
+                .hcr-label{display:inline-flex;align-items:center;gap:10px}
+                .hcr-ico{display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:9999px}
+                .hcr-day .hcr-ico{background:#E5ECD2;color:#2F5D34}
+                .hcr-night .hcr-ico{background:rgba(255,255,255,.12);color:#E4F03A}
+                .hcr-kind{margin:0;font-size:16px;font-weight:800}
+                .hcr-time{margin:2px 0 0;font-size:13px;font-weight:600}
+                .hcr-day .hcr-kind{color:#1B2B1C}.hcr-day .hcr-time{color:rgba(27,43,28,.65)}
+                .hcr-night .hcr-kind{color:#fff}.hcr-night .hcr-time{color:#CFDDAE}
+
+                /* price + "per hour" on one baseline, "per hour" in the normal body font */
+                .hcr-price-row{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:14px;margin-top:34px}
+                .hcr-price{margin:0;font-weight:800;line-height:1;font-size:76px}
+                @media (min-width:768px){.hcr-price{font-size:88px}}
+                .hcr-price small{display:inline-block;margin-right:8px;font-size:.4em;font-weight:800;vertical-align:top;position:relative;top:.12em}
+                .hcr-per{font-size:17px;font-weight:700;letter-spacing:0;word-spacing:normal;white-space:nowrap}
+                .hcr-day .hcr-price{color:#2F5D34}.hcr-day .hcr-per{color:rgba(27,43,28,.65)}
+                .hcr-night .hcr-price{color:#E4F03A}.hcr-night .hcr-per{color:#CFDDAE}
+
+                .hcr-list{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+                .hcr-list li{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+                .hcr-list svg{flex-shrink:0}
+                .hcr-day .hcr-list li{color:#1B2B1C}.hcr-day .hcr-list svg{color:#2F5D34}
+                .hcr-night .hcr-list li{color:#F6F8EE}.hcr-night .hcr-list svg{color:#E4F03A}
+
+                .hcr-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:28px;border-radius:9999px;padding:15px 22px;font-size:15px;font-weight:800;text-decoration:none;transition:background .2s,color .2s}
+                .hcr-btn svg{transition:transform .25s}
+                .hcr-btn:hover svg{transform:translateX(4px)}
+                .hcr-day .hcr-btn{background:#2F5D34;color:#fff}.hcr-day .hcr-btn:hover{background:#1F3F24}
+                .hcr-night .hcr-btn{background:#E4F03A;color:#1B2B1C}.hcr-night .hcr-btn:hover{background:#fff}
+
+                @keyframes hcr-spin{to{transform:rotate(360deg)}}
+                @keyframes hcr-float{from{transform:translateY(-6px) rotate(-6deg)}to{transform:translateY(8px) rotate(6deg)}}
+                @keyframes hcr-twinkle{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.4)}}
+                @keyframes hcr-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcr-sun,.hcr-moon,.hcr-star,.hcr-eyebrow i{animation:none}
+                    .hcr-card{transition:none}
+                }
+            </style>
+
+            <div class="hcr-inner">
+
+                {{-- Heading --}}
+                <div style="text-align:center;">
+                    <span class="hcr-eyebrow"><i></i>Rates</span>
+                    <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl" style="margin:16px 0 0;">Simple, transparent pricing</h2>
                 </div>
 
-                <div class="grid gap-5 sm:grid-cols-2">
-                    {{-- Daytime Rate --}}
-                    <div class="flex flex-col justify-between rounded-[2rem] border-2 border-[#1B2B1C]/10 bg-white p-8">
+                {{-- Rate cards --}}
+                <div class="hcr-grid">
+
+                    {{-- Day --}}
+                    <div class="hcr-card hcr-day">
+                        <svg class="hcr-sun" viewBox="0 0 200 200" aria-hidden="true">
+                            <circle cx="100" cy="100" r="38" fill="currentColor"/>
+                            <g stroke="currentColor" stroke-width="10" stroke-linecap="round">
+                                @for ($a = 0; $a < 360; $a += 30)
+                                    <line x1="100" y1="22" x2="100" y2="44" transform="rotate({{ $a }} 100 100)"/>
+                                @endfor
+                            </g>
+                        </svg>
+
                         <div>
-                            <div class="flex items-center gap-3">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#E5ECD2] text-[#2F5D34]">
-                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
-                                    </svg>
+                            <div class="hcr-label">
+                                <span class="hcr-ico">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                                 </span>
                                 <div>
-                                    <p class="font-bold text-[#1B2B1C]">Day slot</p>
-                                    <p class="text-sm text-[#1B2B1C]/70">4:00 AM – 5:00 PM</p>
+                                    <p class="hcr-kind">Day slot</p>
+                                    <p class="hcr-time">4:00 AM – 5:00 PM</p>
                                 </div>
                             </div>
-                            <p class="hc-display mt-8 text-6xl font-extrabold text-[#2F5D34]">₱200</p>
-                            <p class="mt-1 text-[#1B2B1C]/70">per hour</p>
+
+                            <div class="hcr-price-row">
+                                <p class="hc-display hcr-price"><small>₱</small>{{ $dayRate }}</p>
+                                <span class="hcr-per">per hour</span>
+                            </div>
+
+                            <ul class="hcr-list">
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Book as many hours as you need</li>
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pick your hours online</li>
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pay with GCash or Maya</li>
+                            </ul>
                         </div>
-                        <a href="{{ route('booking.create') }}" class="mt-8 inline-flex items-center justify-center rounded-full bg-[#2F5D34] px-6 py-3 font-bold text-white transition hover:bg-[#1F3F24]">
+
+                        <a href="{{ route('booking.create') }}" class="hcr-btn">
                             Book a day slot
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                         </a>
                     </div>
 
-                    {{-- Night-time Rate --}}
-                    <div class="hc-on-dark flex flex-col justify-between rounded-[2rem] bg-[#1F3F24] p-8">
+                    {{-- Night --}}
+                    <div class="hcr-card hcr-night">
+                        @foreach ($stars as $s)
+                            <span class="hcr-star" style="left:{{ $s[0] }}%;top:{{ $s[1] }}%;width:{{ $s[2] }}px;height:{{ $s[2] }}px;animation-delay:{{ $s[3] }}s"></span>
+                        @endforeach
+                        <svg class="hcr-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+
                         <div>
-                            <div class="flex items-center gap-3">
-                                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-[#E4F03A]">
-                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-                                    </svg>
+                            <div class="hcr-label">
+                                <span class="hcr-ico">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                                 </span>
                                 <div>
-                                    <p class="font-bold text-white">Night slot</p>
-                                    <p class="text-sm text-[#CFDDAE]">5:00 PM – 2:00 AM</p>
+                                    <p class="hcr-kind">Night slot</p>
+                                    <p class="hcr-time">5:00 PM – 2:00 AM</p>
                                 </div>
                             </div>
-                            <p class="hc-display mt-8 text-6xl font-extrabold text-[#E4F03A]">₱300</p>
-                            <p class="mt-1 text-[#CFDDAE]">per hour</p>
+
+                            <div class="hcr-price-row">
+                                <p class="hc-display hcr-price"><small>₱</small>{{ $nightRate }}</p>
+                                <span class="hcr-per">per hour</span>
+                            </div>
+
+                            <ul class="hcr-list">
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Book as many hours as you need</li>
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pick your hours online</li>
+                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pay with GCash or Maya</li>
+                            </ul>
                         </div>
-                        <a href="{{ route('booking.create') }}" class="mt-8 inline-flex items-center justify-center rounded-full bg-[#E4F03A] px-6 py-3 font-bold text-[#1B2B1C] transition hover:bg-white">
+
+                        <a href="{{ route('booking.create') }}" class="hcr-btn">
                             Book a night slot
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                         </a>
                     </div>
                 </div>
@@ -644,22 +819,115 @@
         </section>
 
         {{-- Rules Section --}}
-        <section id="rules" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data>
-            <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Play fair. Play safe.</h2>
-            <div class="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-                @foreach ($rules as $rule)
-                    <div class="border-t-2 border-[#1B2B1C] pt-5">
-                        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#CFDDAE] text-[#2F5D34]">
-                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $rule['icon'] !!}</svg>
-                        </span>
-                        <h3 class="hc-display mt-4 text-xl font-bold text-[#1B2B1C]">{{ $rule['title'] }}</h3>
-                        <p class="mt-2 text-sm leading-relaxed text-[#1B2B1C]/75">{{ $rule['text'] }}</p>
+        <section id="rules" class="hcl scroll-mt-24" x-data>
+            <style>
+                .hcl{position:relative;overflow:hidden;padding:64px 0;
+                    background-color:#F6F8EE;
+                    background-image:radial-gradient(620px 360px at 100% 0%, rgba(228,240,58,.22), transparent 65%),radial-gradient(560px 360px at 0% 100%, rgba(207,221,174,.45), transparent 65%)}
+                @media (min-width:768px){.hcl{padding:96px 0}}
+                .hcl-inner{position:relative;z-index:2;margin:0 auto;max-width:1200px;padding:0 24px}
+
+                .hcl-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
+                .hcl-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcl-pulse 2s ease-in-out infinite}
+                .hcl-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+                .hcl-sub{margin:0;max-width:340px;line-height:1.6;color:rgba(27,43,28,.72)}
+
+                .hcl-grid{display:grid;gap:18px;margin-top:40px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:640px){.hcl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+                @media (min-width:1024px){.hcl-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}}
+
+                .hcl-card{position:relative;overflow:hidden;border-radius:28px;background:#fff;border:1px solid rgba(27,43,28,.1);padding:28px 24px 32px;box-shadow:0 18px 34px -28px rgba(27,43,28,.45);transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s,border-color .35s}
+                .hcl-card:hover{transform:translateY(-8px);border-color:rgba(47,93,52,.4);box-shadow:0 30px 46px -28px rgba(27,43,28,.55)}
+                .hcl-card > *{position:relative;z-index:1}
+                .hcl-card > .hcl-num{position:absolute;z-index:0}
+                .hcl-card > .hcl-bar{position:absolute;z-index:2}
+
+                .hcl-num{right:14px;top:4px;font-size:88px;font-weight:800;line-height:1;color:rgba(47,93,52,.09);pointer-events:none;transition:color .35s}
+                .hcl-card:hover .hcl-num{color:rgba(160,180,20,.35)}
+
+                .hcl-ico{display:flex;width:58px;height:58px;align-items:center;justify-content:center;border-radius:9999px;background:#E4F03A;color:#1F3F24;transition:background .35s,color .35s,transform .35s}
+                .hcl-ico svg{width:26px;height:26px}
+                .hcl-card:hover .hcl-ico{background:#1F3F24;color:#E4F03A;transform:rotate(-8deg) scale(1.07)}
+
+                .hcl-title{margin:22px 0 0;font-size:21px;font-weight:800;color:#1B2B1C}
+                .hcl-text{margin:8px 0 0;font-size:14px;line-height:1.65;color:rgba(27,43,28,.75)}
+
+                .hcl-bar{left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,#2F5D34,#E4F03A);transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+                .hcl-card:hover .hcl-bar{transform:scaleX(1)}
+
+                .hcl-cta{position:relative;overflow:hidden;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;margin-top:26px;border-radius:32px;padding:30px 28px;
+                    background-color:#1F3F24;
+                    background-image:radial-gradient(520px 260px at 100% 0%, rgba(228,240,58,.22), transparent 65%),radial-gradient(460px 260px at 0% 100%, rgba(95,150,80,.4), transparent 65%)}
+                @media (min-width:768px){.hcl-cta{padding:34px 44px}}
+                .hcl-cta-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.07;pointer-events:none}
+                .hcl-cta > div, .hcl-cta > button{position:relative;z-index:2}
+                .hcl-cta-title{margin:0;font-size:24px;font-weight:800;color:#F6F8EE}
+                .hcl-cta-text{margin:6px 0 0;max-width:430px;font-size:14px;line-height:1.6;color:#CFDDAE}
+                .hcl-cta-btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:9999px;background:#E4F03A;padding:15px 26px;font-size:15px;font-weight:800;color:#1B2B1C;cursor:pointer;transition:background .2s}
+                .hcl-cta-btn:hover{background:#fff}
+                .hcl-cta-btn svg{transition:transform .25s}
+                .hcl-cta-btn:hover svg{transform:translateX(4px)}
+                .hcl-ball{position:absolute;right:34%;top:-16px;z-index:1;width:44px;height:44px;color:#E4F03A;animation:hcl-hop 2.4s ease-in-out infinite;pointer-events:none}
+                @media (max-width:900px){.hcl-ball{display:none}}
+
+                @keyframes hcl-hop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(26px) rotate(180deg)}}
+                @keyframes hcl-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcl-ball,.hcl-eyebrow i{animation:none}
+                    .hcl-card,.hcl-ico,.hcl-bar{transition:none}
+                }
+            </style>
+
+            <div class="hcl-inner">
+
+                {{-- Heading --}}
+                <div class="hcl-head">
+                    <div>
+                        <span class="hcl-eyebrow"><i></i>House rules</span>
+                        <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl" style="margin:16px 0 0;">Play fair. Play safe.</h2>
                     </div>
-                @endforeach
+                    <p class="hcl-sub">A few simple rules keep every game fun for everyone.</p>
+                </div>
+
+                {{-- Rule cards --}}
+                <div class="hcl-grid">
+                    @foreach ($rules as $rule)
+                        <div class="hcl-card">
+                            <span class="hcl-num hc-display" aria-hidden="true">{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+
+                            <span class="hcl-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $rule['icon'] !!}</svg>
+                            </span>
+
+                            <h3 class="hc-display hcl-title">{{ $rule['title'] }}</h3>
+                            <p class="hcl-text">{{ $rule['text'] }}</p>
+
+                            <span class="hcl-bar" aria-hidden="true"></span>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Full rules banner --}}
+                <div class="hcl-cta">
+                    <svg class="hcl-cta-lines" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                        <rect x="40" y="30" width="1120" height="240" rx="6"/>
+                        <line x1="600" y1="30" x2="600" y2="270" stroke-dasharray="3 10"/>
+                        <line x1="40" y1="150" x2="400" y2="150"/>
+                        <line x1="800" y1="150" x2="1160" y2="150"/>
+                    </svg>
+                    <svg class="hcl-ball" viewBox="0 0 200 200" aria-hidden="true"><use href="#hc-ball"/></svg>
+
+                    <div>
+                        <p class="hc-display hcl-cta-title">Want the full list?</p>
+                        <p class="hcl-cta-text">Everything you need to know before you play, in one place.</p>
+                    </div>
+
+                    <button type="button" @click="$dispatch('open-house-rules')" class="hcl-cta-btn">
+                        Read the full House Rules
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
             </div>
-            <p class="mt-10">
-                <button type="button" @click="$dispatch('open-house-rules')" class="rounded-full border-2 border-[#1B2B1C]/25 px-7 py-3 font-bold text-[#1B2B1C] transition hover:border-[#1B2B1C] hover:bg-[#E5ECD2]">Read the full House Rules</button>
-            </p>
         </section>
 
         {{-- Find Us Section --}}
