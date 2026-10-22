@@ -117,7 +117,7 @@
                 <div class="mt-8 rounded-[1.5rem] border-2 border-dashed border-[#2F5D34]/50 bg-white/85 p-6">
                     <p class="text-sm font-semibold text-[#1B2B1C]/70">Your booking reference</p>
                     <p class="hc-display mt-2 break-all text-4xl font-extrabold tracking-wider text-[#2F5D34] sm:text-5xl">{{ $booking->booking_reference }}</p>
-                    <p class="mt-3 text-sm text-[#1B2B1C]/70">Screenshot this reference and send it to our Facebook page.</p>
+                    <p class="mt-3 text-sm text-[#1B2B1C]/70">Screenshot this reference for your records.</p>
                 </div>
             </div>
         </section>
@@ -171,17 +171,39 @@
 
                 @if(($booking->payment_method ?? '') === 'Maya')
                     <div class="mt-5">
-                        <p class="text-sm text-[#CFDDAE]">Send payment via Maya</p>
-                        <p class="hc-display mt-1 text-4xl font-extrabold tracking-wide text-[#E4F03A]">0912 345 6789</p>
-                        <p class="mt-3 text-sm text-[#CFDDAE]">Account name</p>
-                        <p class="font-semibold text-white">HomeCourt PickleHouse</p>
+                        <p class="text-sm text-[#CFDDAE]">Pay via Maya</p>
+                        <p class="mt-2 text-base font-semibold text-white">
+                            Please message our Facebook page for the Maya payment details, and include your booking reference.
+                        </p>
                     </div>
                 @else
-                    <div class="mt-5">
-                        <p class="text-sm text-[#CFDDAE]">Send payment via GCash</p>
-                        <p class="hc-display mt-1 text-4xl font-extrabold tracking-wide text-[#E4F03A]">0912 345 6789</p>
-                        <p class="mt-3 text-sm text-[#CFDDAE]">Account name</p>
-                        <p class="font-semibold text-white">HomeCourt PickleHouse</p>
+                    <div class="mt-5" style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;">
+
+                        {{-- QR code --}}
+                        <div style="flex:0 0 auto;margin:0 auto;">
+                            <div style="background:#fff;border-radius:20px;padding:10px;width:230px;max-width:100%;">
+                                <img src="{{ asset('images/gcash-qr.png') }}" alt="GCash QR code for HomeCourt PickleHouse payments" width="762" height="1115" style="display:block;width:100%;height:auto;border-radius:12px;">
+                            </div>
+                            <a href="{{ asset('images/gcash-qr.png') }}" download="HomeCourt-GCash-QR.png"
+                               style="display:block;margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:#E4F03A;text-decoration:underline;text-underline-offset:4px;">
+                                Save QR image
+                            </a>
+                        </div>
+
+                        {{-- Account details --}}
+                        <div style="flex:1 1 220px;min-width:0;">
+                            <p class="text-sm text-[#CFDDAE]">Send payment via GCash</p>
+                            <p class="hc-display mt-1 text-4xl font-extrabold tracking-wide text-[#E4F03A]">0960 302 4390</p>
+
+                            <button type="button"
+                                    onclick="navigator.clipboard && navigator.clipboard.writeText('09603024390'); this.textContent='Copied!'; var b=this; setTimeout(function(){ b.textContent='Copy number'; }, 1800);"
+                                    style="margin-top:8px;border-radius:9999px;border:1.5px solid rgba(228,240,58,.6);background:transparent;color:#E4F03A;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
+                                Copy number
+                            </button>
+
+                            <p class="mt-4 text-sm text-[#CFDDAE]">Account name</p>
+                            <p class="font-semibold text-white">Leah Jean Alimasag</p>
+                        </div>
                     </div>
                 @endif
 

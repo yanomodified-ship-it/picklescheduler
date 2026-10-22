@@ -22,7 +22,7 @@ class CourtAndAdminSeeder extends Seeder
 
         // 2. Ensure exactly Courts 1 through 7 exist
         for ($i = 1; $i <= 7; $i++) {
-            $type =$i <= 4 ? 'Outdoor' : 'Indoor';
+            $type = 'Indoor';
             Court::updateOrCreate(
                 ['id' => $i],
                 [

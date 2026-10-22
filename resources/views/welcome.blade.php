@@ -96,7 +96,7 @@
 
 @php
     
-    $address = 'Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105';
+    $address = 'Purok 7, San Vicente Panabo City, Davao Del Norte, Philippines';
 
     
     $lat = 7.3144437;
@@ -256,7 +256,7 @@
                     </h1>
 
                     <p class="mt-6 max-w-xl text-lg leading-relaxed text-[#1B2B1C]/80">
-                        Private pickleball courts in Panabo City. Pick your hours online, then send your payment receipt on Facebook and we'll confirm your booking.
+                        Indoor pickleball courts in Panabo City. Pick your hours online and pay with GCash or Maya.
                     </p>
 
                     <p class="mt-5 flex items-start gap-2 text-base font-semibold text-[#1B2B1C]">
@@ -266,6 +266,12 @@
                         <span>{{ $address }}</span>
                     </p>
 
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;font-weight:700;color:#2F5D34;text-decoration:underline;text-underline-offset:4px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        Get directions
+                    </a>
+
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row">
                         <a href="{{ route('booking.create') }}" class="inline-flex items-center justify-center rounded-full bg-[#2F5D34] px-8 py-4 text-base font-bold text-white transition hover:bg-[#1F3F24]">
                             Reserve a court
@@ -273,107 +279,130 @@
                         <a href="#courts" class="inline-flex items-center justify-center rounded-full border-2 border-[#1B2B1C]/25 px-8 py-4 text-base font-bold text-[#1B2B1C] transition hover:border-[#1B2B1C] hover:bg-[#F6F8EE]/60">
                             View live courts
                         </a>
+                        
                     </div>
                 </div>
             </div>
         </section>
 
-        {{-- Courts Section --}}
-        <section id="courts" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data="{ courtFilter: 'outdoor' }">
-            <div class="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+{{-- Courts Section --}}
+        <section id="courts" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data="courtSlider()" x-init="$nextTick(() => { $refs.track.scrollLeft = 0; update(); })" @resize.window.debounce.150ms="update()">
+            <style>
+                .hc-track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 2px 6px}
+                .hc-track::-webkit-scrollbar{display:none}
+                .hc-slide{flex:0 0 78%;scroll-snap-align:start}
+                @media (min-width:640px){.hc-slide{flex-basis:calc((100% - 16px) / 2)}}
+                @media (min-width:1024px){.hc-slide{flex-basis:calc((100% - 48px) / 4)}}
+                .hc-court-card{display:flex;flex-direction:column;overflow:hidden;height:100%;border-radius:24px;border:1px solid rgba(27,43,28,.1);background:#fff;transition:border-color .2s}
+                .hc-court-card:hover{border-color:rgba(47,93,52,.45)}
+                .hc-court-art{position:relative;background:#2F5D34;padding:24px 16px 18px}
+                .hc-court-art svg{display:block;width:100%;max-width:170px;height:auto;margin:0 auto}
+                .hc-court-tag{position:absolute;left:12px;top:12px;border-radius:9999px;background:#F6F8EE;padding:3px 10px;font-size:11px;font-weight:700;color:#2F5D34;text-transform:capitalize}
+                .hc-court-body{display:flex;flex:1;flex-direction:column;gap:14px;padding:16px}
+                .hc-court-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+                .hc-arrow{width:46px;height:46px;border-radius:9999px;border:2px solid rgba(47,93,52,.3);background:#fff;color:#2F5D34;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,opacity .2s}
+                .hc-arrow:not(:disabled):hover{background:#2F5D34;color:#fff}
+            </style>
+
+            <div class="mb-6 flex items-end justify-between gap-6">
                 <div>
                     <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Choose your court</h2>
-                    <p class="mt-3 max-w-md text-[#1B2B1C]/75">Select between our available outdoor and indoor courts below.</p>
+                    
                 </div>
 
-                {{-- Dynamic Filter Buttons --}}
-                <div class="inline-flex self-start rounded-full bg-[#E5ECD2] p-1.5 text-sm font-bold md:self-auto" role="group" aria-label="Court type">
-                    <button
-                        type="button"
-                        @click="courtFilter = 'outdoor'"
-                        :aria-pressed="courtFilter === 'outdoor'"
-                        :class="courtFilter === 'outdoor' ? 'bg-[#2F5D34] text-white' : 'text-[#1B2B1C]/70 hover:text-[#1B2B1C]'"
-                        class="flex items-center gap-2 rounded-full px-5 py-2 transition duration-200">
-                        <span>Outdoor</span>
-                        <span class="rounded-full px-2 py-0.5 text-xs" :class="courtFilter === 'outdoor' ? 'bg-white/25 text-white' : 'bg-white text-[#1B2B1C]/70'">
-                            {{ $courts->filter(fn($c) => strtolower($c->classification) === 'outdoor')->count() }}
-                        </span>
+                <div class="flex items-center" style="gap:10px;flex-shrink:0;">
+                    <button type="button" class="hc-arrow" @click="go(-1)" :disabled="atStart" :style="{ opacity: atStart ? '.35' : '1', cursor: atStart ? 'default' : 'pointer' }" aria-label="Previous courts">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                     </button>
-
-                    <button
-                        type="button"
-                        @click="courtFilter = 'indoor'"
-                        :aria-pressed="courtFilter === 'indoor'"
-                        :class="courtFilter === 'indoor' ? 'bg-[#2F5D34] text-white' : 'text-[#1B2B1C]/70 hover:text-[#1B2B1C]'"
-                        class="flex items-center gap-2 rounded-full px-5 py-2 transition duration-200">
-                        <span>Indoor</span>
-                        <span class="rounded-full px-2 py-0.5 text-xs" :class="courtFilter === 'indoor' ? 'bg-white/25 text-white' : 'bg-white text-[#1B2B1C]/70'">
-                            {{ $courts->filter(fn($c) => strtolower($c->classification) === 'indoor')->count() }}
-                        </span>
+                    <button type="button" class="hc-arrow" @click="go(1)" :disabled="atEnd" :style="{ opacity: atEnd ? '.35' : '1', cursor: atEnd ? 'default' : 'pointer' }" aria-label="Next courts">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
                 </div>
             </div>
 
-            {{-- Courts Grid --}}
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div class="hc-track" x-ref="track" @scroll.passive="update()">
                 @forelse ($courts as $court)
-                    @php
-                        
-                        $type = strtolower($court->classification ?? 'outdoor');
-                    @endphp
-
-                    <article
-                        x-show="courtFilter === '{{ $type }}'"
-                        x-cloak
-                        class="flex flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[#1B2B1C]/10 bg-white transition hover:-translate-y-1 hover:border-[#2F5D34]/40">
-                        <div>
-                            {{-- Top-down court diagram with a ball in play --}}
-                            <div class="relative bg-[#2F5D34] px-6 py-8">
-                                <svg viewBox="0 0 160 100" class="mx-auto block h-auto w-full max-w-[14rem] text-white/80" aria-hidden="true">
+                    <div class="hc-slide">
+                        <article class="hc-court-card">
+                            <div class="hc-court-art">
+                                <svg viewBox="0 0 160 100" class="text-white/80" aria-hidden="true">
                                     <use href="#hc-court"/>
                                     <use href="#hc-ball" x="113" y="31" width="13" height="13" class="text-[#E4F03A]"/>
                                 </svg>
-                                <span class="absolute left-4 top-4 rounded-full bg-[#F6F8EE] px-3 py-1 text-xs font-bold capitalize text-[#2F5D34]">
-                                    {{ $court->classification ?? 'Outdoor' }}
-                                </span>
+                                <span class="hc-court-tag">{{ $court->classification ?? 'Indoor' }}</span>
                             </div>
-                            <div class="p-5">
-                                <div class="flex items-start justify-between gap-3">
+
+                            <div class="hc-court-body">
+                                <div class="hc-court-row">
                                     <h3 class="hc-display text-xl font-bold text-[#1B2B1C]">{{ $court->name }}</h3>
 
-                                    {{-- Dynamic Status Badge --}}
                                     @if($court->is_fully_booked)
-                                        <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">Fully Booked</span>
+                                        <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700">Full</span>
                                     @else
                                         <span class="rounded-full bg-[#E5ECD2] px-2.5 py-1 text-xs font-bold text-[#2F5D34]">Active</span>
                                     @endif
-
                                 </div>
-                                <p class="mt-2 text-sm leading-relaxed text-[#1B2B1C]/75">
-                                    {{ $court->description ?? 'Professional pickleball court available for scheduled games.' }}
-                                </p>
+
+                                <div style="margin-top:auto;">
+                                    @if($court->is_fully_booked)
+                                        <button disabled class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-gray-200 bg-gray-100 py-3 text-sm font-bold text-gray-500">
+                                            Unavailable
+                                        </button>
+                                    @else
+                                        <a href="{{ route('booking.create', ['court_id' => $court->id]) }}"
+                                           class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] py-3 text-sm font-bold text-white transition hover:bg-[#1F3F24]">
+                                            Book this court
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                        <div class="p-5 pt-0">
-                            {{-- Dynamic Booking Button --}}
-                            @if($court->is_fully_booked)
-                                <button disabled class="inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border border-gray-200 bg-gray-100 py-2.5 text-sm font-bold text-gray-500">
-                                    Unavailable
-                                </button>
-                            @else
-                                <a href="{{ route('booking.create', ['court_id' => $court->id]) }}"
-                                   class="inline-flex w-full items-center justify-center rounded-full bg-[#E5ECD2] py-2.5 text-sm font-bold text-[#2F5D34] transition hover:bg-[#2F5D34] hover:text-white">
-                                    Book this court
-                                </a>
-                            @endif
-                        </div>
-                    </article>
+                        </article>
+                    </div>
                 @empty
-                    <div class="col-span-full rounded-[1.75rem] border border-[#1B2B1C]/10 bg-white p-6 text-[#1B2B1C]/75">
+                    <div class="hc-slide rounded-[1.75rem] border border-[#1B2B1C]/10 bg-white p-6 text-[#1B2B1C]/75">
                         No active courts are currently available.
                     </div>
                 @endforelse
             </div>
+
+            {{-- Dots --}}
+            <div x-show="pages > 1" class="mt-4 flex items-center justify-center" style="gap:8px;">
+                <template x-for="i in pages" :key="i">
+                    <button type="button" @click="goTo(i - 1)" :aria-label="'Go to position ' + i"
+                            :style="{ width: index === i - 1 ? '22px' : '8px', background: index === i - 1 ? '#2F5D34' : '#CFDDAE' }"
+                            style="height:8px;border-radius:9999px;border:0;padding:0;cursor:pointer;transition:all .25s;"></button>
+                </template>
+            </div>
+
+            <script>
+                function courtSlider() {
+                    return {
+                        index: 0,
+                        pages: 1,
+                        atStart: true,
+                        atEnd: false,
+                        step() {
+                            const first = this.$refs.track.firstElementChild;
+                            return first ? first.offsetWidth + 16 : 1;
+                        },
+                        update() {
+                            const el = this.$refs.track;
+                            const step = this.step();
+                            const perView = Math.max(1, Math.round((el.clientWidth + 16) / step));
+                            this.pages = Math.max(1, el.children.length - perView + 1);
+                            this.index = Math.min(this.pages - 1, Math.round(el.scrollLeft / step));
+                            this.atStart = el.scrollLeft <= 4;
+                            this.atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+                        },
+                        go(dir) {
+                            this.$refs.track.scrollBy({ left: dir * this.step(), behavior: 'smooth' });
+                        },
+                        goTo(i) {
+                            this.$refs.track.scrollTo({ left: i * this.step(), behavior: 'smooth' });
+                        }
+                    };
+                }
+            </script>
         </section>
 
         {{-- Rates Section --}}
@@ -382,7 +411,7 @@
                 <div>
                     <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Simple, transparent pricing</h2>
                     <p class="mt-4 max-w-sm leading-relaxed text-[#1B2B1C]/75">
-                        Rates are per hour. Book as many hours as you need. They don't have to be back to back. Pay with GCash or Maya.
+                        Rates are per hour. Book as many hours as you need. Pay with GCash or Maya.
                     </p>
                 </div>
 
