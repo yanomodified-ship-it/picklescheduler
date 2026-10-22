@@ -100,7 +100,7 @@
 
 @php
     
-    $address = 'Purok 7, San Vicente Panabo City, Davao Del Norte, Philippines';
+    $address = 'Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines';
 
     
     $lat = 7.3144437;
@@ -185,21 +185,53 @@
     </svg>
 
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md transition-shadow duration-300"
-            :class="scrolled ? 'shadow-[0_8px_24px_-12px_rgba(27,43,28,0.35)]' : 'shadow-[0_1px_0_rgba(27,43,28,0.08)]'"
-            x-data="{ mobileMenu: false, scrolled: false }"
-            @scroll.window="scrolled = window.scrollY > 8">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md"
+            :style="{ boxShadow: scrolled ? '0 8px 24px -12px rgba(27,43,28,.35)' : '0 1px 0 rgba(27,43,28,.08)' }"
+            style="transition:box-shadow .3s ease;"
+            x-data="{
+                mobileMenu: false,
+                scrolled: false,
+                progress: 0,
+                active: '',
+                update() {
+                    this.scrolled = window.scrollY > 8;
+                    const h = document.documentElement.scrollHeight - window.innerHeight;
+                    this.progress = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
+                    let cur = '';
+                    ['courts', 'rates', 'rules', 'find-us'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el && el.getBoundingClientRect().top <= 140) cur = id;
+                    });
+                    this.active = cur;
+                }
+            }"
+            x-init="update()"
+            @scroll.window.passive="update()"
+            @resize.window="update()">
+        <style>
+            @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+            .hc-nav a, .hc-mnav a{position:relative}
+            .hc-nav .hc-u{position:absolute;left:0;bottom:-2px;height:2px;width:0;border-radius:9999px;background:#2F5D34;transition:width .3s ease}
+            .hc-nav a:hover .hc-u, .hc-nav a.hc-active .hc-u{width:100%}
+            .hc-nav a.hc-active, .hc-mnav a.hc-active{color:#2F5D34}
+        </style>
+
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6"
+             :style="{ paddingTop: scrolled ? '8px' : '12px', paddingBottom: scrolled ? '8px' : '12px' }"
+             style="transition:padding .25s ease;">
             <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
-                <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
+                <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high"
+                     class="w-auto"
+                     :style="{ height: scrolled ? '36px' : '44px' }"
+                     style="height:44px;width:auto;max-height:44px;transition:height .25s ease;">
             </a>
 
             {{-- Desktop Navigation --}}
-            <nav class="hidden items-center gap-9 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
-                <a href="#courts" class="group relative py-1 transition hover:text-[#2F5D34]">Courts<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
-                <a href="#rates" class="group relative py-1 transition hover:text-[#2F5D34]">Rates<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
-                <a href="#rules" class="group relative py-1 transition hover:text-[#2F5D34]">Rules<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
-                <a href="#find-us" class="group relative py-1 transition hover:text-[#2F5D34]">Find us<span class="absolute -bottom-0.5 left-0 h-0.5 w-0 rounded-full bg-[#2F5D34] transition-all duration-300 group-hover:w-full"></span></a>
+            <nav class="hc-nav hidden items-center gap-8 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
+                <a href="#courts" :class="{ 'hc-active': active === 'courts' }" class="py-1 transition hover:text-[#2F5D34]">Courts<span class="hc-u"></span></a>
+                <a href="#rates" :class="{ 'hc-active': active === 'rates' }" class="py-1 transition hover:text-[#2F5D34]">Rates<span class="hc-u"></span></a>
+                <a href="#rules" :class="{ 'hc-active': active === 'rules' }" class="py-1 transition hover:text-[#2F5D34]">Rules<span class="hc-u"></span></a>
+                <a href="#find-us" :class="{ 'hc-active': active === 'find-us' }" class="py-1 transition hover:text-[#2F5D34]">Find us<span class="hc-u"></span></a>
             </nav>
 
             <div class="hidden items-center md:flex">
@@ -227,67 +259,211 @@
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 -translate-y-2"
              x-transition:enter-end="opacity-100 translate-y-0"
-             class="border-t border-[#1B2B1C]/10 bg-white px-6 pb-5 pt-2 md:hidden" aria-label="Mobile">
-            <a href="#courts" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Courts</a>
-            <a href="#rates" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rates</a>
-            <a href="#rules" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rules</a>
-            <a href="#find-us" @click="mobileMenu = false" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Find us</a>
+             class="hc-mnav border-t border-[#1B2B1C]/10 bg-white px-6 pb-5 pt-2 md:hidden" aria-label="Mobile">
+            <a href="#courts" @click="mobileMenu = false" :class="{ 'hc-active': active === 'courts' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Courts</a>
+            <a href="#rates" @click="mobileMenu = false" :class="{ 'hc-active': active === 'rates' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rates</a>
+            <a href="#rules" @click="mobileMenu = false" :class="{ 'hc-active': active === 'rules' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rules</a>
+            <a href="#find-us" @click="mobileMenu = false" :class="{ 'hc-active': active === 'find-us' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Find us</a>
             <a href="{{ route('booking.create') }}" class="mt-4 block rounded-full bg-[#2F5D34] px-5 py-3 text-center font-bold text-white hover:bg-[#1F3F24]">Book a court</a>
         </nav>
 
-        <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
+        {{-- Scroll progress line --}}
+        <div style="height:3px;background:rgba(31,63,36,.12);">
+            <div :style="{ width: progress + '%' }" style="height:100%;width:0;background:linear-gradient(90deg,#2F5D34,#E4F03A);transition:width .12s linear;"></div>
+        </div>
     </header>
 
     <main class="flex-grow">
 
         {{-- Hero Section --}}
-        <section class="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] md:mx-6 md:rounded-[4rem]">
-            {{-- Decoration layer: big ball + floating pickleballs (motion is switched off for reduced-motion users) --}}
-            <div class="hc-layer" aria-hidden="true">
-                <svg class="hc-float hc-hero-ball" viewBox="0 0 200 200" width="480" height="480"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-hop hc-sm-up" viewBox="0 0 200 200" width="40" height="40" style="left:4%;top:12px;color:#F6F8EE;opacity:.8;animation-delay:-1s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-md-up" viewBox="0 0 200 200" width="28" height="28" style="left:38%;top:16px;color:#E4F03A;animation-delay:-3s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="56" height="56" style="left:6%;bottom:12px;color:#F6F8EE;opacity:.8;animation-delay:-2.5s;animation-duration:6s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-sm-up" viewBox="0 0 200 200" width="32" height="32" style="left:44%;bottom:24px;color:#E4F03A;animation-delay:-5s;animation-duration:9s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-hop hc-md-up" viewBox="0 0 200 200" width="40" height="40" style="right:10%;bottom:16px;color:#F6F8EE;opacity:.8;animation-delay:-4s;animation-duration:7s"><use href="#hc-ball"/></svg>
+        <section class="hcx-hero relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] md:mx-6 md:rounded-[4rem]">
+            <style>
+                .hcx-hero{
+                    background-color:#CFDDAE;
+                    background-image:
+                        radial-gradient(900px 520px at 6% 0%, rgba(246,248,238,.9), transparent 60%),
+                        radial-gradient(760px 520px at 100% 100%, rgba(47,93,52,.30), transparent 62%),
+                        radial-gradient(520px 320px at 58% 8%, rgba(228,240,58,.30), transparent 65%);
+                }
+                .hcx-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+                .hcx-content{position:relative;z-index:2}
+
+                /* court lines */
+                .hcx-court{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+
+                /* ball trail */
+                .hcx-trail{fill:none;stroke:#E4F03A;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 15;animation:hcx-flow 1.6s linear infinite;opacity:.85}
+                @keyframes hcx-flow{to{stroke-dashoffset:-32}}
+
+                /* big ball + rings */
+                .hcx-ballwrap{position:absolute;right:-70px;bottom:-40px;width:230px;height:230px}
+                @media (min-width:768px){.hcx-ballwrap{right:-5%;bottom:auto;top:50%;width:clamp(300px,36vw,500px);height:clamp(300px,36vw,500px);transform:translateY(-50%)}}
+                .hcx-ball{position:absolute;inset:0;color:#E4F03A;filter:drop-shadow(0 24px 30px rgba(31,63,36,.3));animation:hcx-bob 7s ease-in-out infinite alternate}
+                .hcx-ball svg{display:block;width:100%;height:100%}
+                @keyframes hcx-bob{from{transform:translateY(-10px) rotate(-4deg)}to{transform:translateY(14px) rotate(6deg)}}
+                .hcx-ring{position:absolute;inset:0;border-radius:9999px;border:2px solid rgba(246,248,238,.7);opacity:0;animation:hcx-ring 5s ease-out infinite}
+                .hcx-ring:nth-child(2){animation-delay:1.65s}
+                .hcx-ring:nth-child(3){animation-delay:3.3s}
+                @keyframes hcx-ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.55);opacity:0}}
+
+                /* small bouncing balls */
+                .hcx-b{position:absolute;animation:hcx-arc 6s ease-in-out infinite alternate}
+                .hcx-b svg{display:block;width:100%;height:100%}
+                @keyframes hcx-arc{
+                    0%{transform:translate(0,0) rotate(0deg)}
+                    25%{transform:translate(16px,-34px) rotate(70deg)}
+                    50%{transform:translate(32px,0) rotate(140deg)}
+                    75%{transform:translate(48px,-26px) rotate(210deg)}
+                    100%{transform:translate(64px,0) rotate(280deg)}
+                }
+                @media (max-width:767px){.hcx-md{display:none}}
+
+                /* entrance */
+                .hcx-rise{opacity:0;transform:translateY(24px);animation:hcx-rise .8s cubic-bezier(.2,.7,.2,1) forwards}
+                @keyframes hcx-rise{to{opacity:1;transform:none}}
+
+                @media (prefers-reduced-motion:reduce){
+                    .hcx-trail,.hcx-ball,.hcx-b{animation:none}
+                    .hcx-ring{display:none}
+                    .hcx-rise{animation:none;opacity:1;transform:none}
+                }
+            </style>
+
+            {{-- Background layer --}}
+            <div class="hcx-bg" aria-hidden="true">
+
+                {{-- Pickleball court lines --}}
+                <svg class="hcx-court" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round">
+                    <rect x="60" y="60" width="1080" height="480" rx="6"/>
+                    <line x1="600" y1="60" x2="600" y2="540" stroke-dasharray="3 10"/>
+                    <line x1="428" y1="60" x2="428" y2="540"/>
+                    <line x1="772" y1="60" x2="772" y2="540"/>
+                    <line x1="60" y1="300" x2="428" y2="300"/>
+                    <line x1="772" y1="300" x2="1140" y2="300"/>
+                </svg>
+
+                {{-- Ball trail --}}
+                <svg class="hcx-court" style="opacity:1" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">
+                    <path class="hcx-trail" d="M -40 540 C 260 80, 760 20, 1000 260"/>
+                </svg>
+
+                {{-- Big ball with pulsing rings --}}
+                <div class="hcx-ballwrap">
+                    <span class="hcx-ring"></span><span class="hcx-ring"></span><span class="hcx-ring"></span>
+                    <div class="hcx-ball"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                </div>
+
+                {{-- Small bouncing balls --}}
+                <div class="hcx-b" style="left:4%;top:12%;width:40px;height:40px;color:#F6F8EE;opacity:.85;animation-duration:6s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcx-b hcx-md" style="left:42%;top:9%;width:26px;height:26px;color:#E4F03A;animation-duration:7.5s;animation-delay:-2s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcx-b" style="left:6%;bottom:9%;width:54px;height:54px;color:#F6F8EE;opacity:.85;animation-duration:8s;animation-delay:-3s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcx-b hcx-md" style="left:46%;bottom:11%;width:30px;height:30px;color:#E4F03A;animation-duration:6.5s;animation-delay:-1s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcx-b hcx-md" style="right:22%;bottom:8%;width:38px;height:38px;color:#F6F8EE;opacity:.85;animation-duration:9s;animation-delay:-4s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcx-b hcx-md" style="right:36%;top:13%;width:22px;height:22px;color:#E4F03A;animation-duration:7s;animation-delay:-5s"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
             </div>
 
-            <div class="hc-above mx-auto max-w-7xl px-6 pb-20 pt-14 md:px-10 md:pb-28 md:pt-20">
+            <div class="hcx-content mx-auto max-w-7xl px-6 pb-20 pt-14 md:px-10 md:pb-28 md:pt-20">
                 <div class="max-w-3xl">
                     <h1 class="hc-display text-5xl font-extrabold leading-[1.02] text-[#1B2B1C] sm:text-6xl md:text-7xl">
-                        <span class="block">Reserve your court.</span>
-                        <span class="block">Serve your best game.</span>
+                        <span class="hcx-rise block" style="animation-delay:.3s">Reserve your court.</span>
+                        <span class="hcx-rise block" style="animation-delay:.45s">Serve your best game.</span>
                     </h1>
 
-                    <p class="mt-6 max-w-xl text-lg leading-relaxed text-[#1B2B1C]/80">
+                    <p class="hcx-rise mt-6 max-w-xl text-lg leading-relaxed text-[#1B2B1C]/80" style="animation-delay:.6s">
                         Indoor pickleball courts in Panabo City. Pick your hours online and pay with GCash or Maya.
                     </p>
 
-                    <p class="mt-5 flex items-start gap-2 text-base font-semibold text-[#1B2B1C]">
-                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-[#2F5D34]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <span>{{ $address }}</span>
-                    </p>
+                    <div class="hcx-rise" style="animation-delay:.75s">
+                        <p class="mt-5 flex items-start gap-2 text-base font-semibold text-[#1B2B1C]">
+                            <svg class="mt-0.5 h-5 w-5 shrink-0 text-[#2F5D34]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <span>{{ $address }}</span>
+                        </p>
 
-                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener"
-                    style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;font-weight:700;color:#2F5D34;text-decoration:underline;text-underline-offset:4px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-                        Get directions
-                    </a>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener"
+                           style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;font-weight:700;color:#2F5D34;text-decoration:underline;text-underline-offset:4px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                            Get directions
+                        </a>
+                    </div>
 
-                    <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+                    <div class="hcx-rise mt-9 flex flex-col gap-3 sm:flex-row" style="animation-delay:.9s">
                         <a href="{{ route('booking.create') }}" class="inline-flex items-center justify-center rounded-full bg-[#2F5D34] px-8 py-4 text-base font-bold text-white transition hover:bg-[#1F3F24]">
                             Reserve a court
                         </a>
                         <a href="#courts" class="inline-flex items-center justify-center rounded-full border-2 border-[#1B2B1C]/25 px-8 py-4 text-base font-bold text-[#1B2B1C] transition hover:border-[#1B2B1C] hover:bg-[#F6F8EE]/60">
                             View live courts
                         </a>
-                        
                     </div>
                 </div>
             </div>
         </section>
+
+        {{-- Ticker strip --}}
+        <div class="hc-ticker" aria-label="Highlights">
+            <style>
+                .hc-ticker{margin:18px 12px 0;overflow:hidden;border-radius:9999px;background:#1F3F24;padding:12px 0}
+                @media (min-width:768px){.hc-ticker{margin:22px 24px 0}}
+                .hc-ticker-track{display:flex;width:max-content;animation:hc-scroll var(--hc-dur,20s) linear infinite;will-change:transform}
+                .hc-ticker:hover .hc-ticker-track{animation-play-state:paused}
+                .hc-ticker-group{display:flex;flex-shrink:0;align-items:center}
+                .hc-ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 28px;font-size:14px;font-weight:700;color:#F6F8EE;white-space:nowrap}
+                .hc-ticker-dot{width:8px;height:8px;border-radius:9999px;background:#E4F03A;flex-shrink:0}
+                @keyframes hc-scroll{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--hc-shift, 25%)))}}
+                @media (prefers-reduced-motion:reduce){.hc-ticker-track{animation:none}}
+            </style>
+
+            <div class="hc-ticker-track">
+                @for ($i = 0; $i < 4; $i++)
+                    <div class="hc-ticker-group" @if($i > 0) aria-hidden="true" @endif>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Open 4:00 AM – 2:00 AM</span>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>₱200/hr day · ₱300/hr night</span>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Pay with GCash or Maya</span>
+                    </div>
+                @endfor
+            </div>
+
+            <script>
+            (function () {
+                var ticker = document.querySelector('.hc-ticker');
+                if (!ticker) return;
+                var track = ticker.querySelector('.hc-ticker-track');
+                var first = track.querySelector('.hc-ticker-group');
+
+                function fit() {
+                    var gw = first.getBoundingClientRect().width;
+                    if (!gw) return;
+
+                    // enough copies that the strip always reaches past the right edge,
+                    // even after it has slid one copy to the left
+                    var need = Math.max(4, Math.ceil(ticker.clientWidth / gw) + 2);
+                    var groups = track.querySelectorAll('.hc-ticker-group');
+
+                    while (groups.length < need) {
+                        var c = first.cloneNode(true);
+                        c.setAttribute('aria-hidden', 'true');
+                        track.appendChild(c);
+                        groups = track.querySelectorAll('.hc-ticker-group');
+                    }
+                    while (groups.length > need) {
+                        track.removeChild(groups[groups.length - 1]);
+                        groups = track.querySelectorAll('.hc-ticker-group');
+                    }
+
+                    track.style.setProperty('--hc-shift', (100 / need) + '%');   // slide exactly one copy
+                    track.style.setProperty('--hc-dur', (gw / 70) + 's');        // steady speed (~70px per second)
+                }
+
+                fit();
+                window.addEventListener('load', fit);
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+
+                var t;
+                window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(fit, 150); });
+            })();
+            </script>
+        </div>
 
 {{-- Courts Section --}}
         <section id="courts" class="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 md:py-24" x-data="courtSlider()" x-init="$nextTick(() => { $refs.track.scrollLeft = 0; update(); })" @resize.window.debounce.150ms="update()">
@@ -681,6 +857,24 @@
             </div>
         </div>
     </div>
+    <style>
+    .hc-reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+    .hc-reveal.hc-in{opacity:1;transform:none}
+</style>
+<script>
+(function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+
+    var sections = Array.prototype.slice.call(document.querySelectorAll('main section')).slice(1); // skip the hero
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('hc-in'); io.unobserve(e.target); }
+        });
+    }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+
+    sections.forEach(function (s) { s.classList.add('hc-reveal'); io.observe(s); });
+})();
+</script>
     <script>
     console.log('%cHomeCourt PickleHouse%c  built by jondev',
         'background:#2F5D34;color:#E4F03A;padding:4px 8px;border-radius:4px 0 0 4px;font-weight:bold',
