@@ -185,9 +185,12 @@
     </svg>
 
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md"
-            :style="{ boxShadow: scrolled ? '0 8px 24px -12px rgba(27,43,28,.35)' : '0 1px 0 rgba(27,43,28,.08)' }"
-            style="transition:box-shadow .3s ease;"
+    @php
+        $hcNow  = now()->hour + now()->minute / 60;
+        $hcOpen = ($hcNow >= 4 || $hcNow < 2);
+    @endphp
+
+    <header class="hch"
             x-data="{
                 mobileMenu: false,
                 scrolled: false,
@@ -210,66 +213,134 @@
             @resize.window="update()">
         <style>
             @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
-            .hc-nav a, .hc-mnav a{position:relative}
-            .hc-nav .hc-u{position:absolute;left:0;bottom:-2px;height:2px;width:0;border-radius:9999px;background:#2F5D34;transition:width .3s ease}
-            .hc-nav a:hover .hc-u, .hc-nav a.hc-active .hc-u{width:100%}
-            .hc-nav a.hc-active, .hc-mnav a.hc-active{color:#2F5D34}
+
+            .hch{position:sticky;top:0;z-index:50}
+
+            /* top strip */
+            .hch-top{overflow:hidden;max-height:44px;background:#1F3F24;color:#CFDDAE;transition:max-height .35s ease,opacity .25s ease}
+            .hch-top.off{max-height:0;opacity:0}
+            .hch-top-in{display:flex;align-items:center;justify-content:center;gap:12px;max-width:1232px;margin:0 auto;padding:8px 24px;font-size:12px;font-weight:700}
+            @media (min-width:640px){.hch-top-in{justify-content:space-between}}
+            .hch-status{display:inline-flex;align-items:center;gap:8px;color:#E4F03A}
+            .hch-status i{width:8px;height:8px;border-radius:9999px;background:#E4F03A;animation:hch-pulse 2s ease-in-out infinite}
+            .hch-status.closed{color:#CFDDAE}
+            .hch-status.closed i{background:#9CA3AF;animation:none}
+            .hch-top-links{display:none;align-items:center;gap:20px}
+            @media (min-width:640px){.hch-top-links{display:flex}}
+            .hch-top-links a{display:inline-flex;align-items:center;gap:6px;color:#F6F8EE;text-decoration:none;transition:color .2s}
+            .hch-top-links a:hover{color:#E4F03A}
+
+            /* floating bar */
+            .hch-wrap{padding:10px 12px 0}
+            @media (min-width:768px){.hch-wrap{padding:12px 24px 0}}
+            .hch-bar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1232px;margin:0 auto;border-radius:9999px;background:#fff;border:1px solid rgba(27,43,28,.08);padding:8px 10px 8px 20px;box-shadow:0 10px 30px -18px rgba(27,43,28,.45);transition:box-shadow .3s ease,padding .25s ease}
+            .hch-bar.sc{padding-top:5px;padding-bottom:5px;box-shadow:0 18px 40px -16px rgba(27,43,28,.6)}
+            .hch-logo{display:flex;align-items:center}
+            .hch-logo img{display:block;width:auto;height:44px;max-height:44px;transition:height .25s ease}
+            .hch-bar.sc .hch-logo img{height:36px}
+
+            /* desktop links */
+            .hch-nav{display:none;align-items:center;gap:4px}
+            @media (min-width:768px){.hch-nav{display:flex}}
+            .hch-nav a{border-radius:9999px;padding:9px 17px;font-size:14px;font-weight:700;color:rgba(27,43,28,.78);text-decoration:none;transition:background .25s,color .25s}
+            .hch-nav a:hover{background:#E5ECD2;color:#1F3F24}
+            .hch-nav a.hch-on{background:#1F3F24;color:#E4F03A}
+
+            /* book button */
+            .hch-cta{display:none;position:relative;overflow:hidden;align-items:center;gap:8px;border-radius:9999px;background:#E4F03A;padding:12px 22px;font-size:14px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s,color .2s}
+            @media (min-width:768px){.hch-cta{display:inline-flex}}
+            .hch-cta:hover{background:#1F3F24;color:#E4F03A}
+            .hch-cta svg{transition:transform .25s}
+            .hch-cta:hover svg{transform:translateX(4px)}
+            .hch-cta::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-20deg);animation:hch-shine 4.5s ease-in-out infinite;pointer-events:none}
+
+            /* mobile menu */
+            .hch-burger{display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:9999px;border:1.5px solid rgba(27,43,28,.18);background:#fff;color:#1B2B1C;cursor:pointer;transition:background .2s}
+            .hch-burger:hover{background:#E5ECD2}
+            @media (min-width:768px){.hch-burger{display:none}}
+            .hch-mnav{max-width:1232px;margin:8px auto 0;border-radius:28px;background:#fff;border:1px solid rgba(27,43,28,.08);padding:8px 20px 18px;box-shadow:0 20px 40px -20px rgba(27,43,28,.5)}
+            @media (min-width:768px){.hch-mnav{display:none}}
+            .hch-mnav a.l{display:flex;align-items:center;justify-content:space-between;padding:14px 4px;border-bottom:1px solid rgba(27,43,28,.08);font-size:15px;font-weight:700;color:#1B2B1C;text-decoration:none}
+            .hch-mnav a.l.hch-on{color:#2F5D34}
+            .hch-mnav a.l.hch-on::after{content:"";width:9px;height:9px;border-radius:9999px;background:#E4F03A;box-shadow:0 0 0 3px #1F3F24}
+            .hch-mnav a.b{display:block;margin-top:14px;border-radius:9999px;background:#E4F03A;padding:14px;text-align:center;font-size:15px;font-weight:800;color:#1B2B1C;text-decoration:none}
+
+            /* scroll progress */
+            .hch-prog{position:absolute;left:34px;right:34px;bottom:0;height:3px;border-radius:3px;overflow:hidden;background:rgba(31,63,36,.08)}
+            .hch-prog > div{height:100%;width:0;background:linear-gradient(90deg,#2F5D34,#E4F03A);transition:width .12s linear}
+
+            @keyframes hch-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+            @keyframes hch-shine{0%,70%{left:-60%}100%{left:130%}}
+            @media (prefers-reduced-motion:reduce){
+                .hch-status i,.hch-cta::after{animation:none}
+                .hch-top,.hch-bar,.hch-logo img{transition:none}
+            }
         </style>
 
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6"
-             :style="{ paddingTop: scrolled ? '8px' : '12px', paddingBottom: scrolled ? '8px' : '12px' }"
-             style="transition:padding .25s ease;">
-            <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
-                <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high"
-                     class="w-auto"
-                     :style="{ height: scrolled ? '36px' : '44px' }"
-                     style="height:44px;width:auto;max-height:44px;transition:height .25s ease;">
-            </a>
+        {{-- Top strip --}}
+        <div class="hch-top" :class="{ 'off': scrolled }">
+            <div class="hch-top-in">
+                @if ($hcOpen)
+                    <span class="hch-status"><i></i>Open now · until 2:00 AM</span>
+                @else
+                    <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
+                @endif
 
-            {{-- Desktop Navigation --}}
-            <nav class="hc-nav hidden items-center gap-8 text-sm font-semibold text-[#1B2B1C]/80 md:flex" aria-label="Main">
-                <a href="#courts" :class="{ 'hc-active': active === 'courts' }" class="py-1 transition hover:text-[#2F5D34]">Courts<span class="hc-u"></span></a>
-                <a href="#rates" :class="{ 'hc-active': active === 'rates' }" class="py-1 transition hover:text-[#2F5D34]">Rates<span class="hc-u"></span></a>
-                <a href="#rules" :class="{ 'hc-active': active === 'rules' }" class="py-1 transition hover:text-[#2F5D34]">Rules<span class="hc-u"></span></a>
-                <a href="#find-us" :class="{ 'hc-active': active === 'find-us' }" class="py-1 transition hover:text-[#2F5D34]">Find us<span class="hc-u"></span></a>
-            </nav>
-
-            <div class="hidden items-center md:flex">
-                <a href="{{ route('booking.create') }}" class="group inline-flex items-center gap-2 rounded-full bg-[#2F5D34] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#1F3F24] hover:shadow-md">
-                    Book a court
-                    <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-                    </svg>
-                </a>
+                <div class="hch-top-links">
+                    <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        Get directions
+                    </a>
+                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Message us
+                    </a>
+                </div>
             </div>
-
-            {{-- Mobile Menu Button --}}
-            <button type="button" @click="mobileMenu = !mobileMenu" :aria-expanded="mobileMenu" aria-label="Toggle menu" class="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B2B1C]/15 text-[#1B2B1C]/80 transition hover:bg-[#E5ECD2] hover:text-[#1B2B1C] md:hidden">
-                <svg x-show="!mobileMenu" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <svg x-show="mobileMenu" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
-                </svg>
-            </button>
         </div>
 
-        {{-- Mobile Navigation --}}
-        <nav x-show="mobileMenu" x-cloak
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             class="hc-mnav border-t border-[#1B2B1C]/10 bg-white px-6 pb-5 pt-2 md:hidden" aria-label="Mobile">
-            <a href="#courts" @click="mobileMenu = false" :class="{ 'hc-active': active === 'courts' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Courts</a>
-            <a href="#rates" @click="mobileMenu = false" :class="{ 'hc-active': active === 'rates' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rates</a>
-            <a href="#rules" @click="mobileMenu = false" :class="{ 'hc-active': active === 'rules' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Rules</a>
-            <a href="#find-us" @click="mobileMenu = false" :class="{ 'hc-active': active === 'find-us' }" class="block border-b border-[#1B2B1C]/10 py-3 text-sm font-semibold text-[#1B2B1C]/80 hover:text-[#2F5D34]">Find us</a>
-            <a href="{{ route('booking.create') }}" class="mt-4 block rounded-full bg-[#2F5D34] px-5 py-3 text-center font-bold text-white hover:bg-[#1F3F24]">Book a court</a>
-        </nav>
+        {{-- Floating bar --}}
+        <div class="hch-wrap">
+            <div class="hch-bar" :class="{ 'sc': scrolled }">
+                <a href="{{ route('home') }}" class="hch-logo" aria-label="HomeCourt PickleHouse home">
+                    <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high">
+                </a>
 
-        {{-- Scroll progress line --}}
-        <div style="height:3px;background:rgba(31,63,36,.12);">
-            <div :style="{ width: progress + '%' }" style="height:100%;width:0;background:linear-gradient(90deg,#2F5D34,#E4F03A);transition:width .12s linear;"></div>
+                {{-- Desktop Navigation --}}
+                <nav class="hch-nav" aria-label="Main">
+                    <a href="#courts" :class="{ 'hch-on': active === 'courts' }">Courts</a>
+                    <a href="#rates" :class="{ 'hch-on': active === 'rates' }">Rates</a>
+                    <a href="#rules" :class="{ 'hch-on': active === 'rules' }">Rules</a>
+                    <a href="#find-us" :class="{ 'hch-on': active === 'find-us' }">Find us</a>
+                </nav>
+
+                <a href="{{ route('booking.create') }}" class="hch-cta">
+                    Book a court
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+
+                {{-- Mobile Menu Button --}}
+                <button type="button" class="hch-burger" @click="mobileMenu = !mobileMenu" :aria-expanded="mobileMenu" aria-label="Toggle menu">
+                    <svg x-show="!mobileMenu" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg x-show="mobileMenu" x-cloak width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+
+                {{-- Scroll progress line --}}
+                <div class="hch-prog" aria-hidden="true"><div :style="{ width: progress + '%' }"></div></div>
+            </div>
+
+            {{-- Mobile Navigation --}}
+            <nav x-show="mobileMenu" x-cloak x-transition.opacity.duration.200ms class="hch-mnav" aria-label="Mobile">
+                <a href="#courts" @click="mobileMenu = false" :class="{ 'hch-on': active === 'courts' }" class="l">Courts</a>
+                <a href="#rates" @click="mobileMenu = false" :class="{ 'hch-on': active === 'rates' }" class="l">Rates</a>
+                <a href="#rules" @click="mobileMenu = false" :class="{ 'hch-on': active === 'rules' }" class="l">Rules</a>
+                <a href="#find-us" @click="mobileMenu = false" :class="{ 'hch-on': active === 'find-us' }" class="l">Find us</a>
+                <a href="{{ route('booking.create') }}" class="b">Book a court</a>
+            </nav>
         </div>
     </header>
 
@@ -931,45 +1002,162 @@
         </section>
 
         {{-- Find Us Section --}}
-        <section id="find-us" class="relative mx-3 mb-6 scroll-mt-24 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] px-6 py-16 md:mx-6 md:rounded-[4rem] md:py-20">
-            {{-- Decoration layer: floating pickleballs in the empty top and bottom bands --}}
-            <div class="hc-layer" aria-hidden="true">
-                <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="left:6%;top:12px;color:#E4F03A;animation-delay:-1.5s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-md-up" viewBox="0 0 200 200" width="48" height="48" style="right:8%;top:16px;color:#F6F8EE;opacity:.8;animation-delay:-4s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-sm-up" viewBox="0 0 200 200" width="48" height="48" style="left:12%;bottom:12px;color:#F6F8EE;opacity:.8;animation-delay:-6s;animation-duration:9s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="right:7%;bottom:12px;color:#E4F03A;animation-delay:-3s;animation-duration:6s"><use href="#hc-ball"/></svg>
-            </div>
+        @php
+            $nowH     = now()->hour + now()->minute / 60;
+            $shopOpen = ($nowH >= 4 || $nowH < 2);
+        @endphp
 
-            <div class="hc-above mx-auto max-w-5xl">
-                <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl">Find us</h2>
-                <p class="mt-3 text-lg text-[#1B2B1C]/80">{{ $address }}</p>
+        <section id="find-us" class="hcf scroll-mt-24">
+            <style>
+                .hcf{position:relative;margin:0 12px 24px;overflow:hidden;border-radius:40px;padding:56px 20px;
+                    background-color:#CFDDAE;
+                    background-image:radial-gradient(640px 380px at 0% 0%, rgba(246,248,238,.85), transparent 62%),radial-gradient(640px 400px at 100% 100%, rgba(228,240,58,.32), transparent 62%)}
+                @media (min-width:768px){.hcf{margin:0 24px 24px;border-radius:64px;padding:80px 48px}}
+                .hcf-inner{position:relative;z-index:2;margin:0 auto;max-width:1100px}
 
-                <div class="mt-10 aspect-[4/3] overflow-hidden rounded-[2rem] border-2 border-[#1B2B1C]/15 bg-white sm:aspect-[16/9]">
-                    <iframe
-                        title="Map showing HomeCourt PickleHouse"
-                        src="https://www.google.com/maps?q={{ $lat }},{{ $lng }}&amp;z=18&amp;output=embed"
-                        class="h-full w-full"
-                        style="border:0"
-                        loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                .hcf-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
+                .hcf-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcf-pulse 2s ease-in-out infinite}
+                .hcf-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:30px}
+                .hcf-pill{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:8px 16px;font-size:13px;font-weight:800;color:#E4F03A}
+                .hcf-pill i{width:8px;height:8px;border-radius:9999px;background:#E4F03A;animation:hcf-pulse 2s ease-in-out infinite}
+                .hcf-pill.closed{background:#fff;color:#4B5563}
+                .hcf-pill.closed i{background:#9CA3AF;animation:none}
+
+                .hcf-grid{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:1024px){.hcf-grid{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:26px;align-items:stretch}}
+
+                .hcf-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:22px;border-radius:32px;padding:30px;
+                    background-color:#1F3F24;
+                    background-image:radial-gradient(420px 260px at 100% 0%, rgba(228,240,58,.2), transparent 65%),radial-gradient(400px 260px at 0% 100%, rgba(95,150,80,.4), transparent 65%);
+                    box-shadow:0 26px 44px -30px rgba(0,0,0,.7)}
+                @media (min-width:768px){.hcf-card{padding:36px}}
+                .hcf-card > *{position:relative;z-index:2}
+                .hcf-card > .hcf-lines{position:absolute;z-index:1;inset:0;width:100%;height:100%;opacity:.07;pointer-events:none}
+
+                .hcf-pinrow{display:flex;align-items:flex-start;gap:16px}
+                .hcf-pin{position:relative;flex-shrink:0;display:flex;width:54px;height:54px;align-items:center;justify-content:center;border-radius:9999px;background:#E4F03A;color:#1F3F24}
+                .hcf-pin::after{content:"";position:absolute;inset:0;border-radius:9999px;border:2px solid #E4F03A;animation:hcf-ring 2.6s ease-out infinite}
+                .hcf-cap{margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#CFDDAE}
+                .hcf-addr{margin:6px 0 0;font-size:19px;font-weight:700;line-height:1.4;color:#F6F8EE}
+
+                .hcf-hours{display:flex;align-items:center;gap:14px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:16px 18px}
+                .hcf-hours .ic{display:flex;width:44px;height:44px;flex-shrink:0;align-items:center;justify-content:center;border-radius:9999px;background:rgba(228,240,58,.16);color:#E4F03A}
+                .hcf-hours .t1{margin:0;font-size:12px;font-weight:700;color:#CFDDAE}
+                .hcf-hours .t2{margin:2px 0 0;font-size:18px;font-weight:800;color:#F6F8EE}
+
+                .hcf-actions{display:flex;flex-direction:column;gap:12px;margin-top:auto}
+                .hcf-btn{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:9999px;padding:15px 22px;font-size:15px;font-weight:800;text-decoration:none;transition:background .2s,color .2s,border-color .2s}
+                .hcf-btn svg{flex-shrink:0;transition:transform .25s}
+                .hcf-btn.main{background:#E4F03A;color:#1B2B1C}
+                .hcf-btn.main:hover{background:#fff}
+                .hcf-btn.main:hover svg{transform:translate(3px,-3px)}
+                .hcf-btn.ghost{border:2px solid rgba(246,248,238,.35);color:#F6F8EE}
+                .hcf-btn.ghost:hover{background:#F6F8EE;color:#1F3F24;border-color:#F6F8EE}
+
+                .hcf-map{position:relative;overflow:hidden;border-radius:32px;border:6px solid #F6F8EE;background:#fff;aspect-ratio:4/3;box-shadow:0 26px 44px -30px rgba(27,43,28,.55)}
+                @media (min-width:1024px){.hcf-map{aspect-ratio:auto;min-height:480px}}
+                .hcf-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+                .hcf-chip{position:absolute;left:14px;top:14px;z-index:2;display:flex;align-items:center;gap:10px;border-radius:18px;background:#fff;padding:9px 16px 9px 10px;box-shadow:0 14px 28px -14px rgba(27,43,28,.5);pointer-events:none}
+                .hcf-chip .dot{display:flex;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9999px;background:#E4F03A;color:#1F3F24}
+                .hcf-chip b{display:block;font-size:13px;font-weight:800;line-height:1.2;color:#1B2B1C}
+                .hcf-chip span{display:block;font-size:11px;font-weight:600;color:rgba(27,43,28,.65)}
+
+                .hcf-b{position:absolute;z-index:1;pointer-events:none;animation:hcf-arc 6s ease-in-out infinite alternate}
+                .hcf-b svg{display:block;width:100%;height:100%}
+                @media (max-width:767px){.hcf-b.md{display:none}}
+
+                @keyframes hcf-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+                @keyframes hcf-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+                @keyframes hcf-arc{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(28px,-26px) rotate(140deg)}100%{transform:translate(56px,0) rotate(280deg)}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcf-eyebrow i,.hcf-pill i,.hcf-b{animation:none}
+                    .hcf-pin::after{display:none}
+                }
+            </style>
+
+            {{-- floating pickleballs --}}
+            <div class="hcf-b" style="left:5%;top:20px;width:36px;height:36px;color:#E4F03A;animation-duration:6s" aria-hidden="true"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+            <div class="hcf-b md" style="right:9%;top:26px;width:46px;height:46px;color:#F6F8EE;opacity:.85;animation-duration:8s;animation-delay:-3s" aria-hidden="true"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+            <div class="hcf-b md" style="left:10%;bottom:22px;width:44px;height:44px;color:#F6F8EE;opacity:.85;animation-duration:9s;animation-delay:-5s" aria-hidden="true"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+
+            <div class="hcf-inner">
+
+                {{-- Heading + live status --}}
+                <div class="hcf-head">
+                    <div>
+                        <span class="hcf-eyebrow"><i></i>Visit us</span>
+                        <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl" style="margin:16px 0 0;">Find us</h2>
+                    </div>
+
+                    @if ($shopOpen)
+                        <span class="hcf-pill"><i></i>Open now · until 2:00 AM</span>
+                    @else
+                        <span class="hcf-pill closed"><i></i>Closed now · opens at 4:00 AM</span>
+                    @endif
                 </div>
 
-                <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="flex items-center gap-2 font-semibold text-[#1B2B1C]">
-                        <svg class="h-5 w-5 text-[#2F5D34]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                <div class="hcf-grid">
+
+                    {{-- Info card --}}
+                    <div class="hcf-card">
+                        <svg class="hcf-lines" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                            <rect x="30" y="30" width="340" height="540" rx="6"/>
+                            <line x1="30" y1="300" x2="370" y2="300" stroke-dasharray="3 10"/>
+                            <line x1="30" y1="170" x2="370" y2="170"/>
+                            <line x1="30" y1="430" x2="370" y2="430"/>
+                            <line x1="200" y1="30" x2="200" y2="170"/>
+                            <line x1="200" y1="430" x2="200" y2="570"/>
                         </svg>
-                        <span>Courts open 4:00 AM to 2:00 AM</span>
-                    </p>
-                    <div class="flex flex-col gap-3 sm:flex-row">
-                        <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener noreferrer"
-                           class="inline-flex items-center justify-center rounded-full bg-[#2F5D34] px-7 py-3 font-bold text-white transition hover:bg-[#1F3F24]">
-                            Get directions
-                        </a>
-                        <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer"
-                           class="inline-flex items-center justify-center rounded-full border-2 border-[#1B2B1C]/25 px-7 py-3 font-bold text-[#1B2B1C] transition hover:border-[#1B2B1C] hover:bg-[#F6F8EE]/60">
-                            Message us on Facebook
-                        </a>
+
+                        <div class="hcf-pinrow">
+                            <span class="hcf-pin">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </span>
+                            <div>
+                                <p class="hcf-cap">Our address</p>
+                                <p class="hcf-addr">{{ $address }}</p>
+                            </div>
+                        </div>
+
+                        <div class="hcf-hours">
+                            <span class="ic">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </span>
+                            <div>
+                                <p class="t1">Courts open</p>
+                                <p class="t2">4:00 AM – 2:00 AM</p>
+                            </div>
+                        </div>
+
+                        <div class="hcf-actions">
+                            <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $lat }},{{ $lng }}" target="_blank" rel="noopener noreferrer" class="hcf-btn main">
+                                Get directions
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+                            </a>
+                            <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcf-btn ghost">
+                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                Message us on Facebook
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Map --}}
+                    <div class="hcf-map">
+                        <iframe
+                            title="Map showing HomeCourt PickleHouse"
+                            src="https://www.google.com/maps?q={{ $lat }},{{ $lng }}&amp;z=18&amp;output=embed"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+                        <div class="hcf-chip">
+                            <span class="dot">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </span>
+                            <div>
+                                <b>HomeCourt PickleHouse</b>
+                                <span>Panabo City</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -988,18 +1176,80 @@
          @keydown.escape.window="open = null">
 
         {{-- Footer --}}
-        <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
-            <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+        <footer class="hcz">
+            <style>
+                .hcz{position:relative;margin-top:24px;overflow:hidden;border-radius:40px 40px 0 0;color:#CFDDAE;
+                    background-color:#1F3F24;
+                    background-image:radial-gradient(700px 380px at 100% 0%, rgba(228,240,58,.16), transparent 65%),radial-gradient(640px 380px at 0% 100%, rgba(95,150,80,.35), transparent 65%)}
+                @media (min-width:768px){.hcz{margin-top:40px;border-radius:64px 64px 0 0}}
+                .hcz-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.05;pointer-events:none}
+                .hcz-mark{position:absolute;left:50%;bottom:-.14em;z-index:1;transform:translateX(-50%);font-size:clamp(64px,15vw,210px);font-weight:800;line-height:.8;letter-spacing:-.02em;white-space:nowrap;color:rgba(246,248,238,.05);pointer-events:none;user-select:none}
+                .hcz-inner{position:relative;z-index:2;margin:0 auto;max-width:1200px;padding:0 24px}
 
-                <div class="flex items-center gap-6">
-                    <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
-                    <button type="button" @click="$dispatch('open-privacy')" class="underline-offset-4 transition-colors hover:text-white hover:underline">Privacy Policy</button>
+                .hcz-cta{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:22px;padding:52px 0 44px;border-bottom:1px solid rgba(246,248,238,.14)}
+                .hcz-cta h2{margin:0;font-size:clamp(32px,4.8vw,52px);font-weight:800;line-height:1.05;color:#F6F8EE}
+                .hcz-cta h2 em{font-style:normal;color:#E4F03A}
+                .hcz-book{display:inline-flex;align-items:center;gap:10px;border-radius:9999px;background:#E4F03A;padding:16px 30px;font-size:16px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s}
+                .hcz-book:hover{background:#fff}
+                .hcz-book svg{transition:transform .25s}
+                .hcz-book:hover svg{transform:translateX(5px)}
+                .hcz-ball{position:absolute;right:36%;top:14px;width:40px;height:40px;color:#E4F03A;animation:hcz-hop 2.4s ease-in-out infinite;pointer-events:none}
+                @media (max-width:900px){.hcz-ball{display:none}}
 
-                    {{-- Facebook Social Link --}}
-                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="transition-colors hover:text-white">
-                        <svg width="20" height="20" class="fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                .hcz-bar{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding:22px 0 30px;font-size:13px}
+                .hcz-copy{margin:0;color:#CFDDAE}
+                .hcz-copy b{color:#F6F8EE}
+                .hcz-legal{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+                .hcz-legal button.l{background:none;border:0;padding:0;font-size:13px;font-weight:600;color:#F6F8EE;cursor:pointer;text-underline-offset:4px;transition:color .2s}
+                .hcz-legal button.l:hover{color:#E4F03A;text-decoration:underline}
+                .hcz-round{display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:9999px;border:2px solid rgba(246,248,238,.3);background:transparent;color:#F6F8EE;cursor:pointer;text-decoration:none;transition:background .2s,color .2s,border-color .2s}
+                .hcz-round:hover{background:#E4F03A;border-color:#E4F03A;color:#1B2B1C}
+
+                @keyframes hcz-hop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(24px) rotate(180deg)}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcz-ball{animation:none}
+                    .hcz-book svg{transition:none}
+                }
+            </style>
+
+            <svg class="hcz-lines" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                <rect x="60" y="40" width="1080" height="520" rx="6"/>
+                <line x1="600" y1="40" x2="600" y2="560" stroke-dasharray="3 10"/>
+                <line x1="428" y1="40" x2="428" y2="560"/>
+                <line x1="772" y1="40" x2="772" y2="560"/>
+                <line x1="60" y1="300" x2="428" y2="300"/>
+                <line x1="772" y1="300" x2="1140" y2="300"/>
+            </svg>
+            <div class="hcz-mark hc-display" aria-hidden="true">HOMECOURT</div>
+
+            <div class="hcz-inner">
+
+                {{-- Call to action --}}
+                <div class="hcz-cta">
+                    <svg class="hcz-ball" viewBox="0 0 200 200" aria-hidden="true"><use href="#hc-ball"/></svg>
+                    <h2 class="hc-display">Ready to <em>play?</em></h2>
+                    <a href="{{ route('booking.create') }}" class="hcz-book">
+                        Book a court
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </a>
+                </div>
+
+                {{-- Bottom bar --}}
+                <div class="hcz-bar">
+                    <p class="hcz-copy">© {{ date('Y') }} <b>HomeCourt PickleHouse</b>. All rights reserved.</p>
+
+                    <div class="hcz-legal">
+                        <button type="button" class="l" @click="$dispatch('open-house-rules')">House Rules</button>
+                        <button type="button" class="l" @click="$dispatch('open-privacy')">Privacy Policy</button>
+
+                        <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="hcz-round">
+                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+
+                        <button type="button" class="hcz-round" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" aria-label="Back to top">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </footer>
