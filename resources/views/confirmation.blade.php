@@ -83,153 +83,405 @@
     </svg>
 
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
-    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(27,43,28,0.08)]">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-            <a href="{{ route('home') }}" class="flex items-center" aria-label="HomeCourt PickleHouse home">
-                <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high" class="h-10 w-auto sm:h-12" style="height: 44px; width: auto; max-height: 44px;">
-            </a>
+    @php
+        $hcNow  = now()->hour + now()->minute / 60;
+        $hcOpen = ($hcNow >= 4 || $hcNow < 2);
+    @endphp
 
-            <a href="{{ route('home') }}" class="group inline-flex items-center gap-2 rounded-full border-2 border-[#2F5D34]/25 px-4 py-2 text-sm font-bold text-[#2F5D34] transition hover:border-[#2F5D34] hover:bg-[#2F5D34] hover:text-white">
-                <svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m15 18-6-6 6-6"/>
-                </svg>
-                Home
-            </a>
-        </div>
-        <div class="h-[3px] bg-gradient-to-r from-[#2F5D34] via-[#E4F03A] to-[#2F5D34]"></div>
-    </header>
+    <header class="hch"
+            x-data="{
+                scrolled: false,
+                progress: 0,
+                update() {
+                    this.scrolled = window.scrollY > 8;
+                    const h = document.documentElement.scrollHeight - window.innerHeight;
+                    this.progress = h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0;
+                }
+            }"
+            x-init="update()"
+            @scroll.window.passive="update()"
+            @resize.window="update()">
+        <style>
+            .hch{position:sticky;top:0;z-index:50}
+            .hch-top{overflow:hidden;max-height:44px;background:#1F3F24;color:#CFDDAE;transition:max-height .35s ease,opacity .25s ease}
+            .hch-top.off{max-height:0;opacity:0}
+            .hch-top-in{display:flex;align-items:center;justify-content:center;gap:12px;max-width:1232px;margin:0 auto;padding:8px 24px;font-size:12px;font-weight:700}
+            @media (min-width:640px){.hch-top-in{justify-content:space-between}}
+            .hch-status{display:inline-flex;align-items:center;gap:8px;color:#E4F03A}
+            .hch-status i{width:8px;height:8px;border-radius:9999px;background:#E4F03A;animation:hch-pulse 2s ease-in-out infinite}
+            .hch-status.closed{color:#CFDDAE}
+            .hch-status.closed i{background:#9CA3AF;animation:none}
+            .hch-top-links{display:none;align-items:center;gap:20px}
+            @media (min-width:640px){.hch-top-links{display:flex}}
+            .hch-top-links a{display:inline-flex;align-items:center;gap:6px;color:#F6F8EE;text-decoration:none;transition:color .2s}
+            .hch-top-links a:hover{color:#E4F03A}
 
-    <main class="flex-grow">
+            .hch-wrap{padding:10px 12px 0}
+            @media (min-width:768px){.hch-wrap{padding:12px 24px 0}}
+            .hch-bar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1232px;margin:0 auto;border-radius:9999px;background:#fff;border:1px solid rgba(27,43,28,.08);padding:8px 10px 8px 20px;box-shadow:0 10px 30px -18px rgba(27,43,28,.45);transition:box-shadow .3s ease,padding .25s ease}
+            .hch-bar.sc{padding-top:5px;padding-bottom:5px;box-shadow:0 18px 40px -16px rgba(27,43,28,.6)}
+            .hch-logo{display:flex;align-items:center}
+            .hch-logo img{display:block;width:auto;height:44px;max-height:44px;transition:height .25s ease}
+            .hch-bar.sc .hch-logo img{height:36px}
 
-        {{-- Success panel (echoes the home page hero) --}}
-        <section class="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-[#CFDDAE] md:mx-6 md:rounded-[4rem]">
-            <div class="hc-layer" aria-hidden="true">
-                <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="left:6%;top:14px;color:#E4F03A;animation-delay:-1.5s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-sm-up" viewBox="0 0 200 200" width="48" height="48" style="right:8%;top:18px;color:#F6F8EE;opacity:.8;animation-delay:-4s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-drift hc-sm-up" viewBox="0 0 200 200" width="48" height="48" style="left:10%;bottom:14px;color:#F6F8EE;opacity:.8;animation-delay:-6s;animation-duration:9s"><use href="#hc-ball"/></svg>
-                <svg class="hc-float hc-hop" viewBox="0 0 200 200" width="36" height="36" style="right:7%;bottom:14px;color:#E4F03A;animation-delay:-3s;animation-duration:6s"><use href="#hc-ball"/></svg>
-            </div>
+            .hch-right{display:flex;align-items:center;gap:4px}
+            .hch-link{display:none;border-radius:9999px;padding:9px 16px;font-size:14px;font-weight:700;color:rgba(27,43,28,.78);text-decoration:none;transition:background .25s,color .25s}
+            @media (min-width:640px){.hch-link{display:inline-block}}
+            .hch-link:hover{background:#E5ECD2;color:#1F3F24}
+            .hch-cta{display:inline-flex;align-items:center;gap:8px;margin-left:6px;border-radius:9999px;background:#E4F03A;padding:11px 20px;font-size:14px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s,color .2s}
+            .hch-cta:hover{background:#1F3F24;color:#E4F03A}
+            .hch-cta svg{transition:transform .25s}
+            .hch-cta:hover svg{transform:translateX(4px)}
 
-            <div class="hc-above mx-auto max-w-2xl px-6 py-12 text-center md:py-16">
-                <div class="mx-auto flex items-center justify-center rounded-full bg-[#2F5D34] text-white" style="width:4rem;height:4rem">
-                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <h1 class="hc-display mt-6 text-3xl font-extrabold text-[#1B2B1C] sm:text-4xl md:text-5xl">Booking Request Submitted!</h1>
-                <p class="mt-3 text-[#1B2B1C]/80">Thank you for choosing PickleHouse.</p>
+            .hch-prog{position:absolute;left:34px;right:34px;bottom:0;height:3px;border-radius:3px;overflow:hidden;background:rgba(31,63,36,.08)}
+            .hch-prog > div{height:100%;width:0;background:linear-gradient(90deg,#2F5D34,#E4F03A);transition:width .12s linear}
 
-                {{-- Booking Reference (ticket-stub style) --}}
-                <div class="mt-8 rounded-[1.5rem] border-2 border-dashed border-[#2F5D34]/50 bg-white/85 p-6">
-                    <p class="text-sm font-semibold text-[#1B2B1C]/70">Your booking reference</p>
-                    <p class="hc-display mt-2 break-all text-4xl font-extrabold tracking-wider text-[#2F5D34] sm:text-5xl">{{ $booking->booking_reference }}</p>
-                    <p class="mt-3 text-sm text-[#1B2B1C]/70">Screenshot this reference for your records.</p>
-                </div>
-            </div>
-        </section>
+            @keyframes hch-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+            @media (prefers-reduced-motion:reduce){
+                .hch-status i{animation:none}
+                .hch-top,.hch-bar,.hch-logo img{transition:none}
+            }
+        </style>
 
-        <div class="mx-auto w-full max-w-2xl space-y-6 px-4 py-8 sm:px-6 sm:py-12">
-
-            {{-- Booking Details --}}
-            <div class="rounded-[2rem] border border-[#1B2B1C]/10 bg-white p-6 sm:p-8">
-                <h2 class="hc-display mb-5 text-xl font-bold text-[#1B2B1C]">Booking details</h2>
-                <dl class="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
-                    <div>
-                        <dt class="text-sm text-[#1B2B1C]/60">Customer</dt>
-                        <dd class="mt-1 break-words font-bold">{{ $booking->customer_name ?? $booking->customer->full_name ?? 'Guest Customer' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm text-[#1B2B1C]/60">Contact number</dt>
-                        <dd class="mt-1 break-words font-bold">{{ $booking->customer->contact_number ?? 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm text-[#1B2B1C]/60">Court</dt>
-                        <dd class="mt-1 font-bold">{{ $booking->court->name ?? 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm text-[#1B2B1C]/60">Date</dt>
-                        <dd class="mt-1 font-bold">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm text-[#1B2B1C]/60">Total</dt>
-                        <dd class="hc-display mt-1 text-2xl font-extrabold text-[#2F5D34]">
-                            ₱{{ number_format((float) ($totalAmount ?? $booking->total_price ?? $booking->total_amount ?? 0), 2) }}
-                        </dd>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <dt class="text-sm text-[#1B2B1C]/60">Time slot{{ (isset($bookings) && $bookings->count() > 1) ? 's' : '' }}</dt>
-                        <dd class="mt-2 flex flex-wrap gap-2">
-                            @forelse (($bookings ?? collect([$booking])) as $slotBooking)
-                                <span class="inline-flex items-center rounded-full bg-[#E5ECD2] px-3.5 py-1.5 text-xs font-semibold text-[#1B2B1C]">
-                                    {{ \Carbon\Carbon::parse($slotBooking->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($slotBooking->end_time)->format('g:i A') }}
-                                </span>
-                            @empty
-                                <span class="text-xs text-[#1B2B1C]/60">N/A</span>
-                            @endforelse
-                        </dd>
-                    </div>
-                </dl>
-            </div>
-
-            {{-- Payment Details --}}
-            <div class="hc-on-dark rounded-[2rem] bg-[#1F3F24] p-6 text-left sm:p-8">
-                <h2 class="hc-display text-xl font-bold text-white">Payment details</h2>
-
-                @if(($booking->payment_method ?? '') === 'Maya')
-                    <div class="mt-5">
-                        <p class="text-sm text-[#CFDDAE]">Pay via Maya</p>
-                        <p class="mt-2 text-base font-semibold text-white">
-                            Please message our Facebook page for the Maya payment details, and include your booking reference.
-                        </p>
-                    </div>
+        {{-- Top strip --}}
+        <div class="hch-top" :class="{ 'off': scrolled }">
+            <div class="hch-top-in">
+                @if ($hcOpen)
+                    <span class="hch-status"><i></i>Open now · until 2:00 AM</span>
                 @else
-                    <div class="mt-5" style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;">
-
-                        {{-- QR code --}}
-                        <div style="flex:0 0 auto;margin:0 auto;">
-                            <div style="background:#fff;border-radius:20px;padding:10px;width:230px;max-width:100%;">
-                                <img src="{{ asset('images/gcash-qr.png') }}" alt="GCash QR code for HomeCourt PickleHouse payments" width="762" height="1115" style="display:block;width:100%;height:auto;border-radius:12px;">
-                            </div>
-                            <a href="{{ asset('images/gcash-qr.png') }}" download="HomeCourt-GCash-QR.png"
-                               style="display:block;margin-top:10px;text-align:center;font-size:13px;font-weight:700;color:#E4F03A;text-decoration:underline;text-underline-offset:4px;">
-                                Save QR image
-                            </a>
-                        </div>
-
-                        {{-- Account details --}}
-                        <div style="flex:1 1 220px;min-width:0;">
-                            <p class="text-sm text-[#CFDDAE]">Send payment via GCash</p>
-                            <p class="hc-display mt-1 text-4xl font-extrabold tracking-wide text-[#E4F03A]">0960 302 4390</p>
-
-                            <button type="button"
-                                    onclick="navigator.clipboard && navigator.clipboard.writeText('09603024390'); this.textContent='Copied!'; var b=this; setTimeout(function(){ b.textContent='Copy number'; }, 1800);"
-                                    style="margin-top:8px;border-radius:9999px;border:1.5px solid rgba(228,240,58,.6);background:transparent;color:#E4F03A;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">
-                                Copy number
-                            </button>
-
-                            <p class="mt-4 text-sm text-[#CFDDAE]">Account name</p>
-                            <p class="font-semibold text-white">Leah Jean Alimasag</p>
-                        </div>
-                    </div>
+                    <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
                 @endif
 
-                <div class="mt-6 border-t border-white/15 pt-6">
-                    <p class="text-sm leading-relaxed text-[#CFDDAE]">
-                        To verify your booking, kindly message our Facebook page with your booking reference and payment receipt.
-                    </p>
-
-                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="mt-4 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#E4F03A] px-5 py-3.5 text-center text-sm font-bold leading-snug text-[#1B2B1C] transition hover:bg-white">
-                        <svg width="18" height="18" style="flex:none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                        <span>Open our Facebook page</span>
+                <div class="hch-top-links">
+                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Questions? Message us
                     </a>
                 </div>
             </div>
+        </div>
 
-            {{-- Book Again Button --}}
-            <div class="text-center">
-                <a href="{{ route('booking.create') }}" class="inline-flex w-full items-center justify-center rounded-full bg-[#2F5D34] px-8 py-3.5 font-bold text-white transition hover:bg-[#1F3F24] sm:w-auto">
-                    Book Again
+        {{-- Floating bar --}}
+        <div class="hch-wrap">
+            <div class="hch-bar" :class="{ 'sc': scrolled }">
+                <a href="{{ route('home') }}" class="hch-logo" aria-label="HomeCourt PickleHouse home">
+                    <img src="{{ asset('images/logo.png') }}" alt="HomeCourt PickleHouse" width="222" height="120" fetchpriority="high">
                 </a>
+
+                <nav class="hch-right" aria-label="Main">
+                    <a href="{{ route('home') }}" class="hch-link">Home</a>
+                    <a href="{{ route('booking.create') }}" class="hch-cta">
+                        Book again
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                </nav>
+
+                <div class="hch-prog" aria-hidden="true"><div :style="{ width: progress + '%' }"></div></div>
             </div>
         </div>
+    </header>
+
+    <main class="flex-grow">
+        @php
+            $method   = (($booking->payment_method ?? '') === 'Maya') ? 'maya' : 'gcash';
+            $payTotal = (float) ($totalAmount ?? $booking->total_price ?? $booking->total_amount ?? 0);
+
+            $brandName = ['gcash' => 'GCash', 'maya' => 'Maya'];
+            $accounts = [
+                'gcash' => [
+                    ['label' => 'Account 1', 'number' => '0960 302 4390', 'raw' => '09603024390', 'name' => 'Leah Jean Alimasag', 'qr' => 'gcash-qr.png',   'w' => 762, 'h' => 1115],
+                    ['label' => 'Account 2', 'number' => '0960 428 9234', 'raw' => '09604289234', 'name' => 'Leah Jean Alimasag', 'qr' => 'gcash-qr-2.png', 'w' => 803, 'h' => 1118],
+                ],
+                'maya' => [
+                    ['label' => 'Account 1', 'number' => '0917 324 5124', 'raw' => '09173245124', 'name' => 'Leah Jean Alimasag', 'qr' => 'maya-qr.png',     'w' => 820, 'h' => 920],
+                ],
+            ];
+        @endphp
+
+        <section class="hcq">
+            <style>
+                .hcq{position:relative;margin:12px 12px 24px;border-radius:36px;padding:44px 14px 48px;
+                    background-color:#1F3F24;
+                    background-image:radial-gradient(620px 360px at 92% 0%, rgba(228,240,58,.20), transparent 65%),radial-gradient(700px 420px at 0% 100%, rgba(95,150,80,.35), transparent 65%)}
+                @media (min-width:768px){.hcq{margin:12px 24px 28px;border-radius:56px;padding:64px 40px 64px}}
+                .hcq-deco{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none}
+                .hcq-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.06}
+                .hcq-ball{position:absolute;color:#E4F03A;animation:hcq-arc 7s ease-in-out infinite alternate}
+                .hcq-ball svg{display:block;width:100%;height:100%}
+                .hcq-ball.a{left:4%;top:24px;width:34px;height:34px}
+                .hcq-ball.b{right:6%;top:34px;width:46px;height:46px;color:#F6F8EE;opacity:.8;animation-delay:-3s}
+                .hcq-ball.c{left:8%;bottom:30px;width:40px;height:40px;color:#F6F8EE;opacity:.8;animation-delay:-5s}
+                .hcq-ball.d{right:9%;bottom:34px;width:32px;height:32px;animation-delay:-2s}
+                @media (max-width:767px){.hcq-ball.b,.hcq-ball.c{display:none}}
+                .hcq-inner{position:relative;z-index:2;margin:0 auto;max-width:960px}
+
+                /* hero */
+                .hcq-hero{text-align:center}
+                .hcq-check{position:relative;display:inline-flex;width:76px;height:76px;align-items:center;justify-content:center;border-radius:9999px;background:#E4F03A;color:#1F3F24;animation:hcq-pop .6s cubic-bezier(.2,.9,.3,1.4) both}
+                .hcq-check::before,.hcq-check::after{content:"";position:absolute;inset:0;border-radius:9999px;border:2px solid #E4F03A;animation:hcq-ring 2.6s ease-out infinite}
+                .hcq-check::before{animation-delay:1.3s}
+                .hcq-check path{stroke-dasharray:30;stroke-dashoffset:30;animation:hcq-draw .6s .35s ease forwards}
+                .hcq-title{margin:22px 0 0;font-size:clamp(30px,5.2vw,52px);font-weight:800;line-height:1.05;color:#F6F8EE}
+                .hcq-title em{font-style:normal;color:#E4F03A}
+                .hcq-sub{margin:12px auto 0;max-width:520px;line-height:1.6;color:#CFDDAE}
+
+                /* ticket */
+                .hcq-ticket{position:relative;margin:28px auto 0;max-width:560px;border-radius:28px;background:#fff;padding:26px 24px 22px;text-align:center;box-shadow:0 22px 40px -26px rgba(0,0,0,.65)}
+                .hcq-cap{margin:0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,43,28,.6)}
+                .hcq-ref{margin:8px 0 0;word-break:break-all;font-size:clamp(34px,7vw,52px);font-weight:800;letter-spacing:.04em;line-height:1.05;color:#2F5D34}
+                .hcq-copy{margin-top:14px;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;border:2px solid rgba(47,93,52,.35);background:#fff;padding:9px 18px;font-size:13px;font-weight:800;color:#2F5D34;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+                .hcq-copy:hover{background:#2F5D34;border-color:#2F5D34;color:#fff}
+                .hcq-copy.sm{margin-top:10px;padding:6px 14px;font-size:12px}
+                .hcq-perf{position:relative;margin:22px -24px 18px;border-top:2px dashed rgba(27,43,28,.18)}
+                .hcq-perf::before,.hcq-perf::after{content:"";position:absolute;top:-13px;width:24px;height:24px;border-radius:9999px;background:#1F3F24}
+                .hcq-perf::before{left:-12px}
+                .hcq-perf::after{right:-12px}
+                .hcq-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 36px}
+                .hcq-stat span{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,43,28,.55)}
+                .hcq-stat b{display:inline-flex;align-items:center;gap:8px;margin-top:4px;font-size:20px;font-weight:800;color:#1B2B1C}
+                .hcq-stat b.pend{font-size:15px;color:#B45309}
+                .hcq-stat b.pend i{width:9px;height:9px;border-radius:9999px;background:#F59E0B;animation:hcq-pulse 2s ease-in-out infinite}
+                .hcq-hint{margin:16px 0 0;font-size:13px;color:rgba(27,43,28,.65)}
+
+                /* steps */
+                .hcq-steps{display:flex;align-items:center;gap:8px;margin:26px auto 0;max-width:640px;border-radius:9999px;border:1px solid rgba(246,248,238,.18);background:rgba(246,248,238,.08);padding:10px 14px}
+                .hcq-step{display:flex;min-width:0;flex:1;align-items:center;gap:10px}
+                .hcq-dot{display:flex;width:32px;height:32px;flex-shrink:0;align-items:center;justify-content:center;border-radius:9999px;background:rgba(246,248,238,.14);color:#CFDDAE;font-size:14px;font-weight:800}
+                .hcq-step.is-now .hcq-dot{background:#E4F03A;color:#1F3F24;box-shadow:0 0 0 4px rgba(228,240,58,.3)}
+                .hcq-step.is-done .hcq-dot{background:#E4F03A;color:#1F3F24}
+                .hcq-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:800;color:rgba(246,248,238,.55)}
+                .hcq-step.is-now .hcq-label,.hcq-step.is-done .hcq-label{color:#F6F8EE}
+                .hcq-line{flex:0 0 20px;height:3px;border-radius:3px;background:rgba(246,248,238,.18)}
+                .hcq-line.is-done{background:#E4F03A}
+                
+                /* cards */
+                .hcq-stack{display:grid;gap:22px;margin-top:26px}
+                .hcq-card{position:relative;overflow:hidden;border-radius:30px;background:#fff;padding:28px 22px;box-shadow:0 22px 40px -26px rgba(0,0,0,.65)}
+                @media (min-width:640px){.hcq-card{padding:34px 34px}}
+                .hcq-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2F5D34,#E4F03A,#2F5D34)}
+                .hcq-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+                .hcq-num{display:flex;width:38px;height:38px;flex-shrink:0;align-items:center;justify-content:center;border-radius:9999px;background:#E4F03A;color:#1F3F24;font-size:16px;font-weight:800}
+                .hcq-dl{display:grid;gap:20px 32px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:640px){.hcq-dl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+                .hcq-dl dt{font-size:13px;font-weight:700;color:rgba(27,43,28,.6)}
+                .hcq-dl dd{margin:4px 0 0;font-weight:800;word-break:break-word;color:#1B2B1C}
+                .hcq-slotchip{display:inline-flex;align-items:center;border-radius:9999px;background:#E5ECD2;padding:7px 14px;font-size:12px;font-weight:800;color:#1F3F24}
+
+                /* payment */
+                .hcq-amount{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:22px;background:#1F3F24;padding:16px 20px;
+                    background-image:radial-gradient(280px 140px at 100% 0%, rgba(228,240,58,.22), transparent 65%)}
+                .hcq-amount span{font-size:13px;font-weight:700;color:#CFDDAE}
+                .hcq-amount b{font-size:32px;font-weight:800;line-height:1.1;color:#E4F03A}
+                .hcq-tabs{display:inline-flex;gap:6px;margin-top:20px;border-radius:9999px;background:#E5ECD2;padding:5px}
+                .hcq-tab{border:0;border-radius:9999px;background:transparent;padding:10px 22px;font-size:14px;font-weight:800;color:rgba(27,43,28,.7);cursor:pointer;transition:background .2s,color .2s}
+                .hcq-tab.on{background:#1F3F24;color:#E4F03A}
+                .hcq-accs{display:grid;gap:16px;margin-top:20px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:640px){.hcq-accs.two{grid-template-columns:repeat(2,minmax(0,1fr))}}
+                .hcq-accs.one{max-width:400px;margin-left:auto;margin-right:auto}
+                .hcq-acc{border-radius:26px;border:2px solid rgba(27,43,28,.1);background:#F6F8EE;padding:18px;text-align:center}
+                .hcq-acc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+                .hcq-brand{border-radius:9999px;padding:5px 13px;font-size:12px;font-weight:800;color:#fff}
+                .hcq-brand.gcash{background:#0B63F6}
+                .hcq-brand.maya{background:#00A859}
+                .hcq-acc-label{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(27,43,28,.6)}
+                .hcq-qr{margin:14px auto 0;max-width:220px;overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 14px 26px -18px rgba(27,43,28,.55)}
+                .hcq-qr img{display:block;width:100%;height:auto}
+                .hcq-save{display:inline-block;margin:10px 0 14px;font-size:13px;font-weight:800;color:#2F5D34;text-decoration:underline;text-underline-offset:4px}
+                .hcq-save:hover{color:#1F3F24}
+                .hcq-accnum{margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:.02em;color:#1F3F24}
+                .hcq-accname{margin:4px 0 0;font-weight:800;color:#1B2B1C}
+                .hcq-acc .hcq-cap{margin-top:12px}
+                .hcq-note{margin:16px 0 0;font-size:12.5px;line-height:1.6;color:rgba(27,43,28,.68)}
+
+                /* actions */
+                .hcq-fb{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;margin-top:18px;border-radius:9999px;background:#1F3F24;padding:16px 22px;font-size:15px;font-weight:800;color:#E4F03A;text-decoration:none;transition:background .2s,transform .2s}
+                .hcq-fb:hover{background:#2F5D34;transform:translateY(-2px)}
+                .hcq-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:28px}
+                .hcq-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;padding:15px 28px;font-size:15px;font-weight:800;text-decoration:none;transition:background .2s,color .2s,border-color .2s}
+                .hcq-btn.main{background:#E4F03A;color:#1B2B1C}
+                .hcq-btn.main:hover{background:#fff}
+                .hcq-btn.ghost{border:2px solid rgba(246,248,238,.35);color:#F6F8EE}
+                .hcq-btn.ghost:hover{background:#F6F8EE;color:#1F3F24;border-color:#F6F8EE}
+
+                @keyframes hcq-pop{from{transform:scale(0)}to{transform:scale(1)}}
+                @keyframes hcq-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+                @keyframes hcq-draw{to{stroke-dashoffset:0}}
+                @keyframes hcq-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+                @keyframes hcq-arc{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(26px,-24px) rotate(140deg)}100%{transform:translate(52px,0) rotate(280deg)}}
+                @media (prefers-reduced-motion:reduce){
+                    .hcq-ball,.hcq-check,.hcq-check::before,.hcq-check::after,.hcq-stat b.pend i{animation:none}
+                    .hcq-check path{animation:none;stroke-dashoffset:0}
+                }
+            </style>
+
+            {{-- background: court lines + floating pickleballs --}}
+            <div class="hcq-deco" aria-hidden="true">
+                <svg class="hcq-lines" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round">
+                    <rect x="60" y="60" width="1080" height="480" rx="6"/>
+                    <line x1="600" y1="60" x2="600" y2="540" stroke-dasharray="3 10"/>
+                    <line x1="428" y1="60" x2="428" y2="540"/>
+                    <line x1="772" y1="60" x2="772" y2="540"/>
+                    <line x1="60" y1="300" x2="428" y2="300"/>
+                    <line x1="772" y1="300" x2="1140" y2="300"/>
+                </svg>
+                <div class="hcq-ball a"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcq-ball b"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcq-ball c"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                <div class="hcq-ball d"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+            </div>
+
+            <div class="hcq-inner">
+
+                {{-- Success hero --}}
+                <div class="hcq-hero">
+                    <span class="hcq-check">
+                        <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </span>
+                    <h1 class="hc-display hcq-title">Booking Request <em>Submitted!</em></h1>
+                    <p class="hcq-sub">Thank you for choosing PickleHouse.</p>
+                </div>
+
+                {{-- Reference ticket --}}
+                <div class="hcq-ticket">
+                    <p class="hcq-cap">Your booking reference</p>
+                    <p class="hc-display hcq-ref">{{ $booking->booking_reference }}</p>
+                    <button type="button" class="hcq-copy" data-copy="{{ $booking->booking_reference }}" data-label="Copy reference" onclick="hcCopy(this)">Copy reference</button>
+
+                    <div class="hcq-perf"></div>
+
+                    <div class="hcq-stats">
+                        <div class="hcq-stat"><span>Status</span><b class="pend"><i></i>Awaiting payment</b></div>
+                        <div class="hcq-stat"><span>Total</span><b class="hc-display">₱{{ number_format($payTotal, 2) }}</b></div>
+                    </div>
+                    <p class="hcq-hint">Screenshot this reference for your records.</p>
+                </div>
+
+                <div class="hcq-stack">
+
+                    {{-- Booking details --}}
+                    <div class="hcq-card">
+                        <div class="hcq-head">
+                            <span class="hcq-num">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                            </span>
+                            <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Booking details</h2>
+                        </div>
+
+                        <dl class="hcq-dl">
+                            <div>
+                                <dt>Customer</dt>
+                                <dd>{{ $booking->customer_name ?? $booking->customer->full_name ?? 'Guest Customer' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Contact number</dt>
+                                <dd>{{ $booking->customer->contact_number ?? 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Court</dt>
+                                <dd>{{ $booking->court->name ?? 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Date</dt>
+                                <dd>{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }}</dd>
+                            </div>
+                            <div style="grid-column:1 / -1;">
+                                <dt>Time slot{{ (isset($bookings) && $bookings->count() > 1) ? 's' : '' }}</dt>
+                                <dd style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                                    @forelse (($bookings ?? collect([$booking])) as $slotBooking)
+                                        <span class="hcq-slotchip">
+                                            {{ \Carbon\Carbon::parse($slotBooking->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($slotBooking->end_time)->format('g:i A') }}
+                                        </span>
+                                    @empty
+                                        <span style="font-size:12px;color:rgba(27,43,28,.6);">N/A</span>
+                                    @endforelse
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    {{-- Payment --}}
+                    <div class="hcq-card" x-data="{ tab: '{{ $method }}' }">
+                        <div class="hcq-head">
+                            <span class="hcq-num">2</span>
+                            <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Send your payment</h2>
+                        </div>
+
+                        <div class="hcq-amount">
+                            <span>Please send exactly</span>
+                            <b class="hc-display">₱{{ number_format($payTotal, 2) }}</b>
+                        </div>
+
+                        <div class="hcq-tabs" role="tablist" aria-label="Payment method">
+                            <button type="button" role="tab" class="hcq-tab" :class="{ 'on': tab === 'gcash' }" :aria-selected="tab === 'gcash'" @click="tab = 'gcash'">GCash</button>
+                            <button type="button" role="tab" class="hcq-tab" :class="{ 'on': tab === 'maya' }" :aria-selected="tab === 'maya'" @click="tab = 'maya'">Maya</button>
+                        </div>
+
+                        @foreach ($accounts as $key => $list)
+                            <div x-show="tab === '{{ $key }}'" x-cloak class="hcq-accs {{ count($list) > 1 ? 'two' : 'one' }}">
+                                @foreach ($list as $acc)
+                                    <div class="hcq-acc">
+                                        <div class="hcq-acc-top">
+                                            <span class="hcq-brand {{ $key }}">{{ $brandName[$key] }}</span>
+                                            @if (count($list) > 1)
+                                                <span class="hcq-acc-label">{{ $acc['label'] }}</span>
+                                            @endif
+                                        </div>
+
+                                        <div class="hcq-qr">
+                                            <img src="{{ asset('images/' . $acc['qr']) }}" alt="{{ $brandName[$key] }} QR code for HomeCourt PickleHouse payments, {{ $acc['label'] }}" width="{{ $acc['w'] }}" height="{{ $acc['h'] }}" loading="lazy">
+                                        </div>
+                                        <a class="hcq-save" href="{{ asset('images/' . $acc['qr']) }}" download="HomeCourt-{{ $brandName[$key] }}-QR-{{ $loop->iteration }}.png">Save QR image</a>
+
+                                        <p class="hcq-cap">Account number</p>
+                                        <p class="hc-display hcq-accnum">{{ $acc['number'] }}</p>
+                                        <button type="button" class="hcq-copy sm" data-copy="{{ $acc['raw'] }}" data-label="Copy number" onclick="hcCopy(this)">Copy number</button>
+
+                                        <p class="hcq-cap">Account name</p>
+                                        <p class="hcq-accname">{{ $acc['name'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Receipt --}}
+                    <div class="hcq-card">
+                        <div class="hcq-head">
+                            <span class="hcq-num">3</span>
+                            <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Send your receipt</h2>
+                        </div>
+
+                        <p style="margin:0;line-height:1.65;color:rgba(27,43,28,.8);">
+                            To verify your booking, kindly message our Facebook page with your booking reference and payment receipt.
+                        </p>
+
+                        <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcq-fb">
+                            <svg width="20" height="20" style="flex:none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <span>Open our Facebook page</span>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Actions --}}
+                <div class="hcq-btns">
+                    <a href="{{ route('booking.create') }}" class="hcq-btn main">
+                        Book Again
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </a>
+                    <a href="{{ route('home') }}" class="hcq-btn ghost">Back to home</a>
+                </div>
+            </div>
+
+            <script>
+                function hcCopy(btn) {
+                    var text = btn.getAttribute('data-copy');
+                    var label = btn.getAttribute('data-label') || btn.textContent;
+                    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text); }
+                    btn.textContent = 'Copied!';
+                    setTimeout(function () { btn.textContent = label; }, 1800);
+                }
+            </script>
+        </section>
     </main>
 
     {{-- Footer + House Rules and Privacy Policy popups. Edit the text below. --}}
@@ -244,18 +496,76 @@
          @keydown.escape.window="open = null">
 
         {{-- Footer --}}
-        <footer class="hc-footer bg-[#1F3F24] text-[#CFDDAE]">
-            <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm sm:flex-row">
-                                <p>© {{ date('Y') }} HomeCourt PickleHouse. All rights reserved.</p>
+        <footer class="hc-footer hcz">
+            <style>
+                .hcz{position:relative;overflow:hidden;border-radius:40px 40px 0 0;color:#CFDDAE;
+                    background-color:#1F3F24;
+                    background-image:radial-gradient(700px 380px at 100% 0%, rgba(228,240,58,.16), transparent 65%),radial-gradient(640px 380px at 0% 100%, rgba(95,150,80,.35), transparent 65%)}
+                @media (min-width:768px){.hcz{border-radius:64px 64px 0 0}}
+                .hcz-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.05;pointer-events:none}
+                .hcz-mark{position:absolute;left:50%;bottom:-.14em;z-index:1;transform:translateX(-50%);font-size:clamp(64px,15vw,210px);font-weight:800;line-height:.8;letter-spacing:-.02em;white-space:nowrap;color:rgba(246,248,238,.05);pointer-events:none;user-select:none}
+                .hcz-inner{position:relative;z-index:2;margin:0 auto;max-width:1240px;padding:0 24px}
 
-                <div class="flex items-center gap-6">
-                    <button type="button" @click="$dispatch('open-house-rules')" class="underline-offset-4 transition-colors hover:text-white hover:underline">House Rules</button>
-                    <button type="button" @click="$dispatch('open-privacy')" class="underline-offset-4 transition-colors hover:text-white hover:underline">Privacy Policy</button>
+                .hcz-cta{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:22px;padding:52px 0 44px;border-bottom:1px solid rgba(246,248,238,.14)}
+                .hcz-cta h2{margin:0;font-size:clamp(28px,4.4vw,46px);font-weight:800;line-height:1.05;color:#F6F8EE}
+                .hcz-cta h2 em{font-style:normal;color:#E4F03A}
+                .hcz-cta p{margin:12px 0 0;max-width:430px;line-height:1.6;color:#CFDDAE}
+                .hcz-fb{display:inline-flex;align-items:center;gap:10px;border-radius:9999px;background:#E4F03A;padding:16px 28px;font-size:16px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s}
+                .hcz-fb:hover{background:#fff}
+                .hcz-fb svg{flex-shrink:0}
+                .hcz-ball{position:absolute;right:38%;top:14px;width:40px;height:40px;color:#E4F03A;animation:hcz-hop 2.4s ease-in-out infinite;pointer-events:none}
+                .hcz-ball svg{display:block;width:100%;height:100%}
+                @media (max-width:900px){.hcz-ball{display:none}}
 
-                    {{-- Facebook Social Link --}}
-                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" aria-label="HomeCourt PickleHouse on Facebook" class="transition-colors hover:text-white">
-                        <svg width="20" height="20" class="fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                .hcz-bar{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;padding:22px 0 30px;font-size:13px}
+                .hcz-copy{margin:0;color:#CFDDAE}
+                .hcz-copy b{color:#F6F8EE}
+                .hcz-legal{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+                .hcz-legal button.l{background:none;border:0;padding:0;font-size:13px;font-weight:600;color:#F6F8EE;cursor:pointer;text-underline-offset:4px;transition:color .2s}
+                .hcz-legal button.l:hover{color:#E4F03A;text-decoration:underline}
+                .hcz-round{display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:9999px;border:2px solid rgba(246,248,238,.3);background:transparent;color:#F6F8EE;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+                .hcz-round:hover{background:#E4F03A;border-color:#E4F03A;color:#1B2B1C}
+
+                @keyframes hcz-hop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(24px) rotate(180deg)}}
+                @media (prefers-reduced-motion:reduce){.hcz-ball{animation:none}}
+            </style>
+
+            <svg class="hcz-lines" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#F6F8EE" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                <rect x="60" y="40" width="1080" height="520" rx="6"/>
+                <line x1="600" y1="40" x2="600" y2="560" stroke-dasharray="3 10"/>
+                <line x1="428" y1="40" x2="428" y2="560"/>
+                <line x1="772" y1="40" x2="772" y2="560"/>
+                <line x1="60" y1="300" x2="428" y2="300"/>
+                <line x1="772" y1="300" x2="1140" y2="300"/>
+            </svg>
+            <div class="hcz-mark hc-display" aria-hidden="true">HOMECOURT</div>
+
+            <div class="hcz-inner">
+
+                {{-- Receipt band --}}
+                <div class="hcz-cta">
+                    <div class="hcz-ball" aria-hidden="true"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
+                    <div>
+                        <h2 class="hc-display">Sent your <em>payment?</em></h2>
+                        <p>Message our Facebook page with your booking reference and receipt so we can confirm your slot.</p>
+                    </div>
+                    <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcz-fb">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Send receipt on Facebook
                     </a>
+                </div>
+
+                {{-- Bottom bar --}}
+                <div class="hcz-bar">
+                    <p class="hcz-copy">© {{ date('Y') }} <b>HomeCourt PickleHouse</b>. All rights reserved.</p>
+
+                    <div class="hcz-legal">
+                        <button type="button" class="l" @click="$dispatch('open-house-rules')">House Rules</button>
+                        <button type="button" class="l" @click="$dispatch('open-privacy')">Privacy Policy</button>
+                        <button type="button" class="hcz-round" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" aria-label="Back to top">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </footer>
