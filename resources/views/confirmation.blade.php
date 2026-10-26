@@ -186,6 +186,14 @@
             $method   = (($booking->payment_method ?? '') === 'Maya') ? 'maya' : 'gcash';
             $payTotal = (float) ($totalAmount ?? $booking->total_price ?? $booking->total_amount ?? 0);
 
+            $allBookings = $bookings ?? collect([$booking]);
+            $anyRejected = $allBookings->contains(fn ($b) => $b->payment_status === 'Rejected' || $b->booking_status === 'Rejected');
+            $anyCancelled = $allBookings->contains(fn ($b) => $b->booking_status === 'Cancelled');
+            $allVerified = $allBookings->every(fn ($b) => $b->payment_status === 'Verified');
+            $state = $anyRejected ? 'rejected' : ($anyCancelled ? 'cancelled' : ($allVerified ? 'confirmed' : 'pending'));
+            $isBad = in_array($state, ['rejected', 'cancelled']);
+            $rejectReason = $allBookings->pluck('rejection_reason')->filter()->first();
+
             $brandName = ['gcash' => 'GCash', 'maya' => 'Maya'];
             $accounts = [
                 'gcash' => [
@@ -303,6 +311,20 @@
                 .hcq-btn.ghost{border:2px solid rgba(246,248,238,.35);color:#F6F8EE}
                 .hcq-btn.ghost:hover{background:#F6F8EE;color:#1F3F24;border-color:#F6F8EE}
 
+                .hcq-check.bad{background:#F87171;color:#fff}
+                .hcq-check.bad::before,.hcq-check.bad::after{border-color:#F87171}
+                .hcq-check.bad path{stroke-dasharray:40;stroke-dashoffset:40}
+                .hcq-title.bad em{color:#FCA5A5}
+                .hcq-stat b i{display:inline-block;width:9px;height:9px;border-radius:9999px}
+                .hcq-stat b.ok{font-size:15px;color:#15803D}
+                .hcq-stat b.ok i{background:#22C55E;animation:none}
+                .hcq-stat b.bad{font-size:15px;color:#B91C1C}
+                .hcq-stat b.bad i{background:#EF4444;animation:none}
+                .hcq-refresh{margin-left:8px;border:0;background:none;padding:0;font-size:13px;font-weight:800;color:#2F5D34;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+                .hcq-reason{margin:14px 0 0;border-radius:18px;background:#FEF2F2;border:1px solid #FECACA;padding:12px 16px;font-size:14px;line-height:1.6;color:#7F1D1D}
+                .hcq-go{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;margin-top:18px;border-radius:9999px;background:#E4F03A;padding:16px 22px;font-size:15px;font-weight:800;color:#1B2B1C;text-decoration:none;transition:background .2s}
+                .hcq-go:hover{background:#1F3F24;color:#E4F03A}
+
                 @keyframes hcq-pop{from{transform:scale(0)}to{transform:scale(1)}}
                 @keyframes hcq-ring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
                 @keyframes hcq-draw{to{stroke-dashoffset:0}}
@@ -334,11 +356,37 @@
 
                 {{-- Success hero --}}
                 <div class="hcq-hero">
-                    <span class="hcq-check">
-                        <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    <span class="hcq-check {{ $isBad ? 'bad' : '' }}">
+                        @if ($isBad)
+                            <svg width="34" height="34" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 6l12 12M18 6L6 18"></path></svg>
+                        @else
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        @endif
                     </span>
-                    <h1 class="hc-display hcq-title">Booking Request <em>Submitted!</em></h1>
-                    <p class="hcq-sub">Thank you for choosing PickleHouse.</p>
+
+                    <h1 class="hc-display hcq-title {{ $isBad ? 'bad' : '' }}">
+                        @if ($state === 'confirmed')
+                            Booking <em>Confirmed!</em>
+                        @elseif ($state === 'rejected')
+                            Booking <em>Not Approved</em>
+                        @elseif ($state === 'cancelled')
+                            Booking <em>Cancelled</em>
+                        @else
+                            Booking Request <em>Submitted!</em>
+                        @endif
+                    </h1>
+
+                    <p class="hcq-sub">
+                        @if ($state === 'confirmed')
+                            Your payment is verified and your slot is reserved. See you on the court!
+                        @elseif ($state === 'rejected')
+                            We couldn't approve this booking. Please message us on Facebook and we'll help you sort it out.
+                        @elseif ($state === 'cancelled')
+                            This booking was cancelled. If you think this is a mistake, please message us on Facebook.
+                        @else
+                            Thank you for choosing PickleHouse. One more step: send your payment and receipt to confirm your slot.
+                        @endif
+                    </p>
                 </div>
 
                 {{-- Reference ticket --}}
@@ -350,10 +398,24 @@
                     <div class="hcq-perf"></div>
 
                     <div class="hcq-stats">
-                        <div class="hcq-stat"><span>Status</span><b class="pend"><i></i>Awaiting payment</b></div>
+                        <div class="hcq-stat"><span>Status</span>
+                            @if ($state === 'confirmed')
+                                <b class="ok"><i></i>Confirmed · Payment verified</b>
+                            @elseif ($state === 'rejected')
+                                <b class="bad"><i></i>Not approved</b>
+                            @elseif ($state === 'cancelled')
+                                <b class="bad"><i></i>Cancelled</b>
+                            @else
+                                <b class="pend"><i></i>Awaiting payment</b>
+                            @endif
+                        </div>
                         <div class="hcq-stat"><span>Total</span><b class="hc-display">₱{{ number_format($payTotal, 2) }}</b></div>
                     </div>
-                    <p class="hcq-hint">Screenshot this reference for your records.</p>
+                    <p class="hcq-hint">Screenshot this reference for your records.
+                        @if ($state === 'pending')
+                            <button type="button" class="hcq-refresh" onclick="location.reload()">Refresh status</button>
+                        @endif
+                    </p>
                 </div>
 
                 <div class="hcq-stack">
@@ -398,6 +460,8 @@
                             </div>
                         </dl>
                     </div>
+
+                    @if ($state === 'pending')
 
                     {{-- Payment --}}
                     <div class="hcq-card" x-data="{ tab: '{{ $method }}' }">
@@ -460,6 +524,46 @@
                             <span>Open our Facebook page</span>
                         </a>
                     </div>
+                    @else
+                        <div class="hcq-card">
+                            <div class="hcq-head">
+                                <span class="hcq-num">
+                                    @if ($isBad)
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                                    @else
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                                    @endif
+                                </span>
+                                <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">
+                                    @if ($state === 'confirmed') You're all set
+                                    @elseif ($state === 'rejected') What happens now
+                                    @else About this booking
+                                    @endif
+                                </h2>
+                            </div>
+
+                            @if ($state === 'confirmed')
+                                <p style="margin:0;line-height:1.65;color:rgba(27,43,28,.8);">
+                                    Please arrive before your booked time and show this reference to our staff. Your payment has been received, so there is nothing more to send.
+                                </p>
+                                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=7.3144437,125.6915676" target="_blank" rel="noopener noreferrer" class="hcq-go">
+                                    Get directions
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+                                </a>
+                            @else
+                                @if ($state === 'rejected' && $rejectReason)
+                                    <p class="hcq-reason"><strong>Reason:</strong> {{ $rejectReason }}</p>
+                                @endif
+                                <p style="margin:14px 0 0;line-height:1.65;color:rgba(27,43,28,.8);">
+                                    Please do not send any payment for this booking. If you already paid, message our Facebook page right away with your booking reference and your receipt so we can sort it out.
+                                </p>
+                                <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcq-fb">
+                                    <svg width="20" height="20" style="flex:none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                    <span>Message us on Facebook</span>
+                                </a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Actions --}}
@@ -546,7 +650,7 @@
                 <div class="hcz-cta">
                     <div class="hcz-ball" aria-hidden="true"><svg viewBox="0 0 200 200"><use href="#hc-ball"/></svg></div>
                     <div>
-                        <h2 class="hc-display">Sent your <em>payment?</em></h2>
+                        <h2 class="hc-display">@if ($state === 'pending') Sent your <em>payment?</em> @else Need <em>help?</em> @endif</h2>
                         <p>Message our Facebook page with your booking reference and receipt so we can confirm your slot.</p>
                     </div>
                     <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcz-fb">
