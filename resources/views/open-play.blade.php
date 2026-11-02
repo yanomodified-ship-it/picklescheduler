@@ -160,7 +160,7 @@
                 @media (min-width:768px){.hcp-card{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:26px 30px}}
                 .hcp-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2F5D34,#E4F03A,#2F5D34)}
                 .hcp-card.is-off{opacity:.62}
-                .hcp-name{margin:0;font-size:22px;font-weight:800;line-height:1.15;color:#1B2B1C}
+                .hcp-name{margin:0;font-size:22px;font-weight:800;line-height:1.15;color:#1B2B1C;overflow-wrap:anywhere}
                 .hcp-host{display:inline-flex;align-items:center;gap:6px;margin:6px 0 0;font-size:13px;font-weight:700;color:#2F5D34}
                 .hcp-when{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:12px 0 0;font-size:14px;font-weight:700;color:rgba(27,43,28,.78)}
                 .hcp-when svg{flex-shrink:0;color:#2F5D34}
@@ -324,7 +324,7 @@
                 @media (min-width:640px){.hcrm-panel{border-radius:32px}}
                 .hcrm-panel::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2F5D34,#E4F03A,#2F5D34)}
                 .hcrm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:26px 24px 14px}
-                .hcrm-title{margin:0;font-size:22px;font-weight:800;line-height:1.15;color:#1B2B1C}
+                .hcrm-title{margin:0;font-size:22px;font-weight:800;line-height:1.15;color:#1B2B1C;overflow-wrap:anywhere}
                 .hcrm-sub{margin:6px 0 0;font-size:13px;font-weight:700;line-height:1.5;color:rgba(27,43,28,.65)}
                 .hcrm-x{flex:none;padding:8px;border:0;border-radius:9999px;background:transparent;color:rgba(27,43,28,.7);cursor:pointer}
                 .hcrm-x:hover{background:#E5ECD2;color:#1B2B1C}

@@ -359,7 +359,11 @@
                 .hco-panel .hco-msg ul{margin:6px 0 0;padding-left:18px;list-style:disc}
                 .hco-panel .hco-list{display:grid;gap:12px}
                 .hco-panel .hco-sess{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;border:1px solid rgba(148,163,184,.14);background:#070E21;border-radius:16px;padding:16px 18px}
-                .hco-panel .hco-sess h3{margin:0;font-size:16px;font-weight:800;color:#fff}
+                .hco-panel .hco-sess h3{margin:0;font-size:16px;font-weight:800;line-height:1.35;color:#fff;overflow-wrap:anywhere}
+                .hco-panel .hco-sess > div:first-child{flex:1 1 320px;min-width:0}
+                .hco-panel .hco-side{flex:0 0 auto}
+                .hco-panel .hco-meta{overflow-wrap:anywhere}
+                .hco-panel .hco-badge{max-width:100%;overflow-wrap:anywhere}
                 .hco-panel .hco-meta{margin:6px 0 0;font-size:13px;line-height:1.6;color:#94A3B8}
                 .hco-panel .hco-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
                 .hco-panel .hco-badge{border-radius:9999px;background:rgba(148,163,184,.12);padding:4px 11px;font-size:12px;font-weight:700;color:#CBD5E1}

@@ -54,7 +54,7 @@
     .hcn-hero{text-align:center}
     .hcn-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:rgba(228,240,58,.14);padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
     .hcn-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcn-pulse 2s ease-in-out infinite}
-    .hcn-title{margin:16px 0 0;font-size:clamp(30px,5.2vw,50px);font-weight:800;line-height:1.05;color:#F6F8EE}
+    .hcn-title{margin:16px 0 0;font-size:clamp(26px,4.6vw,44px);font-weight:800;line-height:1.1;color:#F6F8EE;overflow-wrap:anywhere}
     .hcn-title em{font-style:normal;color:#E4F03A}
     .hcn-sub{margin:12px auto 0;max-width:520px;line-height:1.6;color:#CFDDAE}
 

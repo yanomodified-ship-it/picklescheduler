@@ -746,7 +746,7 @@
                 .hct-card:hover{transform:translateY(-6px);box-shadow:0 28px 44px -28px rgba(27,43,28,.55)}
                 .hct-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2F5D34,#E4F03A,#2F5D34)}
                 .hct-day{display:inline-flex;align-self:flex-start;border-radius:9999px;background:#E4F03A;padding:5px 12px;font-size:12px;font-weight:800;color:#1F3F24}
-                .hct-name{margin:0;font-size:20px;font-weight:800;line-height:1.15;color:#1B2B1C}
+                .hct-name{margin:0;font-size:20px;font-weight:800;line-height:1.15;color:#1B2B1C;overflow-wrap:anywhere}
                 .hct-time{margin:0;font-size:15px;font-weight:700;color:rgba(27,43,28,.78)}
                 .hct-tags{display:flex;flex-wrap:wrap;gap:6px}
                 .hct-tag{border-radius:9999px;background:#E5ECD2;padding:4px 11px;font-size:12px;font-weight:800;color:#1F3F24}
