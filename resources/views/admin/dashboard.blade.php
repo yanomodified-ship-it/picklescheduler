@@ -149,8 +149,9 @@
 
         <!-- NAVIGATION CONTROLS -->
         <div class="flex space-x-3 mb-6 border-b border-slate-800 pb-3">
-            <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">🗓️ Schedule Grid</button>
             <button @click="activeTab = 'bookings'" :class="activeTab === 'bookings' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">📋 Booking History</button>
+            <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">🗓️ Schedule Grid</button>
+            <button @click="activeTab = 'openplay'" :class="activeTab === 'openplay' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">🏓 Open Play</button>
             <button @click="activeTab = 'courts'" :class="activeTab === 'courts' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">⚙️ Court Settings</button>
         </div>
 
@@ -310,6 +311,360 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        {{-- OPEN PLAY PANEL --}}
+        @php
+            $opErrors = $errors->getBag('openplay');
+            $opCourts = $courts->where('status', 'active');
+        @endphp
+
+        <div class="hco-panel"
+             x-show="activeTab === 'openplay'"
+             style="display:none;"
+             x-init="if (new URLSearchParams(location.search).get('tab') === 'openplay'{{ (session()->has('openplay_msg') || $opErrors->any()) ? ' || true' : '' }}) activeTab = 'openplay'">
+            <style>
+                .hco-panel *{box-sizing:border-box}
+                .hco-panel .hco-eyebrow{margin:0;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#A3E635}
+                .hco-panel .hco-h1{margin:6px 0 0;font-size:26px;font-weight:800;color:#fff}
+                .hco-panel .hco-sub{margin:6px 0 0;font-size:14px;line-height:1.6;color:#94A3B8}
+                .hco-panel .hco-card{margin-top:22px;border:1px solid rgba(148,163,184,.14);background:#0B1327;border-radius:20px;padding:22px}
+                .hco-panel .hco-card h2{margin:0 0 16px;font-size:18px;font-weight:800;color:#fff}
+                .hco-panel .hco-grid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:720px){
+                    .hco-panel .hco-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+                    .hco-panel .hco-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+                    .hco-panel .hco-grid .full{grid-column:1 / -1}
+                }
+                .hco-panel .hco-l{display:block;margin-bottom:6px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#94A3B8}
+                .hco-panel .hco-in{width:100%;border:1px solid rgba(148,163,184,.22);background:#070E21;color:#fff;border-radius:12px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;color-scheme:dark}
+                .hco-panel .hco-in:focus{border-color:#A3E635;box-shadow:0 0 0 3px rgba(163,230,53,.18)}
+                .hco-panel textarea.hco-in{min-height:84px;resize:vertical}
+                .hco-panel .hco-courts{display:flex;flex-wrap:wrap;gap:8px}
+                .hco-panel .hco-court{position:relative}
+                .hco-panel .hco-court input{position:absolute;opacity:0;pointer-events:none}
+                .hco-panel .hco-court span{display:inline-block;border:1px solid rgba(148,163,184,.25);background:#070E21;border-radius:9999px;padding:8px 14px;font-size:13px;font-weight:700;color:#CBD5E1;cursor:pointer;user-select:none}
+                .hco-panel .hco-court input:checked + span{border-color:#A3E635;background:#A3E635;color:#0B1327}
+                .hco-panel .hco-court input:focus-visible + span{outline:2px solid #A3E635;outline-offset:2px}
+                .hco-panel .hco-btn{border:0;border-radius:12px;background:#A3E635;padding:12px 22px;font-family:inherit;font-size:14px;font-weight:800;color:#0B1327;cursor:pointer}
+                .hco-panel .hco-btn:hover{background:#BEF264}
+                .hco-panel .hco-btn.ghost{background:rgba(148,163,184,.12);color:#E2E8F0}
+                .hco-panel .hco-btn.ghost:hover{background:rgba(148,163,184,.22)}
+                .hco-panel .hco-btn.danger{background:rgba(248,113,113,.14);color:#FCA5A5}
+                .hco-panel .hco-btn.danger:hover{background:rgba(248,113,113,.26)}
+                .hco-panel .hco-btn.sm{padding:8px 14px;font-size:12px}
+                .hco-panel .hco-msg{margin-top:18px;border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.55}
+                .hco-panel .hco-msg.ok{border:1px solid rgba(163,230,53,.35);background:rgba(163,230,53,.12);color:#D9F99D}
+                .hco-panel .hco-msg.err{border:1px solid rgba(248,113,113,.35);background:rgba(248,113,113,.10);color:#FECACA}
+                .hco-panel .hco-msg ul{margin:6px 0 0;padding-left:18px;list-style:disc}
+                .hco-panel .hco-list{display:grid;gap:12px}
+                .hco-panel .hco-sess{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;border:1px solid rgba(148,163,184,.14);background:#070E21;border-radius:16px;padding:16px 18px}
+                .hco-panel .hco-sess h3{margin:0;font-size:16px;font-weight:800;color:#fff}
+                .hco-panel .hco-meta{margin:6px 0 0;font-size:13px;line-height:1.6;color:#94A3B8}
+                .hco-panel .hco-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+                .hco-panel .hco-badge{border-radius:9999px;background:rgba(148,163,184,.12);padding:4px 11px;font-size:12px;font-weight:700;color:#CBD5E1}
+                .hco-panel .hco-badge.lime{background:rgba(163,230,53,.14);color:#BEF264}
+                .hco-panel .hco-badge.red{background:rgba(248,113,113,.14);color:#FCA5A5}
+                .hco-panel .hco-empty{padding:26px;text-align:center;font-size:14px;color:#94A3B8}
+                .hco-panel .hco-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+                .hco-panel .hco-count{text-align:right;font-size:22px;font-weight:800;line-height:1;color:#A3E635}
+                .hco-panel .hco-count small{display:block;margin-top:4px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#94A3B8}
+                .hco-panel .hco-stats{display:grid;gap:12px;margin-top:22px;grid-template-columns:repeat(2,minmax(0,1fr))}
+                @media (min-width:900px){.hco-panel .hco-stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+                .hco-panel .hco-stat{border:1px solid rgba(148,163,184,.14);background:#0B1327;border-radius:18px;padding:16px 18px}
+                .hco-panel .hco-stat small{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94A3B8}
+                .hco-panel .hco-stat b{display:block;margin-top:8px;font-size:26px;font-weight:800;line-height:1.1;color:#A3E635}
+                .hco-panel .hco-stat b.w{color:#FCD34D}
+                .hco-panel .hco-stat em{display:block;margin-top:4px;font-size:12px;font-style:normal;font-weight:600;color:#94A3B8}
+                .hco-panel .hco-statnote{margin:10px 0 0;font-size:12px;line-height:1.6;color:#64748B}
+                .hco-panel .hco-rev{display:flex;gap:18px;justify-content:flex-end;margin-top:2px}
+                .hco-panel .hco-rev div{text-align:right}
+                .hco-panel .hco-rev small{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#94A3B8}
+                .hco-panel .hco-rev b{display:block;margin-top:2px;font-size:16px;font-weight:800;color:#A3E635}
+                .hco-panel .hco-rev b.w{color:#FCD34D}
+                .hco-panel .hco-cardhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+                .hco-panel .hco-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+                .hco-panel .hco-modal{position:relative;width:100%;max-width:440px;border:1px solid #DC2626;background:#0B1327;border-radius:20px;padding:22px;box-shadow:0 30px 60px -20px rgba(0,0,0,.7)}
+                .hco-panel .hco-modal h3{margin:0;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:#F87171}
+                .hco-panel .hco-modal p{margin:10px 0 0;font-size:13px;line-height:1.6;color:#CBD5E1}
+                .hco-panel .hco-modal p b{color:#fff}
+                .hco-panel .hco-modal p.warn{border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.1);border-radius:12px;padding:10px 12px;color:#FCD34D}
+                .hco-panel .hco-modal p.warn b{color:#FDE68A}
+                .hco-panel .hco-modal .x{position:absolute;right:14px;top:14px;border:0;background:none;color:#94A3B8;font-size:22px;line-height:1;cursor:pointer}
+                .hco-panel .hco-modal label{display:block;margin-top:16px;font-size:12px;font-weight:700;color:#94A3B8}
+                .hco-panel .hco-modal label code{border-radius:6px;background:rgba(248,113,113,.12);padding:1px 6px;font-family:inherit;font-weight:800;color:#F87171}
+                .hco-panel .hco-modal input[type=text]{width:100%;margin-top:6px;border:1px solid #DC2626;background:#050B1A;color:#fff;border-radius:12px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none}
+                .hco-panel .hco-modal input[type=text]:focus{box-shadow:0 0 0 3px rgba(220,38,38,.25)}
+                .hco-panel .hco-modal .row{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:18px}
+                .hco-panel .hco-modal .cancel{border:0;background:none;padding:10px 14px;font-family:inherit;font-size:13px;font-weight:800;color:#94A3B8;cursor:pointer}
+                .hco-panel .hco-modal .cancel:hover{color:#fff}
+                .hco-panel .hco-modal .go{border:0;border-radius:12px;background:#DC2626;padding:11px 20px;font-family:inherit;font-size:13px;font-weight:800;color:#fff;cursor:pointer}
+                .hco-panel .hco-modal .go:disabled{opacity:.35;cursor:not-allowed}
+            </style>
+
+            <p class="hco-eyebrow">Open play</p>
+            <h2 class="hco-h1">Create &amp; manage sessions</h2>
+            <p class="hco-sub">Sessions that players join one by one. The courts you pick are blocked from normal booking during the session.</p>
+
+            @if (session('openplay_msg'))
+                <div class="hco-msg ok">{{ session('openplay_msg') }}</div>
+            @endif
+
+            @if ($opErrors->any())
+                <div class="hco-msg err">
+                    <strong>Please fix the following:</strong>
+                    <ul>
+                        @foreach ($opErrors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+                        {{-- Open play revenue (court bookings are NOT included) --}}
+            <div class="hco-stats">
+                <div class="hco-stat">
+                    <small>Today</small>
+                    <b>₱{{ number_format($openPlayStats['today'], 2) }}</b>
+                    <em>from today's sessions</em>
+                </div>
+                <div class="hco-stat">
+                    <small>This month</small>
+                    <b>₱{{ number_format($openPlayStats['month'], 2) }}</b>
+                    <em>{{ now()->format('F Y') }}</em>
+                </div>
+                <div class="hco-stat">
+                    <small>All time</small>
+                    <b>₱{{ number_format($openPlayStats['all'], 2) }}</b>
+                    <em>{{ number_format($openPlayStats['players']) }} players paid</em>
+                </div>
+                <div class="hco-stat">
+                    <small>Waiting verification</small>
+                    <b class="w">₱{{ number_format($openPlayStats['pending'], 2) }}</b>
+                    <em>not counted yet</em>
+                </div>
+            </div>
+            <p class="hco-statnote">Open play revenue only: verified entries on sessions that are not cancelled. Court booking revenue stays in the main Revenue Tracker above.</p>
+
+            {{-- New session --}}
+            <section class="hco-card">
+                <h2>New session</h2>
+
+                <form method="POST" action="{{ route('admin.open-play.store') }}">
+                    @csrf
+
+                    <div class="hco-grid">
+                        <div class="full">
+                            <label class="hco-l" for="op_title">Title</label>
+                            <input class="hco-in" id="op_title" name="title" type="text" maxlength="120" required value="{{ old('title', 'Open Play') }}">
+                        </div>
+
+                        <div class="full">
+                            <div class="hco-grid three">
+                                <div>
+                                    <label class="hco-l" for="op_date">Date</label>
+                                    <input class="hco-in" id="op_date" name="session_date" type="date" min="{{ now()->format('Y-m-d') }}" required value="{{ old('session_date', now()->format('Y-m-d')) }}">
+                                </div>
+                                <div>
+                                    <label class="hco-l" for="op_start">Start time</label>
+                                    <input class="hco-in" id="op_start" name="start_time" type="time" required value="{{ old('start_time', '18:00') }}">
+                                </div>
+                                <div>
+                                    <label class="hco-l" for="op_end">End time</label>
+                                    <input class="hco-in" id="op_end" name="end_time" type="time" required value="{{ old('end_time', '21:00') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="hco-l" for="op_price">Price per player (₱)</label>
+                            <input class="hco-in" id="op_price" name="price_per_player" type="number" min="0" step="1" required value="{{ old('price_per_player', 70) }}">
+                        </div>
+                        <div>
+                            <label class="hco-l" for="op_capacity">Total spots (capacity)</label>
+                            <input class="hco-in" id="op_capacity" name="capacity" type="number" min="1" max="500" required value="{{ old('capacity', 20) }}">
+                        </div>
+
+                        <div>
+                            <label class="hco-l" for="op_format">Format</label>
+                            <select class="hco-in" id="op_format" name="format">
+                                <option value="Traditional" @selected(old('format') === 'Traditional')>Traditional</option>
+                                <option value="Smart Cycle" @selected(old('format') === 'Smart Cycle')>Smart Cycle</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="hco-l" for="op_skill">Skill level (optional)</label>
+                            <input class="hco-in" id="op_skill" name="skill_level" type="text" maxlength="150" placeholder="Beginner to Intermediate welcome" value="{{ old('skill_level') }}">
+                        </div>
+
+                        <div class="full">
+                            <label class="hco-l" for="op_inclusions">Inclusions (optional)</label>
+                            <textarea class="hco-in" id="op_inclusions" name="inclusions" maxlength="1000" placeholder="Unli play, free water, equipment...">{{ old('inclusions') }}</textarea>
+                        </div>
+
+                        <div class="full">
+                            <label class="hco-l">Courts used by this session</label>
+                            <div class="hco-courts">
+                                @foreach ($opCourts as $court)
+                                    <label class="hco-court">
+                                        <input type="checkbox" name="courts[]" value="{{ $court->id }}" @checked(in_array($court->id, old('courts', [])))>
+                                        <span>{{ $court->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:10px;">
+                                <button type="button" class="hco-btn ghost sm" onclick="document.querySelectorAll('.hco-panel .hco-court input').forEach(function (i) { i.checked = true; })">Select all</button>
+                                <button type="button" class="hco-btn ghost sm" onclick="document.querySelectorAll('.hco-panel .hco-court input').forEach(function (i) { i.checked = false; })">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+                        <button type="submit" class="hco-btn">Create session</button>
+                    </div>
+                </form>
+            </section>
+
+            {{-- Upcoming sessions --}}
+            <section class="hco-card">
+                <h2>Upcoming sessions</h2>
+
+                <div class="hco-list">
+                    @forelse ($openPlayUpcoming as $s)
+                        @php
+                            $taken = (int) ($s->taken ?? 0);
+                            $cancelMsg = 'Cancel "' . $s->title . '"? Its courts will open for booking again.'
+                                . ($taken > 0 ? ' ' . $taken . ' player(s) already joined, so please message them.' : '');
+                        @endphp
+                        <div class="hco-sess">
+                            <div>
+                                <h3>{{ $s->title }}</h3>
+                                <p class="hco-meta">
+                                    {{ $s->startsAt()->format('D, M j, Y') }}
+                                    &middot; {{ $s->startsAt()->format('g:i A') }} – {{ $s->endsAt()->format('g:i A') }}
+                                </p>
+                                <div class="hco-badges">
+                                    @foreach ($s->courts as $c)
+                                        <span class="hco-badge lime">{{ $c->name }}</span>
+                                    @endforeach
+                                    <span class="hco-badge">₱{{ number_format((float) $s->price_per_player, 0) }} / player</span>
+                                    <span class="hco-badge">{{ $s->format }}</span>
+                                    @if ($s->skill_level)
+                                        <span class="hco-badge">{{ $s->skill_level }}</span>
+                                    @endif
+                                </div>
+                                @if ($s->inclusions)
+                                    <p class="hco-meta">Inclusions: {{ $s->inclusions }}</p>
+                                @endif
+                            </div>
+
+                            <div class="hco-side">
+                                <div class="hco-count">{{ $taken }} / {{ $s->capacity }}<small>players</small></div>
+                                @php
+                                    $revDone = $s->entries->where('payment_status', 'Verified')->where('entry_status', 'Confirmed')->sum('total_price');
+                                    $revWait = $s->entries->where('entry_status', 'Pending Verification')->sum('total_price');
+                                @endphp
+                                <div class="hco-rev">
+                                    <div><small>Collected</small><b>₱{{ number_format((float) $revDone, 2) }}</b></div>
+                                    <div><small>Waiting</small><b class="w">₱{{ number_format((float) $revWait, 2) }}</b></div>
+                                </div>
+                                <form method="POST" action="{{ route('admin.open-play.cancel', $s) }}" style="margin:0" onsubmit="return confirm({{ \Illuminate\Support\Js::from($cancelMsg) }})">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="hco-btn danger sm">Cancel session</button>
+                                </form>
+                            </div>
+
+                            @include('admin.partials.open-play-roster', ['s' => $s])
+                        </div>
+                    @empty
+                        <div class="hco-empty">No upcoming sessions yet. Create one above.</div>
+                    @endforelse
+                </div>
+            </section>
+
+            {{-- Past and cancelled --}}
+            @if ($openPlayPast->isNotEmpty())
+                <section class="hco-card">
+                    @php $pt = $openPlayPastTotals; @endphp
+                    <div x-data="{ delOpen: false, delText: '' }" @keydown.escape.window="delOpen = false; delText = ''">
+                        <div class="hco-cardhead">
+                            <h2 style="margin:0">Past and cancelled</h2>
+                            @if ($pt['sessions'] > 0)
+                                <button type="button" class="hco-btn danger sm" @click="delOpen = true">Delete all ({{ $pt['sessions'] }})</button>
+                            @endif
+                        </div>
+
+                        <div class="hco-overlay" x-show="delOpen" x-cloak style="display:none;" x-transition.opacity @click.self="delOpen = false; delText = ''">
+                            <div class="hco-modal" role="dialog" aria-modal="true" aria-labelledby="opdel-title">
+                                <button type="button" class="x" @click="delOpen = false; delText = ''" aria-label="Close">&times;</button>
+
+                                <h3 id="opdel-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                    Delete ALL Past Sessions
+                                </h3>
+
+                                <p>
+                                    This permanently deletes <b>{{ $pt['sessions'] }}</b> {{ \Illuminate\Support\Str::plural('session', $pt['sessions']) }}
+                                    and <b>{{ $pt['entries'] }}</b> player {{ \Illuminate\Support\Str::plural('entry', $pt['entries']) }}: every past or cancelled open play session, including ones not listed here. Upcoming sessions are not touched. This cannot be undone.
+                                </p>
+
+                                @if ($pt['revenue'] > 0)
+                                    <p class="warn">Heads up: <b>₱{{ number_format($pt['revenue'], 2) }}</b> of verified revenue from these sessions will also disappear from the Open Play totals. Customers' old confirmation links for them will stop working.</p>
+                                @endif
+
+                                <form method="POST" action="{{ route('admin.open-play.delete-past') }}">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <label for="opdel-confirm">Type <code>DELETE ALL</code> to confirm</label>
+                                    <input id="opdel-confirm" type="text" name="confirm" x-model="delText" placeholder="DELETE ALL" autocomplete="off" spellcheck="false">
+
+                                    <div class="row">
+                                        <button type="button" class="cancel" @click="delOpen = false; delText = ''">Cancel</button>
+                                        <button type="submit" class="go" :disabled="delText !== 'DELETE ALL'">Delete Everything</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hco-list">
+                        @foreach ($openPlayPast as $s)
+                            <div class="hco-sess" style="opacity:.85">
+                                <div>
+                                    <h3>{{ $s->title }}</h3>
+                                    <p class="hco-meta">
+                                        {{ $s->startsAt()->format('D, M j, Y') }}
+                                        &middot; {{ $s->startsAt()->format('g:i A') }} – {{ $s->endsAt()->format('g:i A') }}
+                                    </p>
+                                    <div class="hco-badges">
+                                        @foreach ($s->courts as $c)
+                                            <span class="hco-badge">{{ $c->name }}</span>
+                                        @endforeach
+                                        <span class="hco-badge {{ $s->status === 'Cancelled' ? 'red' : '' }}">{{ $s->status === 'Cancelled' ? 'Cancelled' : 'Past' }}</span>
+                                    </div>
+                                </div>
+                                <div class="hco-side">
+                                <div class="hco-count" style="color:#94A3B8">{{ (int) ($s->taken ?? 0) }} / {{ $s->capacity }}<small>players</small></div>
+                                    @php
+                                        $revDone = $s->entries->where('payment_status', 'Verified')->where('entry_status', 'Confirmed')->sum('total_price');
+                                    @endphp
+                                    @if ($s->status === 'Cancelled')
+                                        <span class="hco-badge red">Not counted in revenue</span>
+                                    @else
+                                        <div class="hco-rev">
+                                            <div><small>Collected</small><b>₱{{ number_format((float) $revDone, 2) }}</b></div>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @include('admin.partials.open-play-roster', ['s' => $s])
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
         </div>
 
         <!-- SECTION 3: COURT MANAGEMENT -->
@@ -789,7 +1144,7 @@ function getCsrfToken() {
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('adminDashboard', (allBookings, allCourts) => ({
-                activeTab: 'schedule',
+                activeTab: 'bookings',
                 selectedBooking: null,
                 selectedGroupId: null,
                 expandedPendingCourt: null,

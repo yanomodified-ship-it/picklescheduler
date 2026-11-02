@@ -187,7 +187,7 @@
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     @php
         $hcNow  = now()->hour + now()->minute / 60;
-        $hcOpen = ($hcNow >= 4 || $hcNow < 2);
+        $hcOpen = ($hcNow >= 4);
     @endphp
 
     <header class="hch"
@@ -281,7 +281,7 @@
         <div class="hch-top" :class="{ 'off': scrolled }">
             <div class="hch-top-in">
                 @if ($hcOpen)
-                    <span class="hch-status"><i></i>Open now · until 2:00 AM</span>
+                    <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
                 @else
                     <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
                 @endif
@@ -309,6 +309,7 @@
                 {{-- Desktop Navigation --}}
                 <nav class="hch-nav" aria-label="Main">
                     <a href="#courts" :class="{ 'hch-on': active === 'courts' }">Courts</a>
+                    <a href="{{ route('open-play.index') }}">Open play</a>
                     <a href="#rates" :class="{ 'hch-on': active === 'rates' }">Rates</a>
                     <a href="#rules" :class="{ 'hch-on': active === 'rules' }">Rules</a>
                     <a href="#find-us" :class="{ 'hch-on': active === 'find-us' }">Find us</a>
@@ -336,6 +337,7 @@
             {{-- Mobile Navigation --}}
             <nav x-show="mobileMenu" x-cloak x-transition.opacity.duration.200ms class="hch-mnav" aria-label="Mobile">
                 <a href="#courts" @click="mobileMenu = false" :class="{ 'hch-on': active === 'courts' }" class="l">Courts</a>
+                <a href="{{ route('open-play.index') }}" class="l">Open play</a>
                 <a href="#rates" @click="mobileMenu = false" :class="{ 'hch-on': active === 'rates' }" class="l">Rates</a>
                 <a href="#rules" @click="mobileMenu = false" :class="{ 'hch-on': active === 'rules' }" class="l">Rules</a>
                 <a href="#find-us" @click="mobileMenu = false" :class="{ 'hch-on': active === 'find-us' }" class="l">Find us</a>
@@ -488,7 +490,7 @@
             <div class="hc-ticker-track">
                 @for ($i = 0; $i < 4; $i++)
                     <div class="hc-ticker-group" @if($i > 0) aria-hidden="true" @endif>
-                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Open 4:00 AM – 2:00 AM</span>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Open 4:00 AM – 12:00 AM</span>
                         <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>₱200/hr day · ₱300/hr night</span>
                         <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Pay with GCash or Maya</span>
                     </div>
@@ -725,6 +727,86 @@
             </script>
         </section>
 
+        @if (isset($openPlayTeasers) && $openPlayTeasers->isNotEmpty())
+        {{-- Open play teaser --}}
+        <section class="hct" aria-label="Open play sessions">
+            <style>
+                .hct{margin:0 auto;max-width:1200px;padding:56px 24px 8px}
+                @media (min-width:768px){.hct{padding:80px 24px 16px}}
+                .hct-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+                .hct-eyebrow{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:6px 14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#E4F03A}
+                .hct-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hct-pulse 2s ease-in-out infinite}
+                .hct-title{margin:14px 0 0;font-size:clamp(30px,4.6vw,46px);font-weight:800;line-height:1.05;color:#1B2B1C}
+                .hct-sub{margin:10px 0 0;max-width:460px;line-height:1.6;color:rgba(27,43,28,.72)}
+                .hct-all{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;border:2px solid rgba(47,93,52,.3);padding:11px 22px;font-size:14px;font-weight:800;color:#2F5D34;text-decoration:none;transition:background .2s,color .2s,border-color .2s}
+                .hct-all:hover{background:#2F5D34;border-color:#2F5D34;color:#fff}
+                .hct-grid{display:grid;gap:18px;margin-top:28px;grid-template-columns:minmax(0,1fr)}
+                @media (min-width:768px){.hct-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+                .hct-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;border-radius:26px;border:1px solid rgba(27,43,28,.1);background:#fff;padding:24px 22px 22px;box-shadow:0 18px 34px -28px rgba(27,43,28,.45);transition:transform .3s cubic-bezier(.2,.7,.2,1),box-shadow .3s}
+                .hct-card:hover{transform:translateY(-6px);box-shadow:0 28px 44px -28px rgba(27,43,28,.55)}
+                .hct-card::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#2F5D34,#E4F03A,#2F5D34)}
+                .hct-day{display:inline-flex;align-self:flex-start;border-radius:9999px;background:#E4F03A;padding:5px 12px;font-size:12px;font-weight:800;color:#1F3F24}
+                .hct-name{margin:0;font-size:20px;font-weight:800;line-height:1.15;color:#1B2B1C}
+                .hct-time{margin:0;font-size:15px;font-weight:700;color:rgba(27,43,28,.78)}
+                .hct-tags{display:flex;flex-wrap:wrap;gap:6px}
+                .hct-tag{border-radius:9999px;background:#E5ECD2;padding:4px 11px;font-size:12px;font-weight:800;color:#1F3F24}
+                .hct-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}
+                .hct-price{margin:0;font-size:28px;font-weight:800;line-height:1;color:#2F5D34}
+                .hct-price small{margin-left:3px;font-size:13px;font-weight:700;color:rgba(27,43,28,.6)}
+                .hct-left{font-size:12.5px;font-weight:800;color:#1F3F24}
+                .hct-left.full{color:#B91C1C}
+                .hct-btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;background:#1F3F24;padding:13px 20px;font-size:14px;font-weight:800;color:#E4F03A;text-decoration:none;transition:background .2s}
+                .hct-btn:hover{background:#2F5D34}
+                .hct-btn.off{background:#F1F1F1;color:#9CA3AF;cursor:not-allowed}
+                @keyframes hct-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+                @media (prefers-reduced-motion:reduce){.hct-eyebrow i{animation:none}.hct-card{transition:none}}
+            </style>
+
+            <div class="hct-head">
+                <div>
+                    <span class="hct-eyebrow"><i></i>Open play</span>
+                    <h2 class="hc-display hct-title">Join a game, no group needed</h2>
+                    <p class="hct-sub">Pay per player and play with others. Here's what's coming up.</p>
+                </div>
+                <a href="{{ route('open-play.index') }}" class="hct-all">See all sessions &rarr;</a>
+            </div>
+
+            <div class="hct-grid">
+                @foreach ($openPlayTeasers as $s)
+                    @php
+                        $state = $s->state;
+                        $when  = $s->startsAt()->isToday() ? 'Today' : ($s->startsAt()->isTomorrow() ? 'Tomorrow' : $s->startsAt()->format('D, M j'));
+                    @endphp
+                    <article class="hct-card">
+                        <span class="hct-day">{{ $state === 'live' ? 'Happening now' : $when }}</span>
+                        <h3 class="hc-display hct-name">{{ $s->title }}</h3>
+                        <p class="hct-time">{{ $s->startsAt()->format('g:i A') }} – {{ $s->endsAt()->format('g:i A') }}</p>
+
+                        <div class="hct-tags">
+                            <span class="hct-tag">{{ $s->format }}</span>
+                            <span class="hct-tag">{{ $s->courts->count() }} {{ $s->courts->count() === 1 ? 'court' : 'courts' }}</span>
+                        </div>
+
+                        <div class="hct-foot">
+                            <p class="hc-display hct-price">₱{{ number_format((float) $s->price_per_player, 0) }}<small>/ player</small></p>
+                            @if ($state === 'full')
+                                <span class="hct-left full">Full</span>
+                            @else
+                                <span class="hct-left">{{ $s->left }} spots left</span>
+                            @endif
+                        </div>
+
+                        @if ($state === 'full')
+                            <span class="hct-btn off">Fully booked</span>
+                        @else
+                            <a href="{{ route('open-play.join', $s) }}" class="hct-btn">{{ $state === 'live' ? 'Join now' : 'Join this session' }} &rarr;</a>
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         {{-- Rates Section --}}
         @php
             $dayRate   = 200;
@@ -864,7 +946,7 @@
                                 </span>
                                 <div>
                                     <p class="hcr-kind">Night slot</p>
-                                    <p class="hcr-time">5:00 PM – 2:00 AM</p>
+                                    <p class="hcr-time">5:00 PM – 12:00 AM</p>
                                 </div>
                             </div>
 
@@ -1004,7 +1086,7 @@
         {{-- Find Us Section --}}
         @php
             $nowH     = now()->hour + now()->minute / 60;
-            $shopOpen = ($nowH >= 4 || $nowH < 2);
+            $shopOpen = ($nowH >= 4);
         @endphp
 
         <section id="find-us" class="hcf scroll-mt-24">
@@ -1090,7 +1172,7 @@
                     </div>
 
                     @if ($shopOpen)
-                        <span class="hcf-pill"><i></i>Open now · until 2:00 AM</span>
+                        <span class="hcf-pill"><i></i>Open now · until 12:00 AM</span>
                     @else
                         <span class="hcf-pill closed"><i></i>Closed now · opens at 4:00 AM</span>
                     @endif
@@ -1125,7 +1207,7 @@
                             </span>
                             <div>
                                 <p class="t1">Courts open</p>
-                                <p class="t2">4:00 AM – 2:00 AM</p>
+                                <p class="t2">4:00 AM – 12:00 AM</p>
                             </div>
                         </div>
 
@@ -1239,6 +1321,7 @@
                     <p class="hcz-copy">© {{ date('Y') }} <b>HomeCourt PickleHouse</b>. All rights reserved.</p>
 
                     <div class="hcz-legal">
+                        <a href="{{ route('open-play.index') }}" style="font-size:13px;font-weight:600;color:#F6F8EE;text-decoration:none;">Open Play</a>
                         <button type="button" class="l" @click="$dispatch('open-house-rules')">House Rules</button>
                         <button type="button" class="l" @click="$dispatch('open-privacy')">Privacy Policy</button>
 
@@ -1347,7 +1430,7 @@
                     </section>
                     <section>
                         <h3 class="hc-display">Third-party content</h3>
-                        <p>This website loads Google Fonts, and the map on our home page is provided by Google Maps. Google may receive your IP address and browser details when these load.</p>
+                        <p>This website loads Google Fonts, and the map in the footer of our pages is provided by Google Maps. Google may receive your IP address and browser details when these load.</p>
                     </section>
                     <section>
                         <h3 class="hc-display">Cookies</h3>

@@ -31,7 +31,13 @@ class Court extends Model
     public function getIsFullyBookedAttribute(): bool
 {
     // Your system has 17 hourly time slots per day (6:00 AM to 10:00 PM)
-    $totalDailySlots = 22;
+    // Count the hourly slots from the court's own operating hours (04:00 to 23:00 = 20 slots)
+    $openHour  = (int) substr((string) ($this->operating_hours_start ?: '04:00:00'), 0, 2);
+    $closeHour = (int) substr((string) ($this->operating_hours_end ?: '23:00:00'), 0, 2);
+    if ($closeHour < $openHour) {
+        $closeHour += 24;
+    }
+    $totalDailySlots = max(1, $closeHour - $openHour + 1);
 
     // Only CONFIRMED bookings should count as taking up a slot.
     // "Pending" bookings are still awaiting payment verification and

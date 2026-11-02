@@ -9,6 +9,8 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Models\OpenPlaySession;
+use App\Models\OpenPlayEntry;
 
 class AdminBookingController extends Controller
 {
@@ -26,7 +28,11 @@ class AdminBookingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $courts = Court::orderBy('id')->get();
+                $courts = Court::orderBy('id')->get();
+
+        [$openPlayUpcoming, $openPlayPast] = OpenPlaySession::adminLists();
+        $openPlayStats = OpenPlayEntry::revenueStats();
+        $openPlayPastTotals = OpenPlaySession::pastTotals();
 
         return response()
             ->view('admin.dashboard', compact(
@@ -37,7 +43,11 @@ class AdminBookingController extends Controller
                 'cancelledCount',
                 'totalRevenue',
                 'bookings',
-                'courts'
+                'courts',
+                'openPlayUpcoming',
+                'openPlayPast',
+                'openPlayStats',
+                'openPlayPastTotals'
             ))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache');

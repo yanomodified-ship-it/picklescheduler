@@ -85,7 +85,7 @@
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     @php
         $hcNow  = now()->hour + now()->minute / 60;
-        $hcOpen = ($hcNow >= 4 || $hcNow < 2);
+        $hcOpen = ($hcNow >= 4);
     @endphp
 
     <header class="hch"
@@ -147,7 +147,7 @@
         <div class="hch-top" :class="{ 'off': scrolled }">
             <div class="hch-top-in">
                 @if ($hcOpen)
-                    <span class="hch-status"><i></i>Open now · until 2:00 AM</span>
+                    <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
                 @else
                     <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
                 @endif
@@ -384,7 +384,7 @@
                         @elseif ($state === 'cancelled')
                             This booking was cancelled. If you think this is a mistake, please message us on Facebook.
                         @else
-                            Thank you for choosing PickleHouse. One more step: send your payment and receipt to confirm your slot.
+                            Thank you for choosing PickleHouse. One more step: send your payment receipt and reference to confirm your slot.
                         @endif
                     </p>
                 </div>
@@ -658,6 +658,7 @@
                         Send receipt on Facebook
                     </a>
                 </div>
+                @include('partials.footer-map')
 
                 {{-- Bottom bar --}}
                 <div class="hcz-bar">
@@ -767,7 +768,7 @@
                     </section>
                     <section>
                         <h3 class="hc-display">Third-party content</h3>
-                        <p>This website loads Google Fonts, and the map on our home page is provided by Google Maps. Google may receive your IP address and browser details when these load.</p>
+                        <p>This website loads Google Fonts, and the map in the footer of our pages is provided by Google Maps. Google may receive your IP address and browser details when these load.</p>
                     </section>
                     <section>
                         <h3 class="hc-display">Cookies</h3>

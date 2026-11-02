@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\OpenPlaySession;
 
 class BookingController extends Controller
 {
@@ -24,7 +25,24 @@ class BookingController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('welcome', compact('courts'));
+                // Next open play sessions for the homepage teaser. A problem here must never break the homepage.
+        try {
+            $openPlayTeasers = OpenPlaySession::with('courts')
+                ->withSum(['entries as taken' => fn ($q) => $q->whereNotIn('entry_status', ['Rejected', 'Cancelled'])], 'players')
+                ->where('status', 'Open')
+                ->whereDate('session_date', '>=', now()->subDay()->format('Y-m-d'))
+                ->whereDate('session_date', '<=', now()->addDays(90)->format('Y-m-d'))
+                ->get()
+                ->filter(fn ($s) => $s->endsAt()->gt(now()))
+                ->sortBy(fn ($s) => $s->startsAt()->timestamp)
+                ->take(3)
+                ->values();
+        } catch (\Throwable $e) {
+            report($e);
+            $openPlayTeasers = collect();
+        }
+
+        return view('welcome', compact('courts', 'openPlayTeasers'));
     }
 
     // Load the dedicated booking form page
@@ -35,9 +53,25 @@ class BookingController extends Controller
         // Fetch CONFIRMED and PENDING bookings so the picker can grey out
         // confirmed slots and clearly flag pending ones (only cancelled/
         // rejected bookings should free up a slot again).
-        $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
+                $existingBookings = Booking::where('booking_date', '>=', now()->format('Y-m-d'))
             ->whereNotIn('booking_status', ['Cancelled', 'Rejected'])
-            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status']);
+            ->get(['court_id', 'booking_date', 'start_time', 'end_time', 'booking_status'])
+            ->toBase();
+
+        // Courts reserved for Open Play sessions show up as taken in the slot picker
+        $openPlayBlocks = OpenPlaySession::with('courts')
+            ->where('status', '!=', 'Cancelled')
+            ->whereDate('session_date', '>=', now()->format('Y-m-d'))
+            ->get()
+            ->flatMap(fn ($s) => $s->courts->map(fn ($c) => [
+                'court_id'       => $c->id,
+                'booking_date'   => $s->session_date->format('Y-m-d'),
+                'start_time'     => $s->start_time,
+                'end_time'       => $s->end_time,
+                'booking_status' => 'Confirmed',
+            ]));
+
+        $existingBookings = $existingBookings->concat($openPlayBlocks)->values();
 
         return view('booking', compact('courts', 'existingBookings'));
     }

@@ -5,10 +5,17 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Admin\AdminCourtController;
+use App\Http\Controllers\Admin\AdminOpenPlayController;
+use App\Http\Controllers\OpenPlayController;
 
 // --- PUBLIC ROUTES ---
 Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
+Route::get('/open-play', [OpenPlayController::class, 'index'])->middleware('throttle:60,1')->name('open-play.index');
+Route::get('/open-play/confirmation/{reference}', [OpenPlayController::class, 'confirmation'])->middleware('throttle:30,1')->name('open-play.confirmation');
+Route::get('/open-play/{openPlaySession}', [OpenPlayController::class, 'show'])->whereNumber('openPlaySession')->middleware('throttle:60,1')->name('open-play.show');
+Route::get('/open-play/{openPlaySession}/join', [OpenPlayController::class, 'join'])->middleware('throttle:60,1')->name('open-play.join');
+Route::post('/open-play/{openPlaySession}/join', [OpenPlayController::class, 'store'])->middleware('throttle:10,1')->name('open-play.store');
 Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
 Route::get('/confirmation/{booking_reference}', [BookingController::class, 'confirmation'])->middleware('throttle:30,1')->name('bookings.confirmation');
 
@@ -49,6 +56,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/customers/{customer}/verify-all', [AdminBookingController::class, 'verifyAllForCustomer'])->name('customers.verify-all');
         Route::patch('/customers/{customer}/reject-all', [AdminBookingController::class, 'rejectAllForCustomer'])->name('customers.reject-all');
 
+                // Open Play
+        Route::get('/open-play', [AdminOpenPlayController::class, 'index'])->name('open-play.index');
+        Route::post('/open-play', [AdminOpenPlayController::class, 'store'])->name('open-play.store');
+        Route::patch('/open-play/{openPlaySession}/cancel', [AdminOpenPlayController::class, 'cancel'])->name('open-play.cancel');
+                Route::delete('/open-play/past', [AdminOpenPlayController::class, 'deletePast'])->name('open-play.delete-past');
+
+                Route::patch('/open-play/entries/{openPlayEntry}/verify', [AdminOpenPlayController::class, 'verifyEntry'])->name('open-play.entries.verify');
+        Route::patch('/open-play/entries/{openPlayEntry}/reject', [AdminOpenPlayController::class, 'rejectEntry'])->name('open-play.entries.reject');
+        Route::patch('/open-play/entries/{openPlayEntry}/cancel', [AdminOpenPlayController::class, 'cancelEntry'])->name('open-play.entries.cancel');
+        
         // Court Actions
         Route::post('/courts', [AdminCourtController::class, 'store'])->name('courts.store');
         Route::put('/courts/{court}', [AdminCourtController::class, 'update'])->name('courts.update');

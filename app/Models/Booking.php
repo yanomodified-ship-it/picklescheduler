@@ -53,17 +53,20 @@ class Booking extends Model
     }
     
     public static function hasOverlap($courtId, $date, $startTime, $endTime, $ignoreBookingId = null): bool
-    {
-        return self::where('court_id', $courtId)
-            ->where('booking_date', $date)
-            ->whereNotIn('booking_status', ['Rejected', 'Cancelled'])
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '<', $endTime)
-                      ->where('end_time', '>', $startTime);
-            })
-            ->when($ignoreBookingId, function ($query) use ($ignoreBookingId) {
-                $query->where('id', '!=', $ignoreBookingId);
-            })
-            ->exists();
-    }
+{
+    $bookingConflict = self::where('court_id', $courtId)
+        ->where('booking_date', $date)
+        ->whereNotIn('booking_status', ['Rejected', 'Cancelled'])
+        ->where(function ($query) use ($startTime, $endTime) {
+            $query->where('start_time', '<', $endTime)
+                  ->where('end_time', '>', $startTime);
+        })
+        ->when($ignoreBookingId, function ($query) use ($ignoreBookingId) {
+            $query->where('id', '!=', $ignoreBookingId);
+        })
+        ->exists();
+
+    // Courts reserved for an Open Play session are unavailable too
+    return $bookingConflict || OpenPlaySession::blocks($courtId, $date, $startTime, $endTime);
+        }
 }
