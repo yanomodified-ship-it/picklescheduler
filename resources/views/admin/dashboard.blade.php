@@ -160,7 +160,7 @@
         </div>
 
         <!-- SECTION 1: INTERACTIVE SCHEDULE GRID -->
-        <div x-show="activeTab === 'schedule'" x-cloak class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div x-show="activeTab === 'schedule'" x-cloak x-effect="selectedDate; selectedCourtId; walkInSlots = []" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
             <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Admin Live Schedule</div>
@@ -189,7 +189,8 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-700 bg-slate-800/60 px-4 py-3"><div class="text-sm text-slate-300"><span x-show="walkInSlots.length === 0">Click free slots below, then press the button to book.</span><span x-show="walkInSlots.length > 0"><b class="text-white" x-text="walkInSlots.length"></b> slot(s) · <b class="text-lime-400" x-text="'₱' + walkInTotal.toFixed(2)"></b> <span class="text-[11px] text-slate-400">(no booking fee)</span></span></div><div class="flex gap-2"><button type="button" x-show="walkInSlots.length > 0" @click="clearWalkIn()" class="px-3 py-2 text-xs font-bold text-slate-400 hover:text-white">Clear</button><button type="button" :disabled="walkInSlots.length === 0" @click="showWalkInModal = true" :class="walkInSlots.length === 0 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-lime-400 text-slate-950 hover:bg-lime-300'" class="rounded-xl px-5 py-2 text-sm font-bold">Book selected slots</button></div></div>
+   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 <template x-for="slot in allSlots" :key="slot">
                     <button @click="handleSlotClick(slot)" :class="getSlotStyle(slot)" class="p-3 rounded-2xl border text-center transition flex flex-col items-center justify-between min-h-[105px] relative overflow-hidden group">
                         <div class="text-xs font-bold text-slate-300" x-text="formatTime(slot)"></div>
@@ -201,7 +202,7 @@
                                 </div>
                             </template>
                             <template x-if="!getBookingForSlot(slot)">
-                                <span class="text-[11px] font-medium text-slate-600 group-hover:text-lime-400 transition">+ Walk-In</span>
+                                <span class="text-[11px] font-medium text-slate-600 group-hover:text-lime-400 transition" x-text="(isWalkInSelected(slot) ? '✓ ' : '+ Walk-In · ') + '₱' + walkInRate(slot)"></span>
                             </template>
                         </div>
                         <span class="text-[9px] uppercase px-2 py-0.5 rounded-md truncate max-w-full font-extrabold tracking-wide" :class="getBadgeStyle(slot)" x-text="getSlotStatusLabel(slot)"></span>
@@ -210,7 +211,8 @@
             </div>
         </div>
 
-        <!-- SECTION 2: BOOKING HISTORY TABLE -->
+        <div x-show="activeTab === 'schedule' && walkInSlots.length > 0" x-cloak class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 rounded-2xl border border-lime-400/40 bg-slate-900/95 px-5 py-3 shadow-2xl backdrop-blur"><div class="text-sm text-white"><span class="font-black" x-text="walkInSlots.length"></span> slot(s) selected · <span class="font-black text-lime-400" x-text="'₱' + walkInTotal.toFixed(2)"></span> <span class="text-[11px] text-slate-400">(no booking fee)</span></div><button type="button" @click="clearWalkIn()" class="text-xs font-bold text-slate-400 hover:text-white">Clear</button><button type="button" @click="showWalkInModal = true" class="rounded-xl bg-lime-400 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-lime-300">Walk-in booking</button></div>
+<!-- SECTION 2: BOOKING HISTORY TABLE -->
         <div x-show="activeTab === 'bookings'" x-cloak class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-slate-950 p-4 border-b border-slate-800 flex flex-wrap gap-4 items-end">
         <div>
@@ -822,15 +824,15 @@
             <h2 class="text-xl font-black text-white mb-2">Walk-In Booking</h2>
             <div class="text-xs text-slate-400 mb-6 flex gap-2">
                 <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Date: ' + selectedDate"></span>
-                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Time: ' + formatTime(walkInSlot)"></span>
+                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Time: ' + walkInSlots.map(s => formatTime(s)).join(', ')"></span>
             </div>
 
             <form method="POST" action="{{ route('admin.bookings.store') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="booking_date" :value="selectedDate">
                 <input type="hidden" name="court_id" :value="selectedCourtId">
-                <input type="hidden" name="start_time" :value="walkInSlot">
-                <input type="hidden" name="end_time" :value="walkInSlot ? (parseInt(walkInSlot.split(':')[0]) + 1).toString().padStart(2, '0') + ':00' : ''">
+                <template x-for="s in walkInSlots" :key="s"><input type="hidden" name="slots[]" :value="s"></template>
+                (leave the Replace box EMPTY)
                 <input type="hidden" name="booking_status" value="Confirmed">
 
                 <div>
@@ -843,8 +845,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs text-slate-400 font-semibold mb-1">Amount Paid (₱)</label>
-                        <input type="number" step="0.01" name="total_price" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400" placeholder="150.00">
+                        <label class="block text-xs text-slate-400 font-semibold mb-1">Total (₱) · no booking fee</label>
+                        <input type="number" step="0.01" name="total_price_display" readonly :value="walkInTotal.toFixed(2)" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm outline-none focus:border-lime-400" placeholder="150.00">
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 font-semibold mb-1">Payment Status</label>
@@ -1245,7 +1247,7 @@ function getCsrfToken() {
                 showWalkInModal: false,
                 showDeleteAllModal: false,
                 deleteAllConfirmText: '',
-                walkInSlot: null,
+                walkInSlot: null, walkInSlots: [], pricing: @js($pricing),
 
                 bookings: allBookings,
                 courts: allCourts,
@@ -1359,11 +1361,11 @@ function getCsrfToken() {
                 },
                 getSlotStatusLabel(slotTime) {
                     const booking = this.getBookingForSlot(slotTime);
-                    return booking ? (booking.booking_status || 'Booked') : 'Available';
+                    return booking ? (booking.booking_status || 'Booked') : (this.isWalkInSelected(slotTime) ? 'Selected' : 'Available');
                 },
                 getSlotStyle(slotTime) {
                     const booking = this.getBookingForSlot(slotTime);
-                    if (!booking) return 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 cursor-pointer';
+                    if (!booking) return this.isWalkInSelected(slotTime) ? 'bg-lime-400/20 border-lime-400 text-lime-300 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 cursor-pointer';
                     const status = (booking.booking_status || '').toLowerCase();
                     if (status === 'confirmed') return 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:border-emerald-400 cursor-pointer';
                     if (status.includes('pending') || status.includes('verification')) return 'bg-amber-500/20 border-amber-500/50 text-amber-300 animate-pulse hover:border-amber-400 cursor-pointer';
@@ -1371,16 +1373,16 @@ function getCsrfToken() {
                 },
                 getBadgeStyle(slotTime) {
                     const booking = this.getBookingForSlot(slotTime);
-                    if (!booking) return 'bg-slate-700 text-slate-400';
+                    if (!booking) return this.isWalkInSelected(slotTime) ? 'bg-lime-400 text-slate-950' : 'bg-slate-700 text-slate-400';
                     return (booking.booking_status || '').toLowerCase() === 'confirmed' ? 'bg-emerald-500/30 text-emerald-300' : 'bg-amber-500/30 text-amber-300';
                 },
-                handleSlotClick(slotTime) {
+                toggleWalkInSlot(slot) { const i = this.walkInSlots.indexOf(slot); if (i === -1) { this.walkInSlots.push(slot); } else { this.walkInSlots.splice(i, 1); } const key = s => { const h = parseInt(s.split(':')[0], 10); return h < this.pricing.open_hour ? h + 24 : h; }; this.walkInSlots.sort((a, b) => key(a) - key(b)); }, isWalkInSelected(slot) { return this.walkInSlots.includes(slot); }, walkInRate(slot) { let h = parseInt(slot.split(':')[0], 10); if (h < this.pricing.open_hour) h += 24; const r = this.pricing.rules.find(x => h >= x.start_hour && h < x.end_hour) || this.pricing.rules[this.pricing.rules.length - 1]; return Number(r.rate); }, get walkInTotal() { return this.walkInSlots.reduce((t, s) => t + this.walkInRate(s), 0); }, clearWalkIn() { this.walkInSlots = []; }, handleSlotClick(slotTime) {
                     const booking = this.getBookingForSlot(slotTime);
                     if (booking) {
                         this.selectedBooking = booking;
                     } else {
-                        this.walkInSlot = slotTime;
-                        this.showWalkInModal = true;
+                        this.toggleWalkInSlot(slotTime);
+                        /* the form opens from the "Walk-in booking" bar */
                     }
                 },
                 formatTime(time) {

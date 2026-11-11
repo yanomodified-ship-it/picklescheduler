@@ -56,7 +56,7 @@ class AdminBookingController extends Controller
             ->header('Pragma', 'no-cache');
     }
 
-    // Store Walk-in Booking
+        // Store Walk-in Booking (one or many hourly slots, NO booking fee)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -64,57 +64,68 @@ class AdminBookingController extends Controller
             'contact_number' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]*$/'],
             'court_id'       => 'required|exists:courts,id',
             'booking_date'   => 'required|date',
-            'start_time'     => 'required|string',
-            'end_time'       => 'required|string',
-            'total_price'    => 'required|numeric|min:0',
+            'slots'          => 'required|array|min:1',
+            'slots.*'        => 'date_format:H:i',
             'payment_status' => 'required|string',
             'booking_status' => 'required|string',
         ]);
 
-        $hasOverlap = Booking::hasOverlap(
-            $validated['court_id'],
-            $validated['booking_date'],
-            $validated['start_time'],
-            $validated['end_time']
-        );
-
-        if ($hasOverlap) {
-            return redirect()->back()->with('error', 'This time slot is already booked for the selected court.')->withInput();
-        }
-
-        if (!empty($validated['contact_number'])) {
-            $customer = Customer::updateOrCreate(
-                ['contact_number' => $validated['contact_number']],
-                ['full_name' => $validated['customer_name']]
-            );
-        } else {
-            $customer = Customer::create([
-                'full_name'      => $validated['customer_name'],
-                'contact_number' => 'N/A',
-            ]);
-        }
-
+        $slots = collect($validated['slots'])->unique()->sort()->values();
         $reference = 'WK-' . strtoupper(Str::random(6));
+        $total = $slots->count();
 
-        $start = Carbon::parse($validated['start_time']);
-        $end   = Carbon::parse($validated['end_time']);
-        $duration = $start->diffInHours($end) ?: 1;
+        $slotEnd = fn (string $slot) => ((int) substr($slot, 0, 2) === 23)
+            ? '23:59'
+            : Carbon::parse($slot)->addHour()->format('H:i');
 
-        Booking::create([
-            'booking_reference' => $reference,
-            'customer_id'       => $customer->id,
-            'court_id'          => $validated['court_id'],
-            'customer_name'     => $validated['customer_name'],
-            'booking_date'      => $validated['booking_date'],
-            'start_time'        => $validated['start_time'],
-            'end_time'          => $validated['end_time'],
-            'duration'          => $duration,
-            'total_price'       => $validated['total_price'],
-            'total_amount'      => $validated['total_price'],
-            'payment_method'    => 'Cash / Walk-in',
-            'payment_status'    => $validated['payment_status'],
-            'booking_status'    => $validated['booking_status'],
-        ]);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $slots, $reference, $total, $slotEnd) {
+                // Lock the court so two admins/customers can't take the same slot at once
+                Court::where('id', $validated['court_id'])->lockForUpdate()->firstOrFail();
+
+                foreach ($slots as $slot) {
+                    if (Booking::hasOverlap($validated['court_id'], $validated['booking_date'], $slot, $slotEnd($slot))) {
+                        throw new \RuntimeException("The {$slot} slot is already booked for this court.");
+                    }
+                }
+
+                if (!empty($validated['contact_number'])) {
+                    $customer = Customer::updateOrCreate(
+                        ['contact_number' => $validated['contact_number']],
+                        ['full_name' => $validated['customer_name']]
+                    );
+                } else {
+                    $customer = Customer::create([
+                        'full_name'      => $validated['customer_name'],
+                        'contact_number' => 'N/A',
+                    ]);
+                }
+
+                foreach ($slots as $index => $slot) {
+                    // Price comes from Admin > Pricing, same as the public booking page
+                    $rate = Booking::rateForHour((int) substr($slot, 0, 2));
+
+                    Booking::create([
+                        'booking_reference' => $total > 1 ? "{$reference}-" . ($index + 1) : $reference,
+                        'customer_id'       => $customer->id,
+                        'court_id'          => $validated['court_id'],
+                        'customer_name'     => $validated['customer_name'],
+                        'booking_date'      => $validated['booking_date'],
+                        'start_time'        => $slot,
+                        'end_time'          => $slotEnd($slot),
+                        'duration'          => 1,
+                        'total_price'       => $rate,
+                        'total_amount'      => $rate,
+                        'booking_fee'       => 0, // walk-ins never pay the online booking fee
+                        'payment_method'    => 'Cash / Walk-in',
+                        'payment_status'    => $validated['payment_status'],
+                        'booking_status'    => $validated['booking_status'],
+                    ]);
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
 
         return redirect()->back()->with('success', 'Walk-in booking added! Reference: ' . $reference);
     }
