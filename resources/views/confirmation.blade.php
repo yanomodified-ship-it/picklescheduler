@@ -83,10 +83,11 @@
     </svg>
 
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
-    @php
-        $hcNow  = now()->hour + now()->minute / 60;
-        $hcOpen = ($hcNow >= 4);
-    @endphp
+       @php
+       $hcNow  = now()->hour + now()->minute / 60;
+       $pricing = \App\Support\Pricing::data();
+       $hcOpen = \App\Support\Pricing::isOpenNow();
+   @endphp
 
     <header class="hch"
             x-data="{
@@ -146,10 +147,10 @@
         {{-- Top strip --}}
         <div class="hch-top" :class="{ 'off': scrolled }">
             <div class="hch-top-in">
-                @if ($hcOpen)
-                    <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
+                   @if ($hcOpen)
+                    <span class="hch-status"><i></i>Open now · until {{ $pricing['close_label'] }}</span>
                 @else
-                    <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
+                    <span class="hch-status closed"><i></i>Closed now · opens at {{ $pricing['open_label'] }}</span>
                 @endif
 
                 <div class="hch-top-links">
@@ -451,14 +452,14 @@
                                 <dd style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
                                     @forelse (($bookings ?? collect([$booking])) as $slotBooking)
                                         <span class="hcq-slotchip">
-                                            {{ \Carbon\Carbon::parse($slotBooking->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($slotBooking->end_time)->format('g:i A') }}
+                                            {{ \Carbon\Carbon::parse($slotBooking->start_time)->format('g:i A') }} - {{ substr($slotBooking->end_time, 0, 5) === '23:59' ? '12:00 AM' : \Carbon\Carbon::parse($slotBooking->end_time)->format('g:i A') }}
                                         </span>
                                     @empty
                                         <span style="font-size:12px;color:rgba(27,43,28,.6);">N/A</span>
                                     @endforelse
                                 </dd>
                             </div>
-                        </dl>
+                        @if (($bookingFee ?? 0) > 0)<div style="grid-column:1 / -1;"><dt>Pricing</dt><dd>Court time ₱{{ number_format($hoursTotal ?? 0, 2) }} + booking fee ₱{{ number_format($bookingFee, 2) }}</dd></div>@endif</dl>
                     </div>
 
                     @if ($state === 'pending')
@@ -745,7 +746,7 @@
                 <div class="hc-modal-body">
                     <section>
                         <h3 class="hc-display">Who we are</h3>
-                        <p>HomeCourt PickleHouse ("we", "us") runs this website so you can book pickleball courts at Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105.</p>
+                        <p>HomeCourt PickleHouse we runs this website so you can book pickleball courts at Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines.</p>
                     </section>
                     <section>
                         <h3 class="hc-display">What we collect</h3>

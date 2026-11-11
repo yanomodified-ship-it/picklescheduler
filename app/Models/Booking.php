@@ -22,6 +22,7 @@ class Booking extends Model
     'duration',
     'total_price', 
     'total_amount',  
+    'booking_fee',
     'booking_status',
     'payment_status',
     'payment_method',
@@ -47,9 +48,9 @@ class Booking extends Model
      * Hourly rate by the hour the slot STARTS.
      * 4:00 AM – 4:59 PM = 200, 5:00 PM – 1:59 AM = 300
      */
-    public static function rateForHour(int $hour): int
+    public static function rateForHour(int $hour): float
     {
-        return ($hour >= 4 && $hour < 17) ? 200 : 300;
+        return \App\Support\Pricing::rateForHour($hour);
     }
     
     public static function hasOverlap($courtId, $date, $startTime, $endTime, $ignoreBookingId = null): bool

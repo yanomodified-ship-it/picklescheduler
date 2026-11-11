@@ -27,7 +27,7 @@
     $mapLat     = 7.3144437;
     $mapLng     = 125.6915676;
     $mapAddress = 'Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines';
-    $mapHours   = '4:00 AM – 12:00 AM';
+    $mapHours   = \App\Support\Pricing::data()['open_label'] . ' – ' . \App\Support\Pricing::data()['close_label'];
 @endphp
 
 <div class="hcz-find">

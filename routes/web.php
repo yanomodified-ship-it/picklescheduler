@@ -5,6 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Admin\AdminCourtController;
+use App\Http\Controllers\Admin\AdminPricingController;
 use App\Http\Controllers\Admin\AdminOpenPlayController;
 use App\Http\Controllers\OpenPlayController;
 
@@ -65,7 +66,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::patch('/open-play/entries/{openPlayEntry}/verify', [AdminOpenPlayController::class, 'verifyEntry'])->name('open-play.entries.verify');
         Route::patch('/open-play/entries/{openPlayEntry}/reject', [AdminOpenPlayController::class, 'rejectEntry'])->name('open-play.entries.reject');
         Route::patch('/open-play/entries/{openPlayEntry}/cancel', [AdminOpenPlayController::class, 'cancelEntry'])->name('open-play.entries.cancel');
-        
+                
+        // Pricing & hours
+        Route::put('/pricing', [AdminPricingController::class, 'update'])->name('pricing.update');
+
         // Court Actions
         Route::post('/courts', [AdminCourtController::class, 'store'])->name('courts.store');
         Route::put('/courts/{court}', [AdminCourtController::class, 'update'])->name('courts.update');

@@ -187,7 +187,7 @@
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     @php
         $hcNow  = now()->hour + now()->minute / 60;
-        $hcOpen = ($hcNow >= 4);
+        $hcOpen = \App\Support\Pricing::isOpenNow();
     @endphp
 
     <header class="hch"
@@ -281,9 +281,9 @@
         <div class="hch-top" :class="{ 'off': scrolled }">
             <div class="hch-top-in">
                 @if ($hcOpen)
-                    <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
+                    <span class="hch-status"><i></i>Open now · until {{ $pricing['close_label'] }}</span>
                 @else
-                    <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
+                    <span class="hch-status closed"><i></i>Closed now · opens at {{ $pricing['open_label'] }}</span>
                 @endif
 
                 <div class="hch-top-links">
@@ -490,8 +490,8 @@
             <div class="hc-ticker-track">
                 @for ($i = 0; $i < 4; $i++)
                     <div class="hc-ticker-group" @if($i > 0) aria-hidden="true" @endif>
-                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Open 4:00 AM – 12:00 AM</span>
-                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>₱200/hr day · ₱300/hr night</span>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Open {{ $pricing['open_label'] }} – {{ $pricing['close_label'] }}</span>
+                        <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>{{ $pricing['range_label'] }}/hr · + {{ $pricing['fee_label'] }} booking fee</span>
                         <span class="hc-ticker-item"><span class="hc-ticker-dot"></span>Pay with GCash or Maya</span>
                     </div>
                 @endfor
@@ -663,7 +663,7 @@
                                                 {{ $hoursText }}
                                             </span>
                                         @endif
-                                        <span class="hcc-chip">₱200–₱300 / hr</span>
+                                        <span class="hcc-chip">{{ $pricing['range_label'] }} / hr</span>
                                     </div>
 
                                     <div style="margin-top:auto;">
@@ -808,9 +808,7 @@
         @endif
 
         {{-- Rates Section --}}
-        @php
-            $dayRate   = 200;
-            $nightRate = 300;
+               @php
             $stars = [[8,12,3,0],[22,28,2,.8],[38,9,3,1.6],[54,22,2,.4],[68,11,3,1.2],[80,30,2,2],[12,48,2,1],[30,62,3,.2],[46,44,2,1.8]];
         @endphp
 
@@ -825,7 +823,8 @@
                 .hcr-eyebrow i{width:7px;height:7px;border-radius:9999px;background:#E4F03A;animation:hcr-pulse 2s ease-in-out infinite}
 
                 .hcr-grid{display:grid;gap:22px;margin-top:40px}
-                @media (min-width:768px){.hcr-grid{grid-template-columns:1fr 1fr;gap:26px}}
+                @media (min-width:768px){.hcr-grid{grid-template-columns:repeat(var(--hcr-cols,2),minmax(0,1fr));gap:26px}}
+                .hcr-fee{margin:28px 0 0;text-align:center;font-size:15px;font-weight:700;color:rgba(27,43,28,.75)}
 
                 .hcr-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;border-radius:32px;padding:30px;transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s}
                 @media (min-width:768px){.hcr-card{padding:38px}}
@@ -889,85 +888,60 @@
                     <h2 class="hc-display text-4xl font-extrabold text-[#1B2B1C] sm:text-5xl" style="margin:16px 0 0;">Simple, transparent pricing</h2>
                 </div>
 
-                {{-- Rate cards --}}
-                <div class="hcr-grid">
 
-                    {{-- Day --}}
-                    <div class="hcr-card hcr-day">
-                        <svg class="hcr-sun" viewBox="0 0 200 200" aria-hidden="true">
-                            <circle cx="100" cy="100" r="38" fill="currentColor"/>
-                            <g stroke="currentColor" stroke-width="10" stroke-linecap="round">
-                                @for ($a = 0; $a < 360; $a += 30)
-                                    <line x1="100" y1="22" x2="100" y2="44" transform="rotate({{ $a }} 100 100)"/>
-                                @endfor
-                            </g>
-                        </svg>
+                {{-- Rate cards (driven by Admin > Pricing) --}}
+                <div class="hcr-grid" style="--hcr-cols: {{ count($pricing['rules']) }}">
+                    @foreach ($pricing['rules'] as $i => $rule)
+                        @php $isNight = $loop->last && $loop->count > 1; @endphp
+                        <div class="hcr-card {{ $isNight ? 'hcr-night' : 'hcr-day' }}">
+                            @if ($isNight)
+                                @foreach ($stars as $st)
+                                    <span class="hcr-star" style="left:{{ $st[0] }}%;top:{{ $st[1] }}%;width:{{ $st[2] }}px;height:{{ $st[2] }}px;animation-delay:{{ $st[3] }}s"></span>
+                                @endforeach
+                                <svg class="hcr-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                            @else
+                                <svg class="hcr-sun" viewBox="0 0 200 200" aria-hidden="true">
+                                    <circle cx="100" cy="100" r="38" fill="currentColor"/>
+                                    <g stroke="currentColor" stroke-width="10" stroke-linecap="round">
+                                        @for ($a = 0; $a < 360; $a += 30)
+                                            <line x1="100" y1="22" x2="100" y2="44" transform="rotate({{ $a }} 100 100)"/>
+                                        @endfor
+                                    </g>
+                                </svg>
+                            @endif
 
-                        <div>
-                            <div class="hcr-label">
-                                <span class="hcr-ico">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                                </span>
-                                <div>
-                                    <p class="hcr-kind">Day slot</p>
-                                    <p class="hcr-time">4:00 AM – 5:00 PM</p>
+                            <div>
+                                <div class="hcr-label">
+                                    <span class="hcr-ico">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    </span>
+                                    <div>
+                                        <p class="hcr-kind">{{ $rule['label'] }}</p>
+                                        <p class="hcr-time">{{ $rule['range_label'] }}</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="hcr-price-row">
-                                <p class="hc-display hcr-price"><small>₱</small>{{ $dayRate }}</p>
-                                <span class="hcr-per">per hour</span>
-                            </div>
-
-                            <ul class="hcr-list">
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Book as many hours as you need</li>
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pick your hours online</li>
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pay with GCash or Maya</li>
-                            </ul>
-                        </div>
-
-                        <a href="{{ route('booking.create') }}" class="hcr-btn">
-                            Book a day slot
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                        </a>
-                    </div>
-
-                    {{-- Night --}}
-                    <div class="hcr-card hcr-night">
-                        @foreach ($stars as $s)
-                            <span class="hcr-star" style="left:{{ $s[0] }}%;top:{{ $s[1] }}%;width:{{ $s[2] }}px;height:{{ $s[2] }}px;animation-delay:{{ $s[3] }}s"></span>
-                        @endforeach
-                        <svg class="hcr-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-
-                        <div>
-                            <div class="hcr-label">
-                                <span class="hcr-ico">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                                </span>
-                                <div>
-                                    <p class="hcr-kind">Night slot</p>
-                                    <p class="hcr-time">5:00 PM – 12:00 AM</p>
+                                <div class="hcr-price-row">
+                                    <p class="hc-display hcr-price"><small>₱</small>{{ rtrim(rtrim(number_format($rule['rate'], 2), '0'), '.') }}</p>
+                                    <span class="hcr-per">per hour</span>
                                 </div>
+
+                                <ul class="hcr-list">
+                                    <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg> Book as many hours as you need</li>
+                                    <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg> Pick your hours online</li>
+                                    <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg> Pay with GCash or Maya</li>
+                                </ul>
                             </div>
 
-                            <div class="hcr-price-row">
-                                <p class="hc-display hcr-price"><small>₱</small>{{ $nightRate }}</p>
-                                <span class="hcr-per">per hour</span>
-                            </div>
-
-                            <ul class="hcr-list">
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Book as many hours as you need</li>
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pick your hours online</li>
-                                <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>Pay with GCash or Maya</li>
-                            </ul>
+                            <a href="{{ route('booking.create') }}" class="hcr-btn">
+                                Book a {{ strtolower($rule['label']) }} slot
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </a>
                         </div>
-
-                        <a href="{{ route('booking.create') }}" class="hcr-btn">
-                            Book a night slot
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                        </a>
-                    </div>
+                    @endforeach
                 </div>
+
+                <p class="hcr-fee">A flat {{ $pricing['fee_label'] }} booking fee applies once per reservation.</p>
             </div>
         </section>
 
@@ -1086,7 +1060,7 @@
         {{-- Find Us Section --}}
         @php
             $nowH     = now()->hour + now()->minute / 60;
-            $shopOpen = ($nowH >= 4);
+            $shopOpen = \App\Support\Pricing::isOpenNow();
         @endphp
 
         <section id="find-us" class="hcf scroll-mt-24">
@@ -1172,9 +1146,9 @@
                     </div>
 
                     @if ($shopOpen)
-                        <span class="hcf-pill"><i></i>Open now · until 12:00 AM</span>
+                        <span class="hcf-pill"><i></i>Open now · until {{ $pricing['close_label'] }}</span>
                     @else
-                        <span class="hcf-pill closed"><i></i>Closed now · opens at 4:00 AM</span>
+                        <span class="hcf-pill closed"><i></i>Closed now · opens at {{ $pricing['open_label'] }}</span>
                     @endif
                 </div>
 
@@ -1207,7 +1181,7 @@
                             </span>
                             <div>
                                 <p class="t1">Courts open</p>
-                                <p class="t2">4:00 AM – 12:00 AM</p>
+                                <p class="t2">{{ $pricing['open_label'] }} – {{ $pricing['close_label'] }}</p>
                             </div>
                         </div>
 
@@ -1407,7 +1381,7 @@
                 <div class="hc-modal-body">
                     <section>
                         <h3 class="hc-display">Who we are</h3>
-                        <p>HomeCourt PickleHouse ("we", "us") runs this website so you can book pickleball courts at Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105.</p>
+                        <p>HomeCourt PickleHouse we runs this website so you can book pickleball courts at Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines.</p>
                     </section>
                     <section>
                         <h3 class="hc-display">What we collect</h3>

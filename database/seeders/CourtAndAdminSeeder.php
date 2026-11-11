@@ -11,12 +11,12 @@ class CourtAndAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Create Default Admin User
+        if (app()->environment('production')) { return; } // 1. Create Default Admin User
         User::updateOrCreate(
             ['email' => 'admin@homecourt.com'],
             [
                 'name' => 'Admin Manager',
-                'password' => Hash::make('admin12345'), // Change password in production
+                'password' => Hash::make(\Illuminate\Support\Str::random(40)),
             ]
         );
 

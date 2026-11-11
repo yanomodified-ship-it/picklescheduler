@@ -65,7 +65,7 @@
     {{-- Navigation Header (kept pure white: the logo file has a white background) --}}
     @php
         $hcNow  = now()->hour + now()->minute / 60;
-        $hcOpen = ($hcNow >= 4);
+        $hcOpen = \App\Support\Pricing::isOpenNow();
     @endphp
 
     <header class="hch"
@@ -132,9 +132,9 @@
         <div class="hch-top" :class="{ 'off': scrolled }">
             <div class="hch-top-in">
                 @if ($hcOpen)
-                    <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
+                    <span class="hch-status"><i></i>Open now · until {{ $pricing['close_label'] }}</span>
                 @else
-                    <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
+                    <span class="hch-status closed"><i></i>Closed now · opens at {{ $pricing['open_label'] }}</span>
                 @endif
 
                 <div class="hch-top-links">
@@ -339,7 +339,10 @@
                 <div class="hcw-head">
                     <span class="hcw-eyebrow"><i></i>Book online</span>
                     <h1 class="hc-display hcw-title">Reserve your <em>court</em></h1>
-                    <p class="hcw-sub">Open 4:00 AM – 12:00 AM &nbsp;·&nbsp; ₱200 day &nbsp;·&nbsp; ₱300 night</p>
+                    <p class="hcw-sub">Open {{ $pricing['open_label'] }} – {{ 
+                        $pricing['close_label'] }} &nbsp;·&nbsp; {{ 
+                            $pricing['range_label'] }}/hr &nbsp;·&nbsp; + {{ 
+                                $pricing['fee_label'] }} booking fee</p>
                 </div>
 
                 <form id="bookingForm"
@@ -468,8 +471,8 @@
 
                                                 <span class="hcw-meta">
                                                     <span class="hcw-rate"
-                                                          :class="(parseInt(slot) >= 4 && parseInt(slot) < 17) ? 'day' : 'night'"
-                                                          x-text="(parseInt(slot) >= 4 && parseInt(slot) < 17) ? '₱200' : '₱300'"></span>
+                                                          :class="slotIsNight(slot) ? 'night' : 'day'"
+                                                          x-text="'₱' + rateForSlot(slot)"></span>
                                                     <span class="hcw-state">
                                                         <span x-text="isSlotBooked(slot) ? (isSlotPending(slot) ? 'Pending' : 'Booked') : (selectedSlots.includes(slot) ? 'Selected' : 'Available')"></span>
                                                     </span>
@@ -480,7 +483,7 @@
 
                                     {{-- Live selection summary --}}
                                     <div x-show="selectedSlots.length > 0" x-cloak class="hcw-summary">
-                                        <span><b x-text="durationLabel"></b> selected</span>
+                                        <span><b x-text="durationLabel"></b> selected <small style="opacity:.75">+ {{ $pricing['fee_label'] }} booking fee</small></span>
                                         <span class="tot hc-display" x-text="formattedTotal"></span>
                                     </div>
 
@@ -595,6 +598,7 @@
                                     <div class="hcw-row"><span>Court</span><b x-text="courtName"></b></div>
                                     <div class="hcw-row"><span>Time</span><b x-text="formattedTime"></b></div>
                                     <div class="hcw-row"><span>Duration</span><b x-text="durationLabel"></b></div>
+                                    <div class="hcw-row" x-show="selectedSlots.length > 0"><span>Booking fee</span><b x-text="'₱' + bookingFee"></b></div>
                                     <div class="hcw-row" style="border-bottom:0"><span>Players</span><b x-text="players || '—'"></b></div>
                                 </div>
 
@@ -799,7 +803,7 @@
                 <div class="hc-modal-body">
                     <section>
                         <h3 class="hc-display">Who we are</h3>
-                        <p>HomeCourt PickleHouse ("we", "us") runs this website so you can book pickleball courts at Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105.</p>
+                        <p>HomeCourt PickleHouse we runs this website so you can book pickleball courts at Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines.</p>
                     </section>
                     <section>
                         <h3 class="hc-display">What we collect</h3>
@@ -864,7 +868,7 @@
                 paymentMethod: 'GCash', 
                 agreed: @js((bool) old('agree_terms')),
                 submitting: false,
-                existingBookings: @js($existingBookings ?? []),
+                existingBookings: @js($existingBookings ?? []), pricing: @js($pricing),
                 serverNow: @js(now()->format('Y-m-d\TH:i:s')),   
                 loadedAt: Date.now(),
 
@@ -926,7 +930,7 @@
                     const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
                     const [h] = slotTime.split(':').map(Number);
                     const slotStart = new Date(`${this.bookingDate}T00:00:00`);
-                    slotStart.setHours(h < 4 ? h + 24 : h, 0, 0, 0); 
+                    slotStart.setHours(h < this.pricing.open_hour ? h + 24 : h, 0, 0, 0); 
                     return slotStart.getTime() + 3600000 <= now.getTime();
                 },
 
@@ -934,7 +938,7 @@
                     const nowMs = new Date(this.serverNow).getTime() + (Date.now() - this.loadedAt);
                     const [h] = slotTime.split(':').map(Number);
                     const start = new Date(`${this.bookingDate}T00:00:00`);
-                    start.setHours(h < 4 ? h + 24 : h, 0, 0, 0);
+                    start.setHours(h < this.pricing.open_hour ? h + 24 : h, 0, 0, 0);
                     return start.getTime() + 3600000 <= nowMs;
                 },
 
@@ -1007,22 +1011,22 @@
                     if (this.selectedSlots.length === 0) return 'Not selected';
                                         const dayOrder = s => {
                         const h = parseInt(s.split(':')[0], 10);
-                        return h < 4 ? h + 24 : h;
+                        return h < this.pricing.open_hour ? h + 24 : h;
                     };
                     const sorted = [...this.selectedSlots].sort((a, b) => dayOrder(a) - dayOrder(b));
                     return sorted.map(slot => this.getSlotRangeLabel(slot)).join(', ');
                 },
 
-                get totalPrice() {
+                rateForSlot(slot) { let h = parseInt(slot.split(':')[0], 10); if (h < this.pricing.open_hour) h += 24; const rule = this.pricing.rules.find(r => h >= r.start_hour && h < r.end_hour) || this.pricing.rules[this.pricing.rules.length - 1]; return Number(rule.rate); }, slotIsNight(slot) { let h = parseInt(slot.split(':')[0], 10); if (h < this.pricing.open_hour) h += 24; return h >= 17; }, get bookingFee() { return Number(this.pricing.booking_fee || 0); }, get totalPrice() {
                     return this.selectedSlots.reduce((total, slot) => {
                         const hour = parseInt(slot.split(':')[0], 10);
-                        const rate = (hour >= 4 && hour < 17) ? 200 : 300;
+                        const rate = this.rateForSlot(slot);
                         return total + rate;
                     }, 0);
                 },
 
                 get formattedTotal() {
-                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(this.totalPrice);
+                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(this.selectedSlots.length ? this.totalPrice + this.bookingFee : 0);
                 },
 
                 prepareSubmit(event) {

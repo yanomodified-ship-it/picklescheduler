@@ -1,6 +1,6 @@
 @php
     $hcNow  = now()->hour + now()->minute / 60;
-    $hcOpen = ($hcNow >= 4);
+       $hcOpen = \App\Support\Pricing::isOpenNow();
 @endphp
 
 <header class="hch"
@@ -20,9 +20,9 @@
     <div class="hch-top" :class="{ 'off': scrolled }">
         <div class="hch-top-in">
             @if ($hcOpen)
-                <span class="hch-status"><i></i>Open now · until 12:00 AM</span>
+                <span class="hch-status"><i></i>Open now · until {{ \App\Support\Pricing::data()['close_label'] }}</span>
             @else
-                <span class="hch-status closed"><i></i>Closed now · opens at 4:00 AM</span>
+                <span class="hch-status closed"><i></i>Closed now · opens at {{ \App\Support\Pricing::data()['open_label'] }}</span>
             @endif
 
             <div class="hch-top-links">

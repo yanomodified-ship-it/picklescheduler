@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\OpenPlaySession;
 use App\Models\OpenPlayEntry;
+use App\Support\Pricing;
 
 class AdminBookingController extends Controller
 {
@@ -33,6 +34,7 @@ class AdminBookingController extends Controller
         [$openPlayUpcoming, $openPlayPast] = OpenPlaySession::adminLists();
         $openPlayStats = OpenPlayEntry::revenueStats();
         $openPlayPastTotals = OpenPlaySession::pastTotals();
+        $pricing = Pricing::data();
 
         return response()
             ->view('admin.dashboard', compact(
@@ -47,7 +49,8 @@ class AdminBookingController extends Controller
                 'openPlayUpcoming',
                 'openPlayPast',
                 'openPlayStats',
-                'openPlayPastTotals'
+                'openPlayPastTotals',
+                'pricing'
             ))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache');

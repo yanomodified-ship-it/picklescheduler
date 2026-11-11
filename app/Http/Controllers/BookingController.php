@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\OpenPlaySession;
+use App\Support\Pricing;
 
 class BookingController extends Controller
 {
@@ -42,7 +43,9 @@ class BookingController extends Controller
             $openPlayTeasers = collect();
         }
 
-        return view('welcome', compact('courts', 'openPlayTeasers'));
+        $pricing = Pricing::data();
+
+        return view('welcome', compact('courts', 'openPlayTeasers', 'pricing'));
     }
 
     // Load the dedicated booking form page
@@ -73,7 +76,9 @@ class BookingController extends Controller
 
         $existingBookings = $existingBookings->concat($openPlayBlocks)->values();
 
-        return view('booking', compact('courts', 'existingBookings'));
+        $pricing = Pricing::data();
+
+        return view('booking', compact('courts', 'existingBookings', 'pricing'));
     }
 
     // Store a new booking
@@ -175,7 +180,9 @@ class BookingController extends Controller
         // slot. If a conflict is found, we throw to trigger a rollback and
         // catch it right after to show the same error message as before.
         try {
-            DB::transaction(function () use ($slots, $validated, $customer, $baseReference) {
+            $bookingFee = Pricing::fee();
+
+            DB::transaction(function () use ($slots, $validated, $customer, $baseReference, $bookingFee) {
 
                 // Lock the court row itself. Unlike locking existing bookings,
                 // the court row is guaranteed to exist even when this is the
@@ -221,6 +228,8 @@ class BookingController extends Controller
                         'duration'          => 1,
                         'total_price'       => $rate,
                         'total_amount'      => $rate,
+                        // Flat fee charged ONCE per booking reference (first slot row only)
+                        'booking_fee'       => $index === 0 ? $bookingFee : 0,
                         'booking_status'    => 'Pending Verification',
                         'payment_status'    => 'For Verification',
                         'payment_method'    => $validated['payment_method'],
@@ -273,9 +282,11 @@ class BookingController extends Controller
 
         $booking = $bookings->first();
         $booking->booking_reference = $booking_reference; // Retain base reference for clean UI display
-        $totalAmount = $bookings->sum(fn ($b) => (float) ($b->total_price ?? $b->total_amount ?? 0));
+        $bookingFee  = (float) $bookings->sum('booking_fee');
+        $hoursTotal  = $bookings->sum(fn ($b) => (float) ($b->total_price ?? $b->total_amount ?? 0));
+        $totalAmount = $hoursTotal + $bookingFee; // what the customer actually has to send
 
-        return view('confirmation', compact('booking', 'bookings', 'totalAmount'));
+        return view('confirmation', compact('booking', 'bookings', 'totalAmount', 'bookingFee', 'hoursTotal'));
     }
 
     /**

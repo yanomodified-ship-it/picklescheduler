@@ -115,7 +115,9 @@
                         <button type="button" @click="revenueFilterDate = ''; revenueFilterCourt = ''" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded border border-slate-700 transition" title="Clear Filters">Clear</button>
                     </div>
                 </div>
-                <div class="text-2xl font-black text-lime-400 mt-1" x-text="calculatedRevenue"></div>
+                <div class="text-[10px] text-slate-400 mt-1">Court revenue</div>
+                <div class="text-2xl font-black text-lime-400" x-text="calculatedRevenue"></div>
+                <div class="mt-1 text-[11px] font-bold text-amber-300">Booking fees: <span x-text="calculatedFees"></span></div>
                 
             </div>
             
@@ -140,6 +142,7 @@
                 <div class="flex justify-between items-center text-[11px] py-1 px-2 rounded-lg" :class="m.total > 0 ? 'bg-lime-500/10' : 'opacity-40'">
                     <span class="text-slate-300" x-text="m.month"></span>
                     <span class="text-slate-500" x-text="m.count + ' booking' + (m.count !== 1 ? 's' : '')"></span>
+                    <span class="text-amber-300" x-text="m.fees > 0 ? '+₱' + m.fees.toFixed(2) + ' fees' : ''"></span>
                     <span class="font-bold text-lime-400" x-text="'₱' + m.total.toFixed(2)"></span>
                 </div>
             </template>
@@ -153,6 +156,7 @@
             <button @click="activeTab = 'schedule'" :class="activeTab === 'schedule' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">🗓️ Schedule Grid</button>
             <button @click="activeTab = 'openplay'" :class="activeTab === 'openplay' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">🏓 Open Play</button>
             <button @click="activeTab = 'courts'" :class="activeTab === 'courts' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">⚙️ Court Settings</button>
+            <button @click="activeTab = 'pricing'" :class="activeTab === 'pricing' ? 'bg-lime-400 text-slate-950 font-bold' : 'bg-slate-900 text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-sm transition">💰 Pricing</button>
         </div>
 
         <!-- SECTION 1: INTERACTIVE SCHEDULE GRID -->
@@ -296,7 +300,7 @@
                                 <td class="p-4" x-text="formatDate(b.booking_date)"></td>
                                 <td class="p-4 text-white font-bold" x-text="b.court?.name || 'N/A'"></td>
                                 <td class="p-4" x-text="formatTime((b.start_time || '').substring(0,5)) + ' - ' + formatTime((b.end_time || '').substring(0,5))"></td>
-                                <td class="p-4 font-bold text-white" x-text="'₱' + parseFloat(b.total_price || 0).toFixed(2)"></td>
+                                <td class="p-4 font-bold text-white"><span x-text="'₱' + parseFloat(b.total_price || 0).toFixed(2)"></span><template x-if="parseFloat(b.booking_fee || 0) > 0"><div class="text-[10px] font-semibold text-amber-300" x-text="'+ ₱' + parseFloat(b.booking_fee).toFixed(2) + ' booking fee'"></div></template></td>
                                 <td class="p-4">
                                     <span class="px-2 py-1 rounded-md text-[10px] font-bold"
                                           :class="b.payment_status === 'Verified' ? 'bg-emerald-500/20 text-emerald-400' : (b.payment_status === 'Rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400')"
@@ -671,6 +675,83 @@
             @endif
         </div>
 
+        <!-- SECTION 4: PRICING & HOURS -->
+        <div x-show="activeTab === 'pricing'" x-cloak x-data="pricingEditor(@js($pricing))">
+            <form method="POST" action="{{ route('admin.pricing.update') }}" class="space-y-6">
+                @csrf @method('PUT')
+
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8">
+                    <div class="mb-6 border-b border-slate-800 pb-4">
+                        <h2 class="text-xl font-bold text-white">Pricing &amp; Hours</h2>
+                        <p class="text-xs text-slate-400">Changes apply to the website, booking page and new invoices right away. Existing bookings keep the price they were booked at.</p>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Opening time</label>
+                            <select name="open_hour" x-model.number="openHour" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                <template x-for="h in 24" :key="h"><option :value="h-1" x-text="hourLabel(h-1)"></option></template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Closing time</label>
+                            <select name="close_hour" x-model.number="closeHour" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                <template x-for="h in 24" :key="h"><option :value="h-1" x-text="hourLabel(h-1)"></option></template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Booking fee (₱ per booking, not per hour)</label>
+                            <input type="number" step="0.01" min="0" name="booking_fee" x-model="fee" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                        </div>
+                    </div>
+                    <p class="mt-3 text-[11px] text-slate-500">Closing time earlier than opening time means the courts stay open past midnight (e.g. open 4:00 AM, close 2:00 AM). This also updates every court's operating hours.</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-white">Hourly rates</h3>
+                        <button type="button" @click="addRow()" class="px-3 py-1.5 bg-slate-800 text-lime-400 text-xs font-bold rounded-lg border border-slate-700 hover:bg-slate-700">+ Add range</button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <template x-for="(r, i) in rules" :key="i">
+                            <div class="grid grid-cols-2 sm:grid-cols-12 gap-3 items-end bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                                <div class="col-span-2 sm:col-span-3">
+                                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Name</label>
+                                    <input type="text" :name="`rules[${i}][label]`" x-model="r.label" maxlength="40" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">From</label>
+                                    <select :name="`rules[${i}][start_hour]`" x-model.number="r.start_hour" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                        <template x-for="h in hourChoices" :key="h"><option :value="h" x-text="hourLabel(h)" :selected="h === r.start_hour"></option></template>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Until</label>
+                                    <select :name="`rules[${i}][end_hour]`" x-model.number="r.end_hour" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                        <template x-for="h in hourChoices" :key="h"><option :value="h" x-text="hourLabel(h)" :selected="h === r.end_hour"></option></template>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">₱ / hour</label>
+                                    <input type="number" step="0.01" min="0" :name="`rules[${i}][rate]`" x-model="r.rate" required class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-white text-sm">
+                                </div>
+                                <div class="sm:col-span-1 text-right">
+                                    <button type="button" @click="removeRow(i)" x-show="rules.length > 1" class="px-3 py-2 bg-red-900/60 text-red-300 text-xs rounded-lg border border-red-700/40 hover:bg-red-600 hover:text-white">Del</button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <p class="mt-4 text-[11px]" :class="coverageOk ? 'text-slate-500' : 'text-amber-300 font-bold'" x-text="coverageMessage"></p>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" :disabled="!coverageOk" :class="coverageOk ? 'bg-lime-400 text-slate-950 hover:bg-lime-300' : 'bg-slate-700 text-slate-400 cursor-not-allowed'" class="px-6 py-2.5 text-sm font-bold rounded-xl">Save pricing</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <!-- SECTION 3: COURT MANAGEMENT -->
         <div x-show="activeTab === 'courts'" x-cloak>
             <div class="mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
@@ -977,6 +1058,7 @@
         function formatInvoiceTime(time) {
     if (!time) return '';
     const [hour, minute] = time.split(':').map(Number);
+    if (hour === 23 && minute === 59) return '12:00 AM'; // stored as 23:59, really midnight
     return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 && hour < 24 ? 'PM' : 'AM'}`;
 }
 
@@ -997,7 +1079,9 @@ function buildInvoiceHtml(bookings) {
     const statusLabel = allVerified ? 'PAID' : anyRejected ? 'PARTIALLY REJECTED' : 'PENDING';
     const statusColor = allVerified ? '#16a34a' : anyRejected ? '#dc2626' : '#d97706';
 
-    const grandTotal = bookings.reduce((sum, b) => sum + parseFloat(b.total_price || b.total_amount || 0), 0);
+    const hoursTotal = bookings.reduce((sum, b) => sum + parseFloat(b.total_price || b.total_amount || 0), 0);
+    const feeTotal   = bookings.reduce((sum, b) => sum + parseFloat(b.booking_fee || 0), 0);
+    const grandTotal = hoursTotal + feeTotal;
 
     const rows = bookings.map(b => {
         const startTime = formatInvoiceTime((b.start_time || '').substring(0, 5));
@@ -1020,7 +1104,7 @@ function buildInvoiceHtml(bookings) {
                 <div>
                     <div style="font-size:22px;font-weight:800;">HomeCourt <span style="color:#65a30d;">PickleHouse</span></div>
                     <div style="font-size:11px;color:#666;margin-top:2px;">Premium Pickleball Court Rentals</div>
-                    <div style="font-size:11px;color:#666;margin-top:2px;">📍 Purok 7, San Vicente, Panabo City, Panabo, Philippines, 8105</div>
+                    <div style="font-size:11px;color:#666;margin-top:2px;">📍 Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines</div>
                 </div>
             </div>
             <div style="text-align:right;">
@@ -1056,8 +1140,9 @@ function buildInvoiceHtml(bookings) {
         <div style="display:flex;justify-content:flex-end;margin-bottom:40px;">
             <div style="width:240px;">
                 <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;">
-                    <span>Subtotal</span><span>₱${grandTotal.toFixed(2)}</span>
+                    <span>Court rental</span><span>₱${hoursTotal.toFixed(2)}</span>
                 </div>
+                ${feeTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;"><span>Booking fee</span><span>₱${feeTotal.toFixed(2)}</span></div>` : ''}
                 <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:6px;border-top:2px solid #1a1a1a;font-size:16px;font-weight:800;">
                     <span>Total Due</span><span>₱${grandTotal.toFixed(2)}</span>
                 </div>
@@ -1247,6 +1332,18 @@ function getCsrfToken() {
                     return '₱' + rev.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 },
 
+                get calculatedFees() {
+                    let fees = 0;
+                    this.bookings.forEach(b => {
+                        const matchDate = this.revenueFilterDate === '' || b.booking_date === this.revenueFilterDate;
+                        const matchCourt = this.revenueFilterCourt === '' || String(b.court_id) === String(this.revenueFilterCourt);
+                        if (matchDate && matchCourt && b.payment_status === 'Verified') {
+                            fees += parseFloat(b.booking_fee || 0);
+                        }
+                    });
+                    return '₱' + fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+
                 changeDate(offsetDays) {
                     let current = new Date(this.selectedDate);
                     current.setDate(current.getDate() + offsetDays);
@@ -1416,7 +1513,7 @@ get recentlyConfirmed() {
             };
         }
         groups[baseRef].bookings.push(b);
-        groups[baseRef].total += parseFloat(b.total_price || b.total_amount || 0);
+        groups[baseRef].total += parseFloat(b.total_price || b.total_amount || 0) + parseFloat(b.booking_fee || 0);
         if (b.id > groups[baseRef].maxId) groups[baseRef].maxId = b.id;
     });
     return Object.values(groups)
@@ -1516,6 +1613,7 @@ get monthlyRevenueBreakdown() {
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const totals = Array(12).fill(0);
     const counts = Array(12).fill(0);
+    const fees = Array(12).fill(0);
 
     this.bookings.forEach(b => {
         if (b.payment_status !== 'Verified') return;
@@ -1523,6 +1621,7 @@ get monthlyRevenueBreakdown() {
         if (year !== this.revenueBreakdownYear) return;
         const month = parseInt(b.booking_date.substring(5, 7), 10) - 1;
         totals[month] += parseFloat(b.total_price || b.total_amount || 0);
+        fees[month] += parseFloat(b.booking_fee || 0);
         counts[month]++;
     });
 
@@ -1530,11 +1629,51 @@ get monthlyRevenueBreakdown() {
         month: name,
         total: totals[i],
         count: counts[i],
+        fees: fees[i],
     }));
 },
 
             }));
         });
+    </script>
+    <script>
+        function pricingEditor(p) {
+            return {
+                openHour: p.open_hour,
+                closeHour: p.close_hour,
+                fee: p.booking_fee,
+                rules: p.rules.map(r => ({ label: r.label, start_hour: r.start_hour, end_hour: r.end_hour, rate: r.rate })),
+                get closeService() { return this.closeHour <= this.openHour ? this.closeHour + 24 : this.closeHour; },
+                get hourChoices() {
+                    const out = [];
+                    for (let h = this.openHour; h <= this.closeService; h++) out.push(h);
+                    return out;
+                },
+                hourLabel(h) {
+                    const h24 = h % 24;
+                    return `${h24 % 12 || 12}:00 ${h24 >= 12 ? 'PM' : 'AM'}` + (h >= 24 ? ' (next day)' : '');
+                },
+                addRow() {
+                    const last = this.rules[this.rules.length - 1];
+                    this.rules.push({ label: 'New rate', start_hour: last ? last.end_hour : this.openHour, end_hour: this.closeService, rate: last ? last.rate : 0 });
+                },
+                removeRow(i) { this.rules.splice(i, 1); },
+                get sorted() { return [...this.rules].sort((a, b) => a.start_hour - b.start_hour); },
+                get coverageOk() {
+                    let cursor = this.openHour;
+                    for (const r of this.sorted) {
+                        if (r.start_hour !== cursor || r.end_hour <= cursor) return false;
+                        cursor = r.end_hour;
+                    }
+                    return cursor === this.closeService && this.rules.length > 0;
+                },
+                get coverageMessage() {
+                    return this.coverageOk
+                        ? `Ranges cover ${this.hourLabel(this.openHour)} to ${this.hourLabel(this.closeService)} with no gaps.`
+                        : `Ranges must run back-to-back from ${this.hourLabel(this.openHour)} to ${this.hourLabel(this.closeService)}: each "From" must equal the previous "Until".`;
+                },
+            };
+        }
     </script>
 </body>
 </html>

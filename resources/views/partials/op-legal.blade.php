@@ -49,7 +49,7 @@
             </div>
 
             <div class="hcm-body">
-                <section><h3 class="hc-display">Who we are</h3><p>HomeCourt PickleHouse ("we", "us") runs this website so you can book pickleball courts and join open play sessions at Purok 7, San Vicente Panabo City, Panabo, Philippines, 8105.</p></section>
+                <section><h3 class="hc-display">Who we are</h3><p>HomeCourt PickleHouse we runs this website so you can book pickleball courts and join open play sessions at Purok 1, Salvacion Panabo City, Davao Del Norte, Philippines.</p></section>
                 <section>
                     <h3 class="hc-display">What we collect</h3>
                     <p>When you book a court or join an open play session we collect only what we need to run it:</p>
