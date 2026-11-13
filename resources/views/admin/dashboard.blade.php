@@ -193,7 +193,7 @@
    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 <template x-for="slot in allSlots" :key="slot">
                     <button @click="handleSlotClick(slot)" :class="getSlotStyle(slot)" class="p-3 rounded-2xl border text-center transition flex flex-col items-center justify-between min-h-[105px] relative overflow-hidden group">
-                        <div class="text-xs font-bold text-slate-300" x-text="formatTime(slot)"></div>
+                        <div class="text-xs font-bold text-slate-300" x-text="slotRange(slot)"></div>
                         <div class="my-1.5 w-full text-center">
                             <template x-if="getBookingForSlot(slot)">
                                 <div class="flex flex-col items-center">
@@ -298,7 +298,7 @@
                         <template x-for="b in filteredHistory" :key="b.id">
                             <tr class="hover:bg-slate-800/40 transition">
                                 <td class="p-4 font-extrabold text-lime-400" x-text="b.booking_reference"></td>
-                                <td class="p-4 text-white font-bold" x-text="b.customer_name || b.customer?.full_name || 'N/A'"></td>
+                                <td class="p-4 text-white font-bold"><span x-text="b.customer_name || b.customer?.full_name || 'N/A'"></span><template x-if="b.payment_reference"><div class="text-[10px] font-mono font-semibold text-slate-400">Ref: <span class="text-lime-300" x-text="b.payment_reference"></span></div></template></td>
                                 <td class="p-4" x-text="formatDate(b.booking_date)"></td>
                                 <td class="p-4 text-white font-bold" x-text="b.court?.name || 'N/A'"></td>
                                 <td class="p-4" x-text="formatTime((b.start_time || '').substring(0,5)) + ' - ' + formatTime((b.end_time || '').substring(0,5))"></td>
@@ -306,7 +306,7 @@
                                 <td class="p-4">
                                     <span class="px-2 py-1 rounded-md text-[10px] font-bold"
                                           :class="b.payment_status === 'Verified' ? 'bg-emerald-500/20 text-emerald-400' : (b.payment_status === 'Rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400')"
-                                          x-text="b.payment_status"></span>
+                                          x-text="b.payment_status"></span><template x-if="isOverdue(b)"><div class="mt-1 text-[10px] font-bold text-red-400">⚠ Did not pay within 20 minutes</div></template>
                                 </td>
                                 <td class="p-4 text-right space-x-1">
                                     <button @click="selectedBooking = b" class="bg-slate-800 hover:bg-slate-700 text-white text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-700">View</button>
@@ -824,7 +824,7 @@
             <h2 class="text-xl font-black text-white mb-2">Walk-In Booking</h2>
             <div class="text-xs text-slate-400 mb-6 flex gap-2">
                 <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Date: ' + selectedDate"></span>
-                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Time: ' + walkInSlots.map(s => formatTime(s)).join(', ')"></span>
+                <span class="bg-slate-800 px-2 py-1 rounded" x-text="'Time: ' + walkInSlots.map(s => slotRange(s)).join(', ')"></span>
             </div>
 
             <form method="POST" action="{{ route('admin.bookings.store') }}" class="space-y-4">
@@ -935,6 +935,7 @@
                 <div class="mt-4 bg-slate-950 border border-slate-800 rounded-xl p-4">
                     <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Payment Details</h3>
                     <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Method</span> <span class="font-bold text-white" x-text="selectedBooking?.payment_method || 'Cash / Walk-in'"></span></div>
+                    <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Payment Ref</span> <span class="font-mono font-bold text-lime-300 select-all" x-text="selectedBooking?.payment_reference || '—'"></span></div>
                     <div class="flex justify-between text-sm mb-2"><span class="text-slate-400">Total Due</span> <span class="font-black text-lime-400" x-text="'₱' + selectedBooking?.total_price"></span></div>
 
                     <template x-if="selectedBooking?.payment_status === 'Verified'"><span class="inline-block px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">VERIFIED</span></template>
@@ -1064,7 +1065,7 @@
     return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 && hour < 24 ? 'PM' : 'AM'}`;
 }
 
-function buildInvoiceHtml(bookings) {
+function buildInvoiceHtml(bookings) { const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const first = bookings[0];
     const courtName    = first.court?.name || 'N/A';
     const customerName = first.customer_name || first.customer?.full_name || 'Walk-In Customer';
@@ -1091,7 +1092,7 @@ function buildInvoiceHtml(bookings) {
         const amount    = parseFloat(b.total_price || b.total_amount || 0).toFixed(2);
         return `
             <tr>
-                <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${courtName} Rental (${b.number_of_players || 2} players)</td>
+                <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${esc(courtName)} Rental (${b.number_of_players || 2} players)</td>
                 <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${bookingDate}</td>
                 <td style="padding:12px;font-size:13px;border-bottom:1px solid #f0f0f0;">${startTime} - ${endTime}</td>
                 <td style="padding:12px;font-size:13px;text-align:right;border-bottom:1px solid #f0f0f0;">₱${amount}</td>
@@ -1111,15 +1112,15 @@ function buildInvoiceHtml(bookings) {
             </div>
             <div style="text-align:right;">
                 <div style="font-size:28px;font-weight:800;letter-spacing:2px;">INVOICE</div>
-                <div style="font-size:12px;color:#666;margin-top:4px;">#${baseRef}</div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">#${esc(baseRef)}</div>
             </div>
         </div>
 
         <div style="display:flex;justify-content:space-between;margin-bottom:32px;">
             <div>
                 <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#999;letter-spacing:1px;margin-bottom:6px;">Billed To</div>
-                <div style="font-size:15px;font-weight:700;">${customerName}</div>
-                <div style="font-size:13px;color:#555;margin-top:2px;">${contact}</div>
+                <div style="font-size:15px;font-weight:700;">${esc(customerName)}</div>
+                <div style="font-size:13px;color:#555;margin-top:2px;">${esc(contact)}</div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:11px;color:#999;">Invoice Date: <span style="color:#1a1a1a;font-weight:600;">${dateIssued}</span></div>
@@ -1152,7 +1153,7 @@ function buildInvoiceHtml(bookings) {
         </div>
 
         <div style="border-top:1px solid #e4e4e7;padding-top:20px;">
-            <div style="font-size:11px;color:#999;">Payment Method: <span style="color:#1a1a1a;font-weight:600;">${first.payment_method || 'N/A'}</span></div>
+            <div style="font-size:11px;color:#999;">Payment Method: <span style="color:#1a1a1a;font-weight:600;">${esc(first.payment_method || 'N/A')}</span></div>
             <div style="font-size:12px;color:#999;margin-top:16px;">Thank you for choosing HomeCourt PickleHouse. See you on the court!</div>
         </div>
     </div>`;
@@ -1385,7 +1386,7 @@ function getCsrfToken() {
                         /* the form opens from the "Walk-in booking" bar */
                     }
                 },
-                formatTime(time) {
+                slotRange(slot) { const h = parseInt(slot.split(':')[0], 10); return this.formatTime(slot) + ' - ' + this.formatTime(String(h + 1).padStart(2, '0') + ':00'); }, isOverdue(b) { return b.booking_status === 'Pending Verification' && !!b.created_at && (Date.now() - new Date(b.created_at).getTime()) > 20 * 60 * 1000; }, formatTime(time) {
                     if (!time) return '';
                     const [hour, minute] = time.split(':').map(Number);
                     return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 && hour < 24 ? 'PM' : 'AM'}`;

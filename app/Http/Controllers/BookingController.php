@@ -93,9 +93,10 @@ class BookingController extends Controller
     'contact_number'    => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
     'number_of_players' => 'required|integer|min:1|max:30',
     'payment_method'    => 'required|in:GCash,Maya',
+    'payment_reference' => ['required', 'string', 'min:1', 'max:40', 'regex:/^[A-Za-z0-9\- ]+$/'],
     'agree_terms'       => 'accepted',
 ], [
-    'agree_terms.accepted' => 'Please tick the box to agree to the booking terms and privacy policy.',
+    'agree_terms.accepted' => 'Please tick the box to agree to the booking terms and privacy policy.', 'payment_reference.required' => 'Please enter your GCash or Maya reference number.', 'payment_reference.min' => 'The reference number looks too short. Please copy it from your payment receipt.', 'payment_reference.regex' => 'The reference number can only contain letters, numbers, spaces and dashes.',
 ]);
 
         // Clean up the selected hour slots: unique + sorted (e.g. ["06:00","09:00"])
@@ -171,6 +172,8 @@ class BookingController extends Controller
             ]
         );
 
+        if (Booking::whereRaw("REPLACE(REPLACE(LOWER(payment_reference), ' ', ''), '-', '') = ?", [strtolower(str_replace([' ', '-'], '', $validated['payment_reference']))])->whereNotIn('booking_status', ['Rejected', 'Cancelled'])->exists()) { return back()->withErrors(['payment_reference' => 'This reference number was already used for another booking. Please check it, or message us on Facebook.'])->withInput(); }
+
         // 3. Generate base booking reference
         $baseReference = $this->generateBookingReference();
 
@@ -233,6 +236,7 @@ class BookingController extends Controller
                         'booking_status'    => 'Pending Verification',
                         'payment_status'    => 'For Verification',
                         'payment_method'    => $validated['payment_method'],
+                        'payment_reference' => trim($validated['payment_reference']),
                     ]);
                 }
             });

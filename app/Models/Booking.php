@@ -23,6 +23,7 @@ class Booking extends Model
     'total_price', 
     'total_amount',  
     'booking_fee',
+    'payment_reference',
     'booking_status',
     'payment_status',
     'payment_method',

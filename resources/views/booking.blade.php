@@ -526,6 +526,11 @@
                                             class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition placeholder:text-[#1B2B1C]/40 focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
                                     </div>
                                     <div class="sm:col-span-2">
+                                        <label for="payment_reference" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">GCash / Maya Reference No.</label>
+                                        <input id="payment_reference" name="payment_reference" type="text" maxlength="40" autocomplete="off" value="{{ old('payment_reference') }}" required x-model="referenceNumber" placeholder="e.g. 1234 567 890123" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition placeholder:text-[#1B2B1C]/40 focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
+                                        <p class="mt-2 text-xs text-[#1B2B1C]/60">Pay the exact amount in step 3 first, then type the reference number from your GCash or Maya receipt. We use it to verify your payment.</p>@error('payment_reference')<p class="mt-2 text-xs font-semibold text-red-600">{{ $message }}</p>@enderror
+                                    </div>
+<div class="sm:col-span-2">
                                         <label for="number_of_players" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">Number of Players</label>
                                         <input id="number_of_players" name="number_of_players" type="number" min="1" max="30" value="{{ old('number_of_players', 2) }}" required x-model.number="players" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
                                     </div>
@@ -572,10 +577,102 @@
                                         <span><b>Maya</b><small>Scan a QR or send by number</small></span>
                                     </button>
                                 </div>
+                                
 
+                                {{-- Payment accounts + QR codes, shown inside the booking page (step 3).
+     Uses the booking form's Alpine data: paymentMethod, selectedSlots, formattedTotal.
+     Edit the account list below when numbers or QR images change. --}}
+@php
+    $payBrand = ['gcash' => 'GCash', 'maya' => 'Maya'];
+    $payAccounts = [
+        'gcash' => [
+            ['label' => 'Account 1', 'number' => '0960 302 4390', 'raw' => '09603024390', 'name' => 'Leah Jean Alimasag', 'qr' => 'gcash-qr.png',   'w' => 762, 'h' => 1115],
+            ['label' => 'Account 2', 'number' => '0960 428 9234', 'raw' => '09604289234', 'name' => 'Leah Jean Alimasag', 'qr' => 'gcash-qr-2.png', 'w' => 803, 'h' => 1118],
+        ],
+        'maya' => [
+            ['label' => 'Account 1', 'number' => '0917 324 5124', 'raw' => '09173245124', 'name' => 'Leah Jean Alimasag', 'qr' => 'maya-qr.png',     'w' => 820, 'h' => 920],
+        ],
+    ];
+@endphp
+
+<style>
+    .hcpb{margin-top:22px}
+    .hcpb-hint{margin:10px 2px 0;font-size:13px;font-weight:700;color:#B45309}
+    .hcq-cap{margin:0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(27,43,28,.6)}
+    .hcq-copy{margin-top:14px;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;border:2px solid rgba(47,93,52,.35);background:#fff;padding:9px 18px;font-size:13px;font-weight:800;color:#2F5D34;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+    .hcq-copy:hover{background:#2F5D34;border-color:#2F5D34;color:#fff}
+    .hcq-copy.sm{margin-top:10px;padding:6px 14px;font-size:12px}
+    .hcq-amount{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:22px;background:#1F3F24;padding:16px 20px;
+        background-image:radial-gradient(280px 140px at 100% 0%, rgba(228,240,58,.22), transparent 65%)}
+    .hcq-amount span{font-size:13px;font-weight:700;color:#CFDDAE}
+    .hcq-amount b{font-size:32px;font-weight:800;line-height:1.1;color:#E4F03A}
+    .hcq-accs{display:grid;gap:16px;margin-top:20px;grid-template-columns:minmax(0,1fr)}
+    @media (min-width:640px){.hcq-accs.two{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .hcq-accs.one{max-width:400px;margin-left:auto;margin-right:auto}
+    .hcq-acc{border-radius:26px;border:2px solid rgba(27,43,28,.1);background:#F6F8EE;padding:18px;text-align:center}
+    .hcq-acc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .hcq-brand{border-radius:9999px;padding:5px 13px;font-size:12px;font-weight:800;color:#fff}
+    .hcq-brand.gcash{background:#0B63F6}
+    .hcq-brand.maya{background:#00A859}
+    .hcq-acc-label{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(27,43,28,.6)}
+    .hcq-qr{margin:14px auto 0;max-width:220px;overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 14px 26px -18px rgba(27,43,28,.55)}
+    .hcq-qr img{display:block;width:100%;height:auto}
+    .hcq-save{display:inline-block;margin:10px 0 14px;font-size:13px;font-weight:800;color:#2F5D34;text-decoration:underline;text-underline-offset:4px}
+    .hcq-save:hover{color:#1F3F24}
+    .hcq-accnum{margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:.02em;color:#1F3F24}
+    .hcq-accname{margin:4px 0 0;font-weight:800;color:#1B2B1C}
+    .hcq-acc .hcq-cap{margin-top:12px}
+</style>
+
+<div class="hcpb">
+    <div class="hcq-amount">
+        <span>Please send exactly</span>
+        <b class="hc-display" x-text="selectedSlots.length ? formattedTotal : '₱0.00'"></b>
+    </div>
+    <p class="hcpb-hint" x-show="selectedSlots.length === 0" x-cloak>Select your time slots in step 1 to see the exact amount to send.</p>
+
+    @foreach ($payAccounts as $key => $list)
+        <div x-show="paymentMethod === '{{ $payBrand[$key] }}'" x-cloak class="hcq-accs {{ count($list) > 1 ? 'two' : 'one' }}">
+            @foreach ($list as $acc)
+                <div class="hcq-acc">
+                    <div class="hcq-acc-top">
+                        <span class="hcq-brand {{ $key }}">{{ $payBrand[$key] }}</span>
+                        @if (count($list) > 1)
+                            <span class="hcq-acc-label">{{ $acc['label'] }}</span>
+                        @endif
+                    </div>
+
+                    <div class="hcq-qr">
+                        <img src="{{ asset('images/' . $acc['qr']) }}" alt="{{ $payBrand[$key] }} QR code for HomeCourt PickleHouse payments, {{ $acc['label'] }}" width="{{ $acc['w'] }}" height="{{ $acc['h'] }}" loading="lazy">
+                    </div>
+                    <a class="hcq-save" href="{{ asset('images/' . $acc['qr']) }}" download="HomeCourt-{{ $payBrand[$key] }}-QR-{{ $loop->iteration }}.png">Save QR image</a>
+
+                    <p class="hcq-cap">Account number</p>
+                    <p class="hc-display hcq-accnum">{{ $acc['number'] }}</p>
+                    <button type="button" class="hcq-copy sm" data-copy="{{ $acc['raw'] }}" data-label="Copy number" onclick="hcCopy(this)">Copy number</button>
+
+                    <p class="hcq-cap">Account name</p>
+                    <p class="hcq-accname">{{ $acc['name'] }}</p>
+                </div>
+            @endforeach
+        </div>
+    @endforeach
+</div>
+
+<script>
+    if (typeof hcCopy === 'undefined') {
+        function hcCopy(btn) {
+            var text = btn.getAttribute('data-copy');
+            var label = btn.getAttribute('data-label') || btn.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text); }
+            btn.textContent = 'Copied!';
+            setTimeout(function () { btn.textContent = label; }, 1800);
+        }
+    }
+</script>
                                 <p class="hcw-pm-note">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-                                    You pay after submitting. The account numbers and QR codes appear on the next screen.
+                                    Pay the exact total shown above, then type your GCash or Maya reference number in step 2 before submitting.
                                 </p>
                             </div>
 
@@ -613,12 +710,48 @@
                                     <span>I understand that this booking is <strong>non-refundable and non-cancellable</strong> once submitted. I have reviewed my court, date and time slots and am ready to proceed.</span>
                                 </label>
 
-                                <button type="submit" :disabled="submitting || isFullyBooked || selectedSlots.length === 0 || !agreed" class="hcw-submit">
+                                <button type="button" @click="showPolicy = true" :disabled="submitting || isFullyBooked || !canSubmit" class="hcw-submit">
                                     <span x-show="!submitting">Submit Booking</span>
                                     <span x-show="submitting" x-cloak>Submitting...</span>
                                 </button>
 
-                                <p class="hcw-note">
+                                <p class="hcw-note" x-show="missing.length > 0" x-text="'Still needed: ' + missing.join(', ') + '.'" style="color:#B45309;font-weight:700"></p>
+<template x-teleport="body">
+<div x-show="showPolicy" x-cloak @keydown.escape.window="showPolicy = false" @click.self="showPolicy = false" class="hcp-back" role="dialog" aria-modal="true" aria-labelledby="hcp-title">
+<style>
+.hcp-back{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,28,17,.72);backdrop-filter:blur(3px)}
+.hcp-box{width:100%;max-width:540px;max-height:90vh;overflow:auto;border-radius:26px;background:#fff;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);font-family:inherit}
+.hcp-box h2{margin:0 0 6px;font-size:22px;font-weight:800;color:#1B2B1C}
+.hcp-sub{display:flex;align-items:center;gap:8px;margin:0 0 14px;border-radius:12px;background:#FEF3C7;border:1.5px solid #F59E0B;padding:10px 14px;font-size:15px;font-weight:800;color:#92400E}
+.hcp-timer{margin-bottom:16px;border-radius:16px;background:#E4F03A;border:2px solid #1F3F24;padding:14px 16px;font-size:16px;font-weight:800;line-height:1.4;color:#1F3F24}
+.hcp-note{margin:0 0 20px;border-radius:16px;background:#F3F8E4;border:1.5px dashed #2F5D34;padding:12px 14px;font-size:14px;line-height:1.55;color:#1B2B1C}
+.hcp-note a,.hcp-box li a{font-weight:800;color:#1F3F24;text-decoration:underline}
+.hcp-box ul{margin:0 0 20px;padding-left:20px;font-size:14px;line-height:1.55;color:#1B2B1C}
+.hcp-box li{margin-bottom:8px}
+.hcp-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
+.hcp-btn{cursor:pointer;border-radius:9999px;border:2px solid rgba(47,93,52,.35);background:#fff;padding:12px 22px;font-size:14px;font-weight:800;color:#2F5D34}
+.hcp-btn.go{border-color:#1F3F24;background:#1F3F24;color:#E4F03A}
+.hcp-btn[disabled]{opacity:.55;cursor:not-allowed}
+</style>
+<div class="hcp-box">
+<h2 id="hcp-title">Payment &amp; Reservation Policy</h2>
+<p class="hcp-sub">&#9888;&#65039; Please read this before you submit your booking.</p>
+<div class="hcp-timer">&#9201; Your slot is held for 20 minutes after you submit, while we check your payment.</div>
+<ul>
+<li>Send the <strong>exact total</strong> shown on this page and type the correct GCash or Maya <strong>reference number</strong>.</li>
+<li>After paying, send your <strong>booking reference and payment receipt</strong> to our <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer">Facebook page</a> so we can verify your booking faster.</li>
+<li>Wrong amounts, invalid or reused reference numbers will be rejected.</li>
+<li>Bookings are <strong>non-refundable and non-cancellable</strong> once submitted.</li>
+</ul>
+<div class="hcp-note"><strong>Can't pay within 20 minutes?</strong> Message us on our <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer">Facebook page</a> and tell us the reason so we know what happened. If we don't hear from you and can't verify your payment, your booking will be marked <strong>&ldquo;did not pay within 20 minutes&rdquo;</strong> and may be cancelled and released to other players.</div>
+<div class="hcp-actions">
+<button type="button" class="hcp-btn" @click="showPolicy = false">Go back</button>
+<button type="submit" form="bookingForm" class="hcp-btn go" :disabled="submitting"><span x-show="!submitting">I agree, submit my booking</span><span x-show="submitting" x-cloak>Submitting...</span></button>
+</div>
+</div>
+</div>
+</template>
+<p class="hcw-note">
                                     Please read our
                                     <button type="button" @click="$dispatch('open-house-rules')" class="font-semibold text-[#2F5D34] underline underline-offset-2 hover:text-[#1F3F24]">House Rules</button>
                                     and
@@ -865,9 +998,10 @@
                 customerName: @js(old('name', '')),
                 contactNumber: @js(old('contact_number', '')),
                 players: @js((int) old('number_of_players', 2)),
-                paymentMethod: 'GCash', 
+                paymentMethod: 'GCash',
+                referenceNumber: @js(old('payment_reference', '')), 
                 agreed: @js((bool) old('agree_terms')),
-                submitting: false,
+                submitting: false, showPolicy: false,
                 existingBookings: @js($existingBookings ?? []), pricing: @js($pricing),
                 serverNow: @js(now()->format('Y-m-d\TH:i:s')),   
                 loadedAt: Date.now(),
@@ -963,7 +1097,7 @@
                     });
                 },
 
-                get isFullyBooked() {
+                get missing() { const m = []; if (this.selectedSlots.length === 0) m.push('a time slot'); if (this.customerName.trim().length < 2) m.push('your Facebook name'); if (this.contactNumber.replace(/\D/g, '').length < 10) m.push('your contact number'); if (!(Number(this.players) >= 1)) m.push('number of players'); if (this.referenceNumber.trim().length < 6) m.push('your payment reference number'); if (!this.agreed) m.push('the agreement tick box'); return m; }, get canSubmit() { return this.missing.length === 0; }, get isFullyBooked() {
                     if (!this.courtId || !this.bookingDate) return false;
                     return this.allSlots.every(slot => this.isSlotBooked(slot));
                 },

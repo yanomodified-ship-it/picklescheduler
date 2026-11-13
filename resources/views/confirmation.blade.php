@@ -385,7 +385,7 @@
                         @elseif ($state === 'cancelled')
                             This booking was cancelled. If you think this is a mistake, please message us on Facebook.
                         @else
-                            Thank you for choosing PickleHouse. One more step: send your payment receipt and reference to confirm your slot.
+                            Thank you for choosing PickleHouse. We received your payment reference and will verify it shortly. Send your receipt on Facebook to get confirmed faster.
                         @endif
                     </p>
                 </div>
@@ -459,15 +459,15 @@
                                     @endforelse
                                 </dd>
                             </div>
-                        @if (($bookingFee ?? 0) > 0)<div style="grid-column:1 / -1;"><dt>Pricing</dt><dd>Court time ₱{{ number_format($hoursTotal ?? 0, 2) }} + booking fee ₱{{ number_format($bookingFee, 2) }}</dd></div>@endif</dl>
+                        @if (($bookingFee ?? 0) > 0)<div style="grid-column:1 / -1;"><dt>Pricing</dt><dd>Court time ₱{{ number_format($hoursTotal ?? 0, 2) }} + booking fee ₱{{ number_format($bookingFee, 2) }}</dd></div>@endif @if ($booking->payment_reference)<div style="grid-column:1 / -1;"><dt>Payment reference</dt><dd>{{ $booking->payment_reference }}</dd></div>@endif</dl>
                     </div>
 
                     @if ($state === 'pending')
 
-                    {{-- Payment --}}
+                    @if (false)
                     <div class="hcq-card" x-data="{ tab: '{{ $method }}' }">
                         <div class="hcq-head">
-                            <span class="hcq-num">2</span>
+                            <span class="hcq-num">?</span>
                             <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Send your payment</h2>
                         </div>
 
@@ -509,20 +509,21 @@
                         @endforeach
                     </div>
 
-                    {{-- Receipt --}}
+                    @endif
+{{-- Receipt --}}
                     <div class="hcq-card">
                         <div class="hcq-head">
-                            <span class="hcq-num">3</span>
-                            <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Send your receipt</h2>
+                            <span class="hcq-num">?</span>
+                            <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Any concerns?</h2>
                         </div>
 
                         <p style="margin:0;line-height:1.65;color:rgba(27,43,28,.8);">
-                            To verify your booking, kindly message our Facebook page with your booking reference and payment receipt.
+                            Have a question about your booking or payment, or can't pay within 20 minutes? Message us on our Facebook page and we'll help you out.
                         </p>
 
                         <a href="https://www.facebook.com/HomeCourtPickleHouse" target="_blank" rel="noopener noreferrer" class="hcq-fb">
                             <svg width="20" height="20" style="flex:none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            <span>Open our Facebook page</span>
+                            <span>Message us on Facebook</span>
                         </a>
                     </div>
                     @else
