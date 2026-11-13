@@ -1097,7 +1097,7 @@
                     });
                 },
 
-                get missing() { const m = []; if (this.selectedSlots.length === 0) m.push('a time slot'); if (this.customerName.trim().length < 2) m.push('your Facebook name'); if (this.contactNumber.replace(/\D/g, '').length < 10) m.push('your contact number'); if (!(Number(this.players) >= 1)) m.push('number of players'); if (this.referenceNumber.trim().length < 6) m.push('your payment reference number'); if (!this.agreed) m.push('the agreement tick box'); return m; }, get canSubmit() { return this.missing.length === 0; }, get isFullyBooked() {
+                get missing() { const m = []; if (this.selectedSlots.length === 0) m.push('a time slot'); if (this.customerName.trim().length < 2) m.push('your Facebook name'); if (this.contactNumber.replace(/\D/g, '').length < 10) m.push('your contact number'); if (!(Number(this.players) >= 1)) m.push('number of players'); if (this.referenceNumber.trim().length < 1) m.push('your payment reference number'); if (!this.agreed) m.push('the agreement tick box'); return m; }, get canSubmit() { return this.missing.length === 0; }, get isFullyBooked() {
                     if (!this.courtId || !this.bookingDate) return false;
                     return this.allSlots.every(slot => this.isSlotBooked(slot));
                 },
