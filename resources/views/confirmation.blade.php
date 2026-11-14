@@ -407,7 +407,7 @@
                             @elseif ($state === 'cancelled')
                                 <b class="bad"><i></i>Cancelled</b>
                             @else
-                                <b class="pend"><i></i>Awaiting payment</b>
+                                <b class="pend"><i></i>Pending</b>
                             @endif
                         </div>
                         <div class="hcq-stat"><span>Total</span><b class="hc-display">₱{{ number_format($payTotal, 2) }}</b></div>
