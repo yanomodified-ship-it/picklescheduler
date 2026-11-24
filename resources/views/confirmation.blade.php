@@ -441,7 +441,7 @@
                             </div>
                             <div>
                                 <dt>Court</dt>
-                                <dd>{{ $booking->court->name ?? 'N/A' }}</dd>
+                                <dd>{{ ($bookings ?? collect([$booking]))->map(fn ($b) => $b->court->name ?? null)->filter()->unique()->implode(', ') ?: 'N/A' }}</dd>
                             </div>
                             <div>
                                 <dt>Date</dt>
@@ -451,7 +451,7 @@
                                 <dt>Time slot{{ (isset($bookings) && $bookings->count() > 1) ? 's' : '' }}</dt>
                                 <dd style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
                                     @forelse (($bookings ?? collect([$booking])) as $slotBooking)
-                                        <span class="hcq-slotchip">
+                                        <span class="hcq-slotchip">@if (($bookings ?? collect())->pluck('court_id')->unique()->count() > 1){{ $slotBooking->court->name ?? '' }} · @endif
                                             {{ \Carbon\Carbon::parse($slotBooking->start_time)->format('g:i A') }} - {{ substr($slotBooking->end_time, 0, 5) === '23:59' ? '12:00 AM' : \Carbon\Carbon::parse($slotBooking->end_time)->format('g:i A') }}
                                         </span>
                                     @empty

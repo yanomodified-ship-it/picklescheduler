@@ -56,7 +56,7 @@ class AdminBookingController extends Controller
             ->header('Pragma', 'no-cache');
     }
 
-        // Store Walk-in Booking (one or many hourly slots, NO booking fee)
+    // Store Walk-in Booking (one or many hourly slots, NO booking fee)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -73,6 +73,19 @@ class AdminBookingController extends Controller
         $slots = collect($validated['slots'])->unique()->sort()->values();
         $reference = 'WK-' . strtoupper(Str::random(6));
         $total = $slots->count();
+
+        // Same rule as the customer site: a slot that has already ended can't be booked
+        $now = Carbon::now(config('app.timezone'));
+        $openHour = Pricing::data()['open_hour'];
+        foreach ($slots as $slot) {
+            $slotStart = Carbon::parse($validated['booking_date'] . ' ' . $slot, config('app.timezone'));
+            if ((int) substr($slot, 0, 2) < $openHour) {
+                $slotStart->addDay(); // after-midnight slots belong to the night that started on booking_date
+            }
+            if ($slotStart->copy()->addHour()->lte($now)) {
+                return redirect()->back()->with('error', "The {$slot} slot has already passed. Please choose a later time.")->withInput();
+            }
+        }
 
         $slotEnd = fn (string $slot) => ((int) substr($slot, 0, 2) === 23)
             ? '23:59'
@@ -214,39 +227,59 @@ class AdminBookingController extends Controller
      * in a single request.
      */
     public function verifyAllForCustomer(Request $request, Customer $customer)
-{
-    $courtId = $request->query('court_id');
-    $customerName = $request->query('customer_name');
+    {
+        $query = $this->pendingGroupQuery($request, $customer);
 
-    $query = Booking::where('customer_id', $customer->id)
-        ->where('booking_status', 'Pending Verification');
+        $updated = $query->update([
+            'payment_status'   => 'Verified',
+            'booking_status'   => 'Confirmed',
+            'rejection_reason' => null,
+        ]);
 
-    if ($courtId) {
-        $query->where('court_id', $courtId);
+        $bookings = Booking::where('customer_id', $customer->id)->with(['customer', 'court'])->get();
+
+        $message = $updated > 0
+            ? "{$updated} booking(s) approved for {$customer->full_name}."
+            : "No pending bookings found.";
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $message, 'bookings' => $bookings]);
+        }
+
+        return back()->with('success', $message);
     }
 
-    if ($customerName) {
-        $query->where('customer_name', $customerName);
+    /**
+     * The pending bookings one "Review & Verify" card stands for: same customer,
+     * and (when given) the same name, court and payment reference. An empty
+     * payment reference means walk-in / older bookings that have none.
+     */
+    private function pendingGroupQuery(Request $request, Customer $customer)
+    {
+        $query = Booking::where('customer_id', $customer->id)
+            ->where('booking_status', 'Pending Verification');
+
+        if ($request->query('court_id')) {
+            $query->where('court_id', $request->query('court_id'));
+        }
+
+        if ($request->query('customer_name')) {
+            $query->where('customer_name', $request->query('customer_name'));
+        }
+
+        if ($request->query->has('payment_reference')) {
+            $ref = $request->query('payment_reference');
+            $query->where(function ($q) use ($ref) {
+                if ($ref === null || $ref === '') {
+                    $q->whereNull('payment_reference')->orWhere('payment_reference', '');
+                } else {
+                    $q->where('payment_reference', $ref);
+                }
+            });
+        }
+
+        return $query;
     }
-
-    $updated = $query->update([
-        'payment_status'   => 'Verified',
-        'booking_status'   => 'Confirmed',
-        'rejection_reason' => null,
-    ]);
-
-    $bookings = Booking::where('customer_id', $customer->id)->with(['customer', 'court'])->get();
-
-    $message = $updated > 0
-        ? "{$updated} booking(s) approved for {$customer->full_name}."
-        : "No pending bookings found.";
-
-    if ($request->wantsJson()) {
-        return response()->json(['success' => true, 'message' => $message, 'bookings' => $bookings]);
-    }
-
-    return back()->with('success', $message);
-}
 
     /**
      * Reject every currently-pending booking belonging to one customer
@@ -258,8 +291,7 @@ class AdminBookingController extends Controller
             'rejection_reason' => 'required|string|max:255',
         ]);
 
-        $updated = Booking::where('customer_id', $customer->id)
-            ->where('booking_status', 'Pending Verification')
+        $updated = $this->pendingGroupQuery($request, $customer)
             ->update([
                 'payment_status'   => 'Rejected',
                 'booking_status'   => 'Rejected',

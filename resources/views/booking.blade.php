@@ -353,22 +353,22 @@
                     @csrf
 
                     {{-- Hidden Inputs for Form Submission: one input per selected hour slot --}}
-                    <template x-for="slot in [...selectedSlots].sort()" :key="slot">
-                        <input type="hidden" name="slots[]" :value="slot">
+                    <template x-for="item in selectionList" :key="item.key">
+                        <input type="hidden" name="selections[]" :value="item.key">
                     </template>
 
                     {{-- Progress steps --}}
                     <div class="hcw-steps" aria-label="Booking progress">
-                        <div class="hcw-step" :class="{ 'is-done': (courtId && selectedSlots.length > 0), 'is-now': !(courtId && selectedSlots.length > 0) }">
+                        <div class="hcw-step" :class="{ 'is-done': (totalSelected > 0), 'is-now': !(totalSelected > 0) }">
                             <span class="hcw-dot">
-                                <span x-show="!(courtId && selectedSlots.length > 0)">1</span>
-                                <svg x-show="(courtId && selectedSlots.length > 0)" x-cloak width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                                <span x-show="!(totalSelected > 0)">1</span>
+                                <svg x-show="(totalSelected > 0)" x-cloak width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
                             </span>
                             <span class="hcw-label">Court &amp; time</span>
                         </div>
-                        <span class="hcw-line" :class="{ 'is-done': (courtId && selectedSlots.length > 0) }"></span>
+                        <span class="hcw-line" :class="{ 'is-done': (totalSelected > 0) }"></span>
 
-                        <div class="hcw-step" :class="{ 'is-done': (String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1), 'is-now': (courtId && selectedSlots.length > 0) && !(String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1) }">
+                        <div class="hcw-step" :class="{ 'is-done': (String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1), 'is-now': (totalSelected > 0) && !(String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1) }">
                             <span class="hcw-dot">
                                 <span x-show="!(String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1)">2</span>
                                 <svg x-show="(String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1)" x-cloak width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
@@ -377,7 +377,7 @@
                         </div>
                         <span class="hcw-line" :class="{ 'is-done': (String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1) }"></span>
 
-                        <div class="hcw-step" :class="{ 'is-done': agreed, 'is-now': (courtId && selectedSlots.length > 0) && (String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1) && !agreed }">
+                        <div class="hcw-step" :class="{ 'is-done': agreed, 'is-now': (totalSelected > 0) && (String(customerName || '').trim().length > 1 && String(contactNumber || '').replace(/\D/g, '').length >= 7 && Number(players) >= 1) && !agreed }">
                             <span class="hcw-dot">
                                 <span x-show="!agreed">3</span>
                                 <svg x-show="agreed" x-cloak width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
@@ -395,7 +395,7 @@
                                 <div class="hcw-cardhead">
                                     <div class="hcw-ctitle">
                                         <span class="hcw-num">1</span>
-                                        <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Select court &amp; schedule</h2>
+                                        <h2 class="hc-display text-xl font-bold text-[#1B2B1C]">Select court(s) &amp; schedule</h2>
                                     </div>
 
                                     <template x-if="courtId && isFullyBooked">
@@ -413,11 +413,11 @@
                                 <div class="grid gap-5 sm:grid-cols-2">
                                     <div>
                                         <label for="booking_date" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">Booking Date</label>
-                                        <input id="booking_date" name="booking_date" type="date" min="{{ now()->format('Y-m-d') }}" value="{{ old('booking_date', now()->format('Y-m-d')) }}" required x-model="bookingDate" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
+                                        <input id="booking_date" name="booking_date" type="date" min="{{ now()->format('Y-m-d') }}" value="{{ old('booking_date', now()->format('Y-m-d')) }}" required x-model="bookingDate" @change="selections = {}" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
                                     </div>
                                     <div>
-                                        <label for="court_id" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">Court</label>
-                                        <select id="court_id" name="court_id" required x-model="courtId" @change="selectedSlots = []" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
+                                        <label for="court_id" class="mb-2 block text-sm font-semibold text-[#1B2B1C]">Court(s)</label>
+                                        <select id="court_id" x-model="courtId" class="w-full rounded-xl border border-[#1B2B1C]/20 bg-[#F6F8EE] px-4 py-3 text-[#1B2B1C] outline-none transition focus:border-[#2F5D34] focus:bg-white focus:ring-2 focus:ring-[#2F5D34]/20">
                                             <option value="">Select a court</option>
                                             @foreach ($courts as $court)
                                                 @php
@@ -447,9 +447,9 @@
                                         <p class="text-sm font-semibold text-[#1B2B1C]">
                                             Court availability for <span x-text="formattedDate" class="text-[#2F5D34]"></span>
                                         </p>
-                                        <template x-if="selectedSlots.length > 0">
-                                            <button type="button" @click="selectedSlots = []" class="text-xs font-semibold text-[#1B2B1C]/70 underline hover:text-[#2F5D34]">
-                                                Clear Selection
+                                        <template x-if="totalSelected > 0">
+                                            <button type="button" @click="selections = {}" class="text-xs font-semibold text-[#1B2B1C]/70 underline hover:text-[#2F5D34]">
+                                                Clear all
                                             </button>
                                         </template>
                                     </div>
@@ -482,12 +482,20 @@
                                     </div>
 
                                     {{-- Live selection summary --}}
-                                    <div x-show="selectedSlots.length > 0" x-cloak class="hcw-summary">
+                                    <div x-show="totalSelected > 0" x-cloak class="hcw-summary">
                                         <span><b x-text="durationLabel"></b> selected <small style="opacity:.75">+ {{ $pricing['fee_label'] }} booking fee</small></span>
                                         <span class="tot hc-display" x-text="formattedTotal"></span>
                                     </div>
 
-                                    <div class="hcw-legend">
+                                    <div x-show="selectedCourts.length > 0" x-cloak class="hcw-sel">
+<style>.hcw-sel{margin-top:18px;border-radius:20px;border:2px solid rgba(27,43,28,.1);background:#F6F8EE;padding:14px 16px}.hcw-sel-t{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(27,43,28,.6)}.hcw-sel-r{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid rgba(27,43,28,.08)}.hcw-sel-r:first-of-type{border-top:0}.hcw-sel-c{flex:none;cursor:pointer;border:0;background:#1F3F24;color:#E4F03A;border-radius:9999px;padding:5px 12px;font-size:12px;font-weight:800}.hcw-sel-s{flex:1;font-size:13px;font-weight:700;line-height:1.5;color:#1B2B1C}.hcw-sel-x{flex:none;cursor:pointer;border:0;background:transparent;font-size:22px;line-height:1;font-weight:800;color:#B91C1C}.hcw-sel-n{margin:8px 0 0;font-size:12px;color:rgba(27,43,28,.65)}</style>
+<p class="hcw-sel-t">Your selection</p>
+<template x-for="c in selectedCourts" :key="c.id">
+<div class="hcw-sel-r"><button type="button" class="hcw-sel-c" @click="courtId = String(c.id)" x-text="c.label"></button><span class="hcw-sel-s" x-text="c.slotsLabel"></span><button type="button" class="hcw-sel-x" @click="clearCourt(c.id)" aria-label="Remove this court">&times;</button></div>
+</template>
+<p class="hcw-sel-n">One booking fee covers everything you select here.</p>
+</div>
+<div class="hcw-legend">
                                         <span><i style="background:#fff;border:2px solid #CFDDAE"></i>Available</span>
                                         <span><i style="background:#1F3F24"></i>Selected</span>
                                         <span><i style="background:#FDE68A"></i>Pending</span>
@@ -627,9 +635,9 @@
 <div class="hcpb">
     <div class="hcq-amount">
         <span>Please send exactly</span>
-        <b class="hc-display" x-text="selectedSlots.length ? formattedTotal : '₱0.00'"></b>
+        <b class="hc-display" x-text="totalSelected ? formattedTotal : '₱0.00'"></b>
     </div>
-    <p class="hcpb-hint" x-show="selectedSlots.length === 0" x-cloak>Select your time slots in step 1 to see the exact amount to send.</p>
+    <p class="hcpb-hint" x-show="totalSelected === 0" x-cloak>Select your time slots in step 1 to see the exact amount to send.</p>
 
     @foreach ($payAccounts as $key => $list)
         <div x-show="paymentMethod === '{{ $payBrand[$key] }}'" x-cloak class="hcq-accs {{ count($list) > 1 ? 'two' : 'one' }}">
@@ -695,7 +703,7 @@
                                     <div class="hcw-row"><span>Court</span><b x-text="courtName"></b></div>
                                     <div class="hcw-row"><span>Time</span><b x-text="formattedTime"></b></div>
                                     <div class="hcw-row"><span>Duration</span><b x-text="durationLabel"></b></div>
-                                    <div class="hcw-row" x-show="selectedSlots.length > 0"><span>Booking fee</span><b x-text="'₱' + bookingFee"></b></div>
+                                    <div class="hcw-row" x-show="totalSelected > 0"><span>Booking fee</span><b x-text="'₱' + bookingFee"></b></div>
                                     <div class="hcw-row" style="border-bottom:0"><span>Players</span><b x-text="players || '—'"></b></div>
                                 </div>
 
@@ -710,7 +718,7 @@
                                     <span>I understand that this booking is <strong>non-refundable and non-cancellable</strong> once submitted. I have reviewed my court, date and time slots and am ready to proceed.</span>
                                 </label>
 
-                                <button type="button" @click="showPolicy = true" :disabled="submitting || isFullyBooked || !canSubmit" class="hcw-submit">
+                                <button type="button" @click="showPolicy = true" :disabled="submitting || !canSubmit" class="hcw-submit">
                                     <span x-show="!submitting">Submit Booking</span>
                                     <span x-show="submitting" x-cloak>Submitting...</span>
                                 </button>
@@ -763,7 +771,7 @@
                     </div>
 
                     {{-- Mobile bottom bar: total + jump to review --}}
-                    <div class="hcw-bar" x-show="selectedSlots.length > 0" x-cloak>
+                    <div class="hcw-bar" x-show="totalSelected > 0" x-cloak>
                         <div>
                             <div class="t"><span x-text="durationLabel"></span></div>
                             <div class="v hc-display" x-text="formattedTotal"></div>
@@ -989,12 +997,41 @@
     </div>
 
     <script>
+        @php
+            $__oldSel = collect((array) old('selections', []))
+                ->filter(fn ($s) => is_string($s) && str_contains($s, '|'))
+                ->groupBy(fn ($s) => explode('|', $s, 2)[0])
+                ->map(fn ($g) => $g->map(fn ($s) => explode('|', $s, 2)[1])->values()->all())
+                ->all();
+        @endphp
         function bookingForm(courtsData) {
             return {
                 courts: courtsData,
                 bookingDate: @js(old('booking_date', now()->format('Y-m-d'))),
                 courtId: new URLSearchParams(window.location.search).get('court_id') || @js(old('court_id', '')),
-                selectedSlots: [],
+                selections: @js((object) $__oldSel),
+
+                // Slots of the court currently being viewed (the grid reads and writes this)
+                get selectedSlots() { return this.selections[this.courtId] || []; },
+                set selectedSlots(v) { if (!this.courtId) return; this.selections = { ...this.selections, [this.courtId]: v }; },
+
+                // Everything chosen across ALL courts, sorted by court then time
+                get selectionList() {
+                    const order = s => { const h = parseInt(s.split(':')[0], 10); return h < this.pricing.open_hour ? h + 24 : h; };
+                    const out = [];
+                    Object.keys(this.selections).map(Number).sort((a, c) => a - c).forEach(cid => {
+                        [...(this.selections[cid] || [])].sort((a, c) => order(a) - order(c)).forEach(slot => out.push({ courtId: cid, slot, key: cid + '|' + slot }));
+                    });
+                    return out;
+                },
+                get totalSelected() { return this.selectionList.length; },
+                courtLabel(id) { const c = this.courts.find(x => String(x.id) === String(id)); return c ? c.name : 'Court ' + id; },
+                get selectedCourts() {
+                    const by = {};
+                    this.selectionList.forEach(it => { (by[it.courtId] = by[it.courtId] || []).push(it.slot); });
+                    return Object.keys(by).map(id => ({ id: Number(id), label: this.courtLabel(id), slots: by[id], slotsLabel: by[id].map(s => this.getSlotRangeLabel(s)).join(', ') }));
+                },
+                clearCourt(id) { const next = { ...this.selections }; delete next[id]; this.selections = next; },
                 customerName: @js(old('name', '')),
                 contactNumber: @js(old('contact_number', '')),
                 players: @js((int) old('number_of_players', 2)),
@@ -1042,13 +1079,8 @@
 
                 selectSlot(slot) {
                     if (this.isSlotBooked(slot)) return;
-
-                    
-                    if (this.selectedSlots.includes(slot)) {
-                        this.selectedSlots = this.selectedSlots.filter(s => s !== slot);
-                    } else {
-                        this.selectedSlots.push(slot);
-                    }
+                    const cur = this.selectedSlots;
+                    this.selectedSlots = cur.includes(slot) ? cur.filter(s => s !== slot) : [...cur, slot];
                 },
 
                 get activeBookingsForSelected() {
@@ -1097,7 +1129,7 @@
                     });
                 },
 
-                get missing() { const m = []; if (this.selectedSlots.length === 0) m.push('a time slot'); if (this.customerName.trim().length < 2) m.push('your Facebook name'); if (this.contactNumber.replace(/\D/g, '').length < 10) m.push('your contact number'); if (!(Number(this.players) >= 1)) m.push('number of players'); if (this.referenceNumber.trim().length < 1) m.push('your payment reference number'); if (!this.agreed) m.push('the agreement tick box'); return m; }, get canSubmit() { return this.missing.length === 0; }, get isFullyBooked() {
+                get missing() { const m = []; if (this.totalSelected === 0) m.push('a time slot'); if (this.customerName.trim().length < 2) m.push('your Facebook name'); if (this.contactNumber.replace(/\D/g, '').length < 10) m.push('your contact number'); if (!(Number(this.players) >= 1)) m.push('number of players'); if (this.referenceNumber.trim().length < 1) m.push('your payment reference number'); if (!this.agreed) m.push('the agreement tick box'); return m; }, get canSubmit() { return this.missing.length === 0; }, get isFullyBooked() {
                     if (!this.courtId || !this.bookingDate) return false;
                     return this.allSlots.every(slot => this.isSlotBooked(slot));
                 },
@@ -1108,10 +1140,8 @@
                 },
 
                 get courtName() {
-                    if (!this.courtId) return 'Not selected';
-                    const select = document.getElementById('court_id');
-                    const option = select?.querySelector(`option[value="${this.courtId}"]`);
-                    return option?.textContent.trim() || 'Not selected';
+                    if (this.selectedCourts.length === 0) return 'Not selected';
+                    return this.selectedCourts.map(c => c.label).join(', ');
                 },
 
                 get hourlyRate() {
@@ -1122,8 +1152,10 @@
                 },
 
                 get durationLabel() {
-                    const hours = this.selectedSlots.length;
+                    const hours = this.totalSelected;
                     if (!hours) return 'Not selected';
+                    const courts = this.selectedCourts.length;
+                    if (courts > 1) return `${hours} hours across ${courts} courts`;
                     return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
                 },
 
@@ -1142,29 +1174,21 @@
                 },
 
                 get formattedTime() {
-                    if (this.selectedSlots.length === 0) return 'Not selected';
-                                        const dayOrder = s => {
-                        const h = parseInt(s.split(':')[0], 10);
-                        return h < this.pricing.open_hour ? h + 24 : h;
-                    };
-                    const sorted = [...this.selectedSlots].sort((a, b) => dayOrder(a) - dayOrder(b));
-                    return sorted.map(slot => this.getSlotRangeLabel(slot)).join(', ');
+                    if (this.totalSelected === 0) return 'Not selected';
+                    if (this.selectedCourts.length === 1) return this.selectedCourts[0].slotsLabel;
+                    return this.selectedCourts.map(c => c.label + ': ' + c.slotsLabel).join(' • ');
                 },
 
                 rateForSlot(slot) { let h = parseInt(slot.split(':')[0], 10); if (h < this.pricing.open_hour) h += 24; const rule = this.pricing.rules.find(r => h >= r.start_hour && h < r.end_hour) || this.pricing.rules[this.pricing.rules.length - 1]; return Number(rule.rate); }, slotIsNight(slot) { let h = parseInt(slot.split(':')[0], 10); if (h < this.pricing.open_hour) h += 24; return h >= 17; }, get bookingFee() { return Number(this.pricing.booking_fee || 0); }, get totalPrice() {
-                    return this.selectedSlots.reduce((total, slot) => {
-                        const hour = parseInt(slot.split(':')[0], 10);
-                        const rate = this.rateForSlot(slot);
-                        return total + rate;
-                    }, 0);
+                    return this.selectionList.reduce((total, it) => total + this.rateForSlot(it.slot), 0);
                 },
 
                 get formattedTotal() {
-                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(this.selectedSlots.length ? this.totalPrice + this.bookingFee : 0);
+                    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(this.totalSelected ? this.totalPrice + this.bookingFee : 0);
                 },
 
                 prepareSubmit(event) {
-                    if (!this.bookingDate || !this.courtId || this.selectedSlots.length === 0) {
+                    if (!this.bookingDate || this.totalSelected === 0) {
                         event.preventDefault();
                         alert('Please select at least one time slot.');
                         return;

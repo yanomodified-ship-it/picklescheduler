@@ -242,15 +242,15 @@
                     <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Multiple Pending Bookings — Verify Together</h4>
                     
                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <template x-for="group in pendingByCustomer" :key="group.customer_id + '-' + group.court_id + '-' + group.customer_name">
+                        <template x-for="group in pendingByCustomer" :key="group.key">
     <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2">
         <div>
             <div class="text-sm font-bold text-white" x-text="group.customer_name"></div>
             <div class="text-[11px] text-slate-400" x-text="group.bookings.length + ' pending bookings'"></div>
-            <div class="text-[11px] text-lime-400 font-semibold" x-text="group.court_name"></div>
+            <div class="text-[11px] text-lime-400 font-semibold" x-text="group.courts.join(', ')"></div>
             <div class="text-[11px] text-white font-bold mt-0.5" x-text="'Total: ₱' + group.totalPending.toFixed(2)"></div>
         </div>
-        <button @click="selectedGroupId = group.customer_id + '-' + group.court_id + '-' + group.customer_name" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">Review & Verify</button>
+        <button @click="selectedGroupId = group.key" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">Review & Verify</button>
     </div>
 </template>
                     </div>
@@ -998,7 +998,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3" x-show="!showGroupRejectForm">
-                    <button type="button" @click="verifyAllForCustomer(selectedGroup.customer_id, selectedGroup.court_id, selectedGroup.customer_name); selectedGroupId = null;" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Verify All</button>
+                    <button type="button" @click="verifyAllForCustomer(selectedGroup.customer_id, '', selectedGroup.customer_name, selectedGroup.payment_reference); selectedGroupId = null;" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Verify All</button>
                     <button type="button" @click="showGroupRejectForm = true" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject All</button>
                 </div>
 
@@ -1009,7 +1009,7 @@
                         <div class="flex justify-end gap-3 mt-2">
                             <button type="button" @click="showGroupRejectForm = false" class="px-4 py-2 text-slate-400 text-sm font-bold">Cancel</button>
                             <button type="button"
-                                    @click="if (groupRejectReason.trim()) { rejectAllForCustomer(selectedGroup.customer_id, selectedGroup.court_id, selectedGroup.customer_name, groupRejectReason); selectedGroupId = null; showGroupRejectForm = false; groupRejectReason = ''; } else { alert('Please enter a reason.'); }"
+                                    @click="if (groupRejectReason.trim()) { rejectAllForCustomer(selectedGroup.customer_id, '', selectedGroup.customer_name, groupRejectReason, selectedGroup.payment_reference); selectedGroupId = null; showGroupRejectForm = false; groupRejectReason = ''; } else { alert('Please enter a reason.'); }"
                                     class="px-5 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-500 shadow-lg shadow-red-600/20">Confirm Rejection</button>
                         </div>
                     </div>
@@ -1086,7 +1086,7 @@ function buildInvoiceHtml(bookings) { const esc = s => String(s ?? '').replace(/
     const feeTotal   = bookings.reduce((sum, b) => sum + parseFloat(b.booking_fee || 0), 0);
     const grandTotal = hoursTotal + feeTotal;
 
-    const rows = bookings.map(b => {
+    const rows = bookings.map(b => { const courtName = b.court?.name || 'N/A';
         const startTime = formatInvoiceTime((b.start_time || '').substring(0, 5));
         const endTime   = formatInvoiceTime((b.end_time || '').substring(0, 5));
         const amount    = parseFloat(b.total_price || b.total_amount || 0).toFixed(2);
@@ -1473,19 +1473,19 @@ function getCsrfToken() {
         }
 
         const name = b.customer_name || b.customer?.full_name || 'Unknown Customer';
-        const key = b.customer_id + '-' + b.court_id + '-' + name;
+        const key = b.customer_id + '-' + name + '-' + (b.payment_reference || '');
         if (!groups[key]) {
             groups[key] = {
                 customer_id: b.customer_id,
                 court_id: b.court_id,
                 customer_name: name,
-                court_name: b.court?.name || 'Unknown Court',
+                court_name: '', key, payment_reference: b.payment_reference || '', courts: [],
                 bookings: [],
                 totalPending: 0,
             };
         }
-        groups[key].bookings.push(b);
-        groups[key].totalPending += parseFloat(b.total_price || 0);
+        groups[key].bookings.push(b); const cn = b.court?.name || 'Unknown Court'; if (!groups[key].courts.includes(cn)) groups[key].courts.push(cn);
+        groups[key].totalPending += parseFloat(b.total_price || 0) + parseFloat(b.booking_fee || 0);
     });
     return Object.values(groups).filter(g => g.bookings.length > 1);
 },
@@ -1526,12 +1526,12 @@ get recentlyConfirmed() {
 
 get selectedGroup() {
     if (this.selectedGroupId === null) return null;
-    return this.pendingByCustomer.find(g => (g.customer_id + '-' + g.court_id + '-' + g.customer_name) === this.selectedGroupId) || null;
+    return this.pendingByCustomer.find(g => g.key === this.selectedGroupId) || null;
 },
 
-                async verifyAllForCustomer(customerId, courtId, customerName) {
+                async verifyAllForCustomer(customerId, courtId, customerName, paymentRef = '') {
     try {
-        const data = await apiPatch(`/admin/customers/${customerId}/verify-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}`);
+        const data = await apiPatch(`/admin/customers/${customerId}/verify-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}&payment_reference=${encodeURIComponent(paymentRef || '')}`);
         data.bookings.forEach(b => this.mergeBooking(b));
         this.showFlash(data.message);
     } catch (e) {
@@ -1539,9 +1539,9 @@ get selectedGroup() {
     }
 },
 
-async rejectAllForCustomer(customerId, courtId, customerName, reason) {
+async rejectAllForCustomer(customerId, courtId, customerName, reason, paymentRef = '') {
     try {
-        const data = await apiPatch(`/admin/customers/${customerId}/reject-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}`, { rejection_reason: reason });
+        const data = await apiPatch(`/admin/customers/${customerId}/reject-all?court_id=${courtId}&customer_name=${encodeURIComponent(customerName)}&payment_reference=${encodeURIComponent(paymentRef || '')}`, { rejection_reason: reason });
         data.bookings.forEach(b => this.mergeBooking(b));
         this.showFlash(data.message);
     } catch (e) {
