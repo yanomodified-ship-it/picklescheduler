@@ -218,6 +218,95 @@
                 .hcw-title{margin:14px 0 0;font-size:clamp(30px,5vw,48px);font-weight:800;line-height:1.05;color:#F6F8EE}
                 .hcw-title em{font-style:normal;color:#E4F03A}
                 .hcw-sub{margin:10px 0 0;font-size:14px;font-weight:600;color:#CFDDAE}
+.hcr-plan{display:flex;flex-wrap:wrap;gap:22px 30px;margin-top:22px}
+.hcr-zone-t{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#CFDDAE}
+.hcr-zone-t::after{content:"";flex:1;height:1px;background:rgba(207,221,174,.3)}
+.hcr-row{display:flex;gap:10px}
+.hcr-card{width:108px;padding:7px 7px 10px;border-radius:16px;background:#F6F8EE;box-shadow:0 6px 16px rgba(0,0,0,.14);transition:transform .2s,box-shadow .2s}
+.hcr-card.is-open:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(0,0,0,.2)}
+.hcr-court{display:block;width:100%;height:auto;border-radius:10px}
+.hcr-court .g{fill:#2F6B3A}
+.hcr-court .num{font:800 46px sans-serif;text-anchor:end;fill:rgba(255,255,255,.14)}
+.hcr-court .ln{fill:none;stroke:#fff;stroke-width:1.6}
+.hcr-court .net{stroke-dasharray:3 3}
+.hcr-court .ball{fill:#E4F03A}
+.hcr-meta{display:flex;flex-direction:column;gap:2px;padding:8px 4px 0}
+.hcr-meta b{font-size:13px;font-weight:800;color:#1B2B1C}
+.hcr-pill{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800}
+.hcr-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.hcr-card.is-open .hcr-pill{color:#2F5D34}
+.hcr-card.is-closed .hcr-court .g{fill:#A9B3A6}
+.hcr-card.is-closed .hcr-court .ln{stroke:rgba(255,255,255,.75)}
+.hcr-card.is-closed .hcr-meta b{color:rgba(27,43,28,.5)}
+.hcr-card.is-closed .hcr-pill{color:#B91C1C}
+.hcr-plan{flex-wrap:nowrap;gap:0 20px;margin-top:18px;padding-bottom:8px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.hcs-wrap{margin-top:18px}
+.hcs-box{position:relative}
+.hcs-box::after{content:"";position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(90deg,rgba(31,63,36,0),rgba(31,63,36,.96));pointer-events:none;transition:opacity .25s}
+.hcs-wrap.is-end .hcs-box::after{opacity:0}
+.hcs-scroll{overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 0 8px}
+.hcs-scroll::-webkit-scrollbar{display:none}
+.hcs-grid{display:grid;grid-template-columns:repeat(7,minmax(84px,1fr));grid-auto-columns:minmax(84px,1fr);column-gap:10px;row-gap:8px;width:100%;min-width:648px;max-width:1000px}
+@media (min-width:768px){.hcs-grid{column-gap:16px}.hcs-lab{font-size:12px}}
+.hcs-lab{display:flex;align-items:center;gap:8px;min-width:0;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#CFDDAE;white-space:nowrap}
+.hcs-lab::after{content:"";flex:1;height:1px;background:rgba(207,221,174,.35)}
+.hcs-grid .hcr-card{width:auto;scroll-snap-align:start}
+.hcs-hint{display:flex;align-items:center;gap:6px;margin-top:2px;font-size:12px;font-weight:700;color:#CFDDAE;transition:opacity .25s}
+.hcs-hint span{display:inline-block;animation:hcsNudge 1.2s ease-in-out infinite}
+.hcs-wrap.is-end .hcs-hint{opacity:0}
+@keyframes hcsNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+@media (min-width:768px){.hcs-hint{display:none}.hcs-box::after{display:none}}
+@media (prefers-reduced-motion:reduce){.hcs-hint span{animation:none}}
+.hcr-plan::-webkit-scrollbar{display:none}
+.hcr-zone{flex:none}
+.hcr-zone-t{min-height:14px;margin-bottom:8px}
+.hcr-zone-t:empty::after{display:none}
+.hcr-row{gap:8px}
+.hcr-card{flex:none;width:88px;padding:5px 5px 8px;border-radius:14px;scroll-snap-align:start}
+.hcr-court{border-radius:9px}
+.hcr-meta{padding:6px 3px 0;gap:1px}
+.hcr-meta b{font-size:12px}
+.hcr-pill{font-size:10px}
+@media (max-width:640px){.hcr-card{width:84px}.hcr-plan{gap:0 16px;margin-right:-16px;padding-right:16px}}
+.hcf-plan{display:flex;align-items:stretch;gap:14px;margin-top:22px;padding:4px 2px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.hcf-zone{flex:none;border-radius:22px;padding:12px 16px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14)}
+.hcf-warehouse{border:2px dashed rgba(228,240,58,.5);background:rgba(228,240,58,.06)}
+.hcf-zone-t{display:block;margin-bottom:12px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#CFDDAE}
+.hcf-row{display:flex;gap:14px}
+.hcf-court{width:68px;text-align:center}
+.hcf-svg{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.28));transition:transform .2s}
+.hcf-court:hover .hcf-svg{transform:translateY(-4px)}
+.hcf-svg .s{fill:#2E8B3F;stroke:#fff;stroke-width:2}
+.hcf-svg .k{fill:#3FA34D;stroke:#fff;stroke-width:1.5}
+.hcf-svg .l{stroke:#fff;stroke-width:1.5}
+.hcf-svg .n{stroke:#102414;stroke-width:3}
+.hcf-svg .b{fill:#1F3F24;stroke:#E4F03A;stroke-width:2}
+.hcf-svg .t{fill:#E4F03A;font:800 15px sans-serif;text-anchor:middle}
+.hcf-svg .x{display:none;stroke:#9B1C1C;stroke-width:5;stroke-linecap:round;opacity:.75}
+.hcf-court.is-closed .s{fill:#C99494}
+.hcf-court.is-closed .k{fill:#B87E7E}
+.hcf-court.is-closed .b{stroke:#F5A3A3}
+.hcf-court.is-closed .t{fill:#F5A3A3}
+.hcf-court.is-closed .x{display:block}
+.hcf-name{margin-top:9px;font-size:13px;font-weight:800;color:#fff}
+.hcf-st{display:inline-block;margin-top:4px;padding:2px 10px;border-radius:9999px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.hcf-court.is-open .hcf-st{background:#E4F03A;color:#1B2B1C}
+.hcf-court.is-closed .hcf-st{background:#FDE2E2;color:#9B1C1C}
+.hcf-legend{display:flex;gap:16px;margin-top:2px;font-size:12px;font-weight:700;color:#CFDDAE}
+.hcf-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.hcf-legend .o{background:#E4F03A}
+.hcf-legend .c{background:#F5A3A3}
+@media (max-width:640px){.hcf-court{width:56px}.hcf-row{gap:10px}.hcf-zone{padding:10px 12px 12px}}
+.hcw-map{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+.hcw-zone{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px 12px}
+.hcw-zone-t{display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#CFDDAE}
+.hcw-zone-r{display:flex;gap:8px}
+.hcw-tile{min-width:74px;padding:8px 10px;border-radius:12px;text-align:center;border:2px solid;display:flex;flex-direction:column;gap:1px}
+.hcw-tile b{font-size:13px}
+.hcw-tile small{font-size:10px;opacity:.75}
+.hcw-tile i{font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase}
+.hcw-tile.is-open{background:#E4F03A;border-color:#E4F03A;color:#1B2B1C}
+.hcw-tile.is-closed{background:rgba(254,226,226,.92);border-color:#F5A3A3;color:#9B1C1C}
 
                 /* progress steps */
                 .hcw-steps{display:flex;align-items:center;gap:8px;margin:0 0 22px;border-radius:9999px;border:1px solid rgba(246,248,238,.18);background:rgba(246,248,238,.08);padding:10px 14px}
@@ -343,6 +432,161 @@
                         $pricing['close_label'] }} &nbsp;·&nbsp; {{ 
                             $pricing['range_label'] }}/hr &nbsp;·&nbsp; + {{ 
                                 $pricing['fee_label'] }} booking fee</p>
+
+                    {{-- Court layout --}}
+                    @php
+                        $courtNo = fn ($c) => (int) preg_replace('/\D/', '', $c->name);
+                        $zones = [
+                            '🚪 Entrance'            => $courts->filter(fn ($c) => in_array($courtNo($c), [1, 2, 3, 4])),
+                            '🏭 Inside the warehouse' => $courts->filter(fn ($c) => in_array($courtNo($c), [5, 6, 7])),
+                        ];
+                    @endphp
+                    {{-- Court floor plan --}}
+@php
+    $planNo = fn ($c) => (int) preg_replace('/\D/', '', $c->name);
+    $planZones = [
+        ['title' => '🚪 Entrance',  'class' => 'hcf-entrance',  'nums' => [1]],
+        ['title' => 'Main floor',   'class' => 'hcf-main',      'nums' => [2, 3, 4]],
+        ['title' => '🏭 Warehouse', 'class' => 'hcf-warehouse', 'nums' => [5, 6, 7]],
+    ];
+@endphp
+{{-- Court layout --}}
+@php
+    $roomNo = fn ($c) => (int) preg_replace('/\D/', '', $c->name);
+    $roomZones = [
+        ['title' => 'Entrance',   'nums' => [1]],
+        ['title' => '', 'nums' => [2, 3, 4]],
+        ['title' => 'Warehouse',  'nums' => [5, 6, 7]],
+    ];
+@endphp
+{{-- Court layout: one row, swipeable on mobile --}}
+@php $swNo = fn ($c) => (int) preg_replace('/\D/', '', $c->name); @endphp
+<div class="hcs-wrap" id="hcsWrap">
+    <div class="hcs-box">
+        <div class="hcs-scroll" id="hcsScroll">
+            <div class="hcs-grid" aria-label="Court layout">
+                <span class="hcs-lab" style="grid-column:1;grid-row:1">Entrance</span>
+                <span class="hcs-lab" style="grid-column:5 / span 3;grid-row:1">Warehouse</span>
+                @foreach ($courts->sortBy($swNo) as $c)
+                    @php $isClosed = $c->status !== 'active'; @endphp
+                    <div class="hcr-card {{ $isClosed ? 'is-closed' : 'is-open' }}" style="grid-column:{{ $swNo($c) }};grid-row:2">
+                        <svg class="hcr-court" viewBox="0 0 120 72" aria-hidden="true">
+                            <rect class="g" width="120" height="72"/>
+                            <g class="ln">
+                                <rect x="8" y="8" width="104" height="56" rx="2"/>
+                                <line x1="40" y1="8" x2="40" y2="64"/>
+                                <line x1="80" y1="8" x2="80" y2="64"/>
+                                <line x1="8" y1="36" x2="40" y2="36"/>
+                                <line x1="80" y1="36" x2="112" y2="36"/>
+                                <line class="net" x1="60" y1="8" x2="60" y2="64"/>
+                            </g>
+                            @unless ($isClosed)
+                                <circle class="ball" cx="60" cy="36" r="5"/>
+                            @endunless
+                        </svg>
+                        <div class="hcr-meta">
+                            <b>{{ $c->name }}</b>
+                            <span class="hcr-pill">{{ $isClosed ? 'Closed' : 'Open' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <div class="hcs-hint">Swipe to see all courts <span>→</span></div>
+</div>
+<script>
+(function () {
+    var s = document.getElementById('hcsScroll'), w = document.getElementById('hcsWrap');
+    if (!s || !w) return;
+    function update() {
+        w.classList.toggle('is-end', s.scrollWidth <= s.clientWidth + 8 || s.scrollLeft + s.clientWidth >= s.scrollWidth - 8);
+    }
+    s.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+})();
+</script>
+
+<div class="hcr-plan" style="display:none" aria-label="Court layout">
+    @foreach ($roomZones as $zone)
+        <div class="hcr-zone">
+            <span class="hcr-zone-t">{{ $zone['title'] }}</span>
+            <div class="hcr-row">
+                @foreach ($courts->filter(fn ($c) => in_array($roomNo($c), $zone['nums']))->sortBy($roomNo) as $c)
+                    @php $isClosed = $c->status !== 'active'; @endphp
+                    <div class="hcr-card {{ $isClosed ? 'is-closed' : 'is-open' }}">
+                        <svg class="hcr-court" viewBox="0 0 120 72" aria-hidden="true">
+                            <rect class="g" width="120" height="72"/>
+                            <text class="num" x="114" y="62">{{ $roomNo($c) }}</text>
+                            <g class="ln">
+                                <rect x="8" y="8" width="104" height="56" rx="2"/>
+                                <line x1="40" y1="8" x2="40" y2="64"/>
+                                <line x1="80" y1="8" x2="80" y2="64"/>
+                                <line x1="8" y1="36" x2="40" y2="36"/>
+                                <line x1="80" y1="36" x2="112" y2="36"/>
+                                <line class="net" x1="60" y1="8" x2="60" y2="64"/>
+                            </g>
+                            @unless ($isClosed)
+                                <circle class="ball" cx="60" cy="36" r="5"/>
+                            @endunless
+                        </svg>
+                        <div class="hcr-meta">
+                            <b>{{ $c->name }}</b>
+                            <span class="hcr-pill">{{ $isClosed ? 'Closed' : 'Open' }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="hcf-plan" style="display:none" aria-label="Court floor plan">
+    @foreach ($planZones as $zone)
+        <div class="hcf-zone {{ $zone['class'] }}">
+            <span class="hcf-zone-t">{{ $zone['title'] }}</span>
+            <div class="hcf-row">
+                @foreach ($courts->filter(fn ($c) => in_array($planNo($c), $zone['nums']))->sortBy($planNo) as $c)
+                    @php $isClosed = $c->status !== 'active'; @endphp
+                    <div class="hcf-court {{ $isClosed ? 'is-closed' : 'is-open' }}">
+                        <svg class="hcf-svg" viewBox="-2 -2 64 136" aria-hidden="true">
+                            <rect class="s" x="2" y="2" width="56" height="128" rx="3"/>
+                            <rect class="k" x="2" y="46" width="56" height="40"/>
+                            <line class="l" x1="30" y1="2" x2="30" y2="46"/>
+                            <line class="l" x1="30" y1="86" x2="30" y2="130"/>
+                            <line class="n" x1="-2" y1="66" x2="62" y2="66"/>
+                            <circle class="b" cx="30" cy="66" r="12"/>
+                            <text class="t" x="30" y="71.5">{{ $planNo($c) }}</text>
+                            <path class="x" d="M10 12 L50 54 M50 12 L10 54 M10 78 L50 120 M50 78 L10 120"/>
+                        </svg>
+                        <div class="hcf-name">{{ $c->name }}</div>
+                        <span class="hcf-st">{{ $isClosed ? 'Closed' : 'Open' }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+</div>
+<div class="hcf-legend" style="display:none"><span><i class="o"></i>Open</span><span><i class="c"></i>Closed</span></div>
+
+<div class="hcw-map" style="display:none" aria-label="Court layout">
+                        @foreach ($zones as $zoneName => $zoneCourts)
+                            <div class="hcw-zone">
+                                <span class="hcw-zone-t">{{ $zoneName }}</span>
+                                <div class="hcw-zone-r">
+                                    @foreach ($zoneCourts->sortBy($courtNo) as $c)
+                                        @php $isClosed = $c->status !== 'active'; @endphp
+                                        <div class="hcw-tile {{ $isClosed ? 'is-closed' : 'is-open' }}">
+                                            <b>{{ $c->name }}</b>
+                                            <small>{{ $c->classification }}</small>
+                                            <i>{{ $isClosed ? 'Closed' : 'Open' }}</i>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
                 <form id="bookingForm"
@@ -424,8 +668,8 @@
                                                     $type = $court->classification ?? 'Indoor';
                                                     $rate = $court->price_per_hour ?? 500;
                                                 @endphp
-                                                <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ old('court_id') == $court->id ? 'selected' : '' }}>
-                                                    {{ $court->name }} — {{ ucfirst($type) }}
+                                                <option value="{{ $court->id }}" data-rate="{{ $rate }}" {{ $court->status !== 'active' ? 'disabled' : '' }} {{ $court->status === 'active' && old('court_id') == $court->id ? 'selected' : '' }}>
+                                                    {{ $court->name }} — {{ ucfirst($type) }}{{ $court->status !== 'active' ? ' — Closed' : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -1047,7 +1291,7 @@
                 get allSlots() {
                     if (!this.courtId) return [];
                     const court = this.courts.find(c => String(c.id) === String(this.courtId));
-                    if (!court) return [];
+                    if (!court || court.status !== 'active') return [];
 
                     let startHour = parseInt((court.operating_hours_start || '04:00').substring(0, 2), 10);
                     let endHour = parseInt((court.operating_hours_end || '01:00').substring(0, 2), 10);

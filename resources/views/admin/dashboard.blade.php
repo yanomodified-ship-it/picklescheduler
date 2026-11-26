@@ -238,8 +238,11 @@
 
             <!-- BULK VERIFICATION PANEL: customers with more than one pending booking -->
             <template x-if="pendingByCustomer.length > 0">
-                <div class="p-4 border-b border-slate-800 bg-amber-500/5">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3">Multiple Pending Bookings — Verify Together</h4>
+                <div class="hc-snap p-4 border-b border-slate-800 bg-amber-500/5">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Multiple Pending Bookings — Verify Together</h4>
+                        <span class="text-[11px] font-semibold text-slate-500" x-text="pendingByCustomer.length + ' group' + (pendingByCustomer.length > 1 ? 's' : '') + (pendingByCustomer.length > 2 ? ' · swipe →' : '')"></span>
+                    </div>
                     
                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         <template x-for="group in pendingByCustomer" :key="group.key">
@@ -248,6 +251,7 @@
             <div class="text-sm font-bold text-white" x-text="group.customer_name"></div>
             <div class="text-[11px] text-slate-400" x-text="group.bookings.length + ' pending bookings'"></div>
             <div class="text-[11px] text-lime-400 font-semibold" x-text="group.courts.join(', ')"></div>
+            <div class="text-[11px] text-slate-500" x-text="'Submitted ' + formatSubmitted(groupSubmittedAt(group)) + ' · ' + timeAgo(groupSubmittedAt(group))"></div>
             <div class="text-[11px] text-white font-bold mt-0.5" x-text="'Total: ₱' + group.totalPending.toFixed(2)"></div>
         </div>
         <button @click="selectedGroupId = group.key" class="w-full bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">Review & Verify</button>
@@ -259,8 +263,11 @@
 
             <!-- RECENTLY CONFIRMED PANEL: quick-download invoices right after verifying -->
 <template x-if="recentlyConfirmed.length > 0">
-    <div class="p-4 border-b border-slate-800 bg-emerald-500/5">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3">Recently Confirmed — Quick Download</h4>
+    <div class="hc-snap p-4 border-b border-slate-800 bg-emerald-500/5">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Recently Confirmed — Quick Download</h4>
+            <span class="text-[11px] font-semibold text-slate-500" x-text="recentlyConfirmed.length + ' booking' + (recentlyConfirmed.length > 1 ? 's' : '') + (recentlyConfirmed.length > 2 ? ' · swipe →' : '')"></span>
+        </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <template x-for="group in recentlyConfirmed" :key="group.baseRef">
                 <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-3 flex flex-col gap-2">
@@ -270,19 +277,38 @@
                         <div class="text-[11px] text-slate-500" x-text="formatDate(group.booking_date)"></div>
                         <div class="text-[11px] text-emerald-400 font-bold mt-0.5" x-text="'₱' + group.total.toFixed(2)"></div>
                     </div>
-                    <button @click="downloadInvoice(group.bookings)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg">📄 Download Invoice</button>
+                    <div class="flex gap-2">
+                        <button type="button" @click="selectedBooking = firstBooking(group)" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold py-1.5 rounded-lg border border-slate-700">View</button>
+                        <button @click="downloadInvoice(group.bookings)" class="flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold py-1.5 rounded-lg">📄 Download Invoice</button>
+                    </div>
                 </div>
             </template>
         </div>
     </div>
 </template>
 
-            <div class="overflow-x-auto">
+            <style>
+    .hc-history{max-height:70vh;overflow:auto;scrollbar-width:thin;scrollbar-color:#334155 transparent}
+    .hc-history::-webkit-scrollbar{width:8px;height:8px}
+    .hc-history::-webkit-scrollbar-thumb{background:#334155;border-radius:9999px}
+    .hc-history{max-height:70vh;overflow:auto;scrollbar-width:thin;scrollbar-color:#334155 transparent}
+    .hc-history::-webkit-scrollbar{width:8px;height:8px}
+    .hc-history::-webkit-scrollbar-thumb{background:#334155;border-radius:9999px}
+    .hc-history thead th{position:sticky;top:0;z-index:5;background:#020617;box-shadow:0 1px 0 #1e293b}
+    .hc-history input[type=checkbox]{accent-color:#a3e635}
+    .hc-history tbody td:nth-child(2){white-space:nowrap}
+    .hc-snap .flex.gap-2 > button{flex:1 1 0}
+    .hc-snap .flex.gap-2 > button:last-child{flex:2 1 0}
+    .hc-history input[type=checkbox]{accent-color:#a3e635}
+</style>
+<div class="hc-history overflow-auto max-h-[70vh] dark-scroll">
                 <table class="w-full text-left text-xs text-slate-300">
                     <thead class="bg-slate-950 text-slate-400 font-bold uppercase border-b border-slate-800">
                         <tr>
+                            <th class="p-4 w-10"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-lime-400" :checked="allVisibleSelected" @change="toggleSelectAll()" title="Select all shown"></th>
                             <th class="p-4">Reference</th>
                             <th class="p-4">Customer</th>
+                            <th class="p-4">Submitted</th>
                             <th class="p-4">Date</th>
                             <th class="p-4">Court</th>
                             <th class="p-4">Time</th>
@@ -293,12 +319,14 @@
                     </thead>
                     <tbody class="divide-y divide-slate-800/60 font-medium">
                         <template x-if="filteredHistory.length === 0">
-                            <tr><td colspan="8" class="p-8 text-center text-slate-500">No bookings found.</td></tr>
+                            <tr><td colspan="10" class="p-8 text-center text-slate-500">No bookings found.</td></tr>
                         </template>
                         <template x-for="b in filteredHistory" :key="b.id">
-                            <tr class="hover:bg-slate-800/40 transition">
+                            <tr class="hover:bg-slate-800/40 transition" :class="isSelected(b.id) ? 'bg-lime-400/5' : ''">
+                                <td class="p-4 w-10"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-lime-400" :checked="isSelected(b.id)" @change="toggleSelect(b.id)"></td>
                                 <td class="p-4 font-extrabold text-lime-400" x-text="b.booking_reference"></td>
                                 <td class="p-4 text-white font-bold"><span x-text="b.customer_name || b.customer?.full_name || 'N/A'"></span><template x-if="b.payment_reference"><div class="text-[10px] font-mono font-semibold text-slate-400">Ref: <span class="text-lime-300" x-text="b.payment_reference"></span></div></template></td>
+                                <td class="p-4"><div class="text-white font-semibold" x-text="formatSubmitted(b.created_at)"></div><div class="text-[10px] text-slate-500" x-text="timeAgo(b.created_at)"></div></td>
                                 <td class="p-4" x-text="formatDate(b.booking_date)"></td>
                                 <td class="p-4 text-white font-bold" x-text="b.court?.name || 'N/A'"></td>
                                 <td class="p-4" x-text="formatTime((b.start_time || '').substring(0,5)) + ' - ' + formatTime((b.end_time || '').substring(0,5))"></td>
@@ -909,13 +937,35 @@
         </div>
     </div>
 
+    <style>
+    .dark-scroll{scrollbar-width:thin;scrollbar-color:#334155 transparent;color-scheme:dark}
+    .hc-snap > .grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:10px;scrollbar-width:thin;scrollbar-color:#334155 transparent}
+    .hc-snap > .grid::-webkit-scrollbar{height:6px}
+    .hc-snap > .grid::-webkit-scrollbar-thumb{background:#334155;border-radius:9999px}
+    .hc-snap > .grid > div{flex:none;width:min(300px,85%);scroll-snap-align:start}
+    .dark-scroll::-webkit-scrollbar{width:8px}
+    .dark-scroll::-webkit-scrollbar-track{background:transparent}
+    .dark-scroll::-webkit-scrollbar-thumb{background:#334155;border-radius:9999px}
+</style>
+<!-- SELECTION BAR -->
+    <div x-show="selectedCount > 0 && activeTab === 'bookings'" x-cloak x-transition class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 shadow-2xl">
+        <span class="text-sm font-bold text-white" x-text="selectedCount + ' selected'"></span>
+        <button type="button" @click="selectedIds = []" class="px-3 py-1.5 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 rounded-lg">Clear</button>
+        <button type="button" @click="deleteSelectedAction()" class="px-4 py-1.5 text-xs font-bold text-red-300 hover:text-white bg-red-900/40 hover:bg-red-800/60 rounded-lg border border-red-700/50">🗑 Delete selected</button>
+    </div>
+
     <!-- MODAL: BOOKING VERIFICATION -->
     <div x-show="selectedBooking !== null" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div @click.away="selectedBooking = null; showRejectModal = false;" class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative">
             <button @click="selectedBooking = null; showRejectModal = false;" class="absolute top-5 right-5 text-slate-400 hover:text-white">✕</button>
             <div class="p-6 sm:p-8 overflow-y-auto" id="printable-receipt">
                 <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Review Booking</div>
-                <h2 class="text-2xl font-black text-white mt-1 mb-6" x-text="selectedBooking?.booking_reference"></h2>
+                <h2 class="text-2xl font-black text-white mt-1 mb-2" x-text="selectedBooking?.booking_reference"></h2>
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 text-xs text-slate-400">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="selectedBooking?.payment_status === 'Verified' ? 'bg-emerald-500/20 text-emerald-400' : (selectedBooking?.payment_status === 'Rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400')" x-text="selectedBooking?.payment_status"></span>
+                    <span>Submitted <span class="font-semibold text-slate-200" x-text="formatSubmitted(selectedBooking?.created_at)"></span></span>
+                    <span class="text-slate-500" x-text="'· ' + timeAgo(selectedBooking?.created_at)"></span>
+                </div>
 
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
@@ -926,8 +976,8 @@
                     <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
                         <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Booking Info</h3>
                         <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Court</span> <span class="font-bold text-white" x-text="selectedBooking?.court?.name"></span></div>
-                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Date</span> <span class="font-bold text-white" x-text="selectedBooking?.booking_date"></span></div>
-                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Time</span> <span class="font-bold text-white" x-text="selectedBooking?.start_time + ' - ' + selectedBooking?.end_time"></span></div>
+                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Date</span> <span class="font-bold text-white" x-text="formatDate(selectedBooking?.booking_date)"></span></div>
+                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Time</span> <span class="font-bold text-white" x-text="selectedBooking ? formatBookingTime(selectedBooking) : ''"></span></div>
                         <div class="flex justify-between text-sm"><span class="text-slate-400">Players</span> <span class="font-bold text-white" x-text="selectedBooking?.number_of_players || 4"></span></div>
                     </div>
                 </div>
@@ -935,8 +985,8 @@
                 <div class="mt-4 bg-slate-950 border border-slate-800 rounded-xl p-4">
                     <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Payment Details</h3>
                     <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Method</span> <span class="font-bold text-white" x-text="selectedBooking?.payment_method || 'Cash / Walk-in'"></span></div>
-                    <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Payment Ref</span> <span class="font-mono font-bold text-lime-300 select-all" x-text="selectedBooking?.payment_reference || '—'"></span></div>
-                    <div class="flex justify-between text-sm mb-2"><span class="text-slate-400">Total Due</span> <span class="font-black text-lime-400" x-text="'₱' + selectedBooking?.total_price"></span></div>
+                    <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Payment Ref</span> <span class="font-bold tracking-wider tabular-nums text-lime-300 select-all" x-text="selectedBooking?.payment_reference || '—'"></span></div>
+                    <div class="flex justify-between text-sm mb-2"><span class="text-slate-400">Total Due</span> <span class="font-black text-lime-400" x-text="'₱' + (parseFloat(selectedBooking?.total_price || 0) + parseFloat(selectedBooking?.booking_fee || 0)).toFixed(2)"></span></div>
 
                     <template x-if="selectedBooking?.payment_status === 'Verified'"><span class="inline-block px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">VERIFIED</span></template>
                     <template x-if="selectedBooking?.payment_status === 'Rejected'">
@@ -954,7 +1004,7 @@
                             <button type="button" @click="approveBooking(selectedBooking.id)" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Approve Payment</button>
                         </template>
                         <template x-if="selectedBooking?.payment_status !== 'Rejected'">
-                            <buttb0on @click="showRejectModal = true" type="button" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject</button>
+                            <button @click="showRejectModal = true" type="button" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject</button>
                         </template>
                     </div>
                 </div>
@@ -980,13 +1030,37 @@
         <div @click.away="selectedGroupId = null; showGroupRejectForm = false;" class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl relative">
             <button @click="selectedGroupId = null; showGroupRejectForm = false;" class="absolute top-5 right-5 text-slate-400 hover:text-white">✕</button>
             <div class="p-6 sm:p-8 overflow-y-auto">
-                <div class="text-xs font-bold uppercase tracking-widest text-amber-400">Multiple Pending Bookings</div>
+                <div class="text-xs font-bold uppercase tracking-widest text-lime-400">Review Bookings</div>
                 <h2 class="text-2xl font-black text-white mt-1 mb-1" x-text="selectedGroup?.customer_name"></h2>
-                <p class="text-xs text-slate-400 mb-1" x-text="(selectedGroup?.bookings.length || 0) + ' pending booking(s) — ' + (selectedGroup?.courts || []).join(', ')"></p>
-                <p class="text-xs text-lime-400 font-bold mb-6" x-text="'Total: ₱' + (selectedGroup?.totalPending || 0).toFixed(2)"></p>
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 mt-1 text-xs text-slate-400">
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-400">PENDING</span>
+                    <span>Submitted <span class="font-semibold text-slate-200" x-text="formatSubmitted(groupSubmittedAt(selectedGroup))"></span></span>
+                    <span class="text-slate-500" x-text="'· ' + timeAgo(groupSubmittedAt(selectedGroup))"></span>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Customer Info</h3>
+                        <div class="font-bold text-white" x-text="selectedGroup?.customer_name"></div>
+                        <div class="text-slate-400 text-sm" x-text="selectedGroup?.bookings[0]?.customer?.contact_number || 'No contact provided'"></div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Booking Info</h3>
+                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Court</span> <span class="font-bold text-white text-right" x-text="(selectedGroup?.courts || []).join(', ')"></span></div>
+                        <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Slots</span> <span class="font-bold text-white" x-text="selectedGroup?.bookings.length || 0"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-slate-400">Players</span> <span class="font-bold text-white" x-text="selectedGroup?.bookings[0]?.number_of_players || '—'"></span></div>
+                    </div>
+                </div>
 
-                <div class="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800 mb-6 max-h-64 overflow-y-auto">
-                    <template x-for="b in (selectedGroup?.bookings || [])" :key="b.id">
+                <div class="mt-4 bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h3 class="text-xs font-bold uppercase text-slate-500 mb-2">Payment Details</h3>
+                    <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Method</span> <span class="font-bold text-white" x-text="selectedGroup?.bookings[0]?.payment_method || '—'"></span></div>
+                    <div class="flex justify-between text-sm mb-1"><span class="text-slate-400">Payment Ref</span> <span class="font-bold tracking-wider tabular-nums text-lime-300 select-all" x-text="selectedGroup?.payment_reference || '—'"></span></div>
+                    <div class="flex justify-between text-sm"><span class="text-slate-400">Total Due</span> <span class="font-black text-lime-400" x-text="'₱' + (selectedGroup?.totalPending || 0).toFixed(2)"></span></div>
+                </div>
+
+                <h3 class="text-xs font-bold uppercase text-slate-500 mt-6 mb-2" x-text="'Slots (' + (selectedGroup?.bookings.length || 0) + ')'"></h3>
+                <div class="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800 mb-2 max-h-64 overflow-y-auto dark-scroll">
+                    <template x-for="b in sortedGroupBookings" :key="b.id">
                         <div class="p-3 flex justify-between items-center text-sm">
                             <div>
                                 <div class="font-bold text-lime-400 text-xs" x-text="b.booking_reference"></div>
@@ -997,12 +1071,12 @@
                     </template>
                 </div>
 
-                <div class="flex flex-wrap gap-3" x-show="!showGroupRejectForm">
+                <div class="mt-6 pt-6 border-t border-slate-800 flex flex-wrap justify-end gap-3" x-show="!showGroupRejectForm">
                     <button type="button" @click="verifyAllForCustomer(selectedGroup.customer_id, '', selectedGroup.customer_name, selectedGroup.payment_reference); selectedGroupId = null;" class="px-5 py-2 bg-lime-400 text-slate-950 text-sm font-bold rounded-xl hover:bg-lime-300 shadow-lg shadow-lime-400/20">✓ Verify All</button>
                     <button type="button" @click="showGroupRejectForm = true" class="px-5 py-2 bg-red-900/40 text-red-400 text-sm font-bold rounded-xl hover:bg-red-900/60 border border-red-900/50">✕ Reject All</button>
                 </div>
 
-                <div class="mt-2" x-show="showGroupRejectForm" x-cloak x-data="{ groupRejectReason: '' }">
+                <div class="mt-6 pt-6 border-t border-slate-800" x-show="showGroupRejectForm" x-cloak x-data="{ groupRejectReason: '' }">
                     <div class="flex flex-col gap-3">
                         <label class="text-sm font-bold text-red-400">Reason for rejecting all these bookings:</label>
                         <textarea x-model="groupRejectReason" rows="2" class="w-full rounded-xl border border-red-900 bg-slate-950 px-4 py-3 text-white outline-none focus:border-red-500"></textarea>
@@ -1247,6 +1321,7 @@ function getCsrfToken() {
                 showAddCourtModal: false,
                 showWalkInModal: false,
                 showDeleteAllModal: false,
+                selectedIds: [],
                 deleteAllConfirmText: '',
                 walkInSlot: null, walkInSlots: [], pricing: @js($pricing),
 
@@ -1322,7 +1397,36 @@ function getCsrfToken() {
                     return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
                 },
 
-                get calculatedRevenue() {
+                formatSubmitted(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    return d.toLocaleString('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+},
+
+timeAgo(iso) {
+    if (!iso) return '';
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (isNaN(mins)) return '';
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + ' min ago';
+    const h = Math.floor(mins / 60);
+    if (h < 24) return h + ' hr' + (h > 1 ? 's' : '') + ' ago';
+    const d = Math.floor(h / 24);
+    return d + ' day' + (d > 1 ? 's' : '') + ' ago';
+},
+
+formatBookingTime(b) {
+    return this.formatTime((b.start_time || '').substring(0, 5)) + ' - ' + this.formatTime((b.end_time || '').substring(0, 5));
+},
+
+groupSubmittedAt(group) {
+    if (!group) return null;
+    const t = group.bookings.map(b => b.created_at).filter(Boolean).sort();
+    return t[0] || null;
+},
+
+get calculatedRevenue() {
                     let rev = 0;
                     this.bookings.forEach(b => {
                         const matchDate = this.revenueFilterDate === '' || b.booking_date === this.revenueFilterDate;
@@ -1443,6 +1547,44 @@ function getCsrfToken() {
                     }
                 },
 
+                firstBooking(group) {
+                    return [...group.bookings].sort((a, b) => (a.booking_reference || '').localeCompare(b.booking_reference || ''))[0];
+                },
+
+                isSelected(id) { return this.selectedIds.includes(id); },
+
+                toggleSelect(id) {
+                    this.selectedIds = this.isSelected(id) ? this.selectedIds.filter(x => x !== id) : [...this.selectedIds, id];
+                },
+
+                get selectedCount() {
+                    return this.bookings.filter(b => this.selectedIds.includes(b.id)).length;
+                },
+
+                get allVisibleSelected() {
+                    return this.filteredHistory.length > 0 && this.filteredHistory.every(b => this.selectedIds.includes(b.id));
+                },
+
+                toggleSelectAll() {
+                    const ids = this.filteredHistory.map(b => b.id);
+                    this.selectedIds = this.allVisibleSelected
+                        ? this.selectedIds.filter(id => !ids.includes(id))
+                        : [...new Set([...this.selectedIds, ...ids])];
+                },
+
+                async deleteSelectedAction() {
+                    const ids = this.bookings.filter(b => this.selectedIds.includes(b.id)).map(b => b.id);
+                    if (!ids.length) return;
+                    if (!confirm('Permanently delete ' + ids.length + ' selected booking(s)? This cannot be undone.')) return;
+                    let ok = 0, failed = 0;
+                    for (const id of ids) {
+                        try { await apiDelete(`/admin/bookings/${id}`); this.removeBooking(id); ok++; }
+                        catch (e) { failed++; }
+                    }
+                    this.selectedIds = this.selectedIds.filter(id => this.bookings.some(b => b.id === id));
+                    this.showFlash(failed ? (ok + ' deleted, ' + failed + ' failed.') : (ok + ' booking(s) deleted permanently.'), failed ? 'error' : 'success');
+                },
+
                 async deleteBookingAction(id) {
                     if (!confirm('Delete this booking?')) return;
                     try {
@@ -1521,7 +1663,18 @@ get recentlyConfirmed() {
     });
     return Object.values(groups)
         .sort((a, b) => b.maxId - a.maxId)
-        .slice(0, 3);
+        .slice(0, 30);
+},
+
+get sortedGroupBookings() {
+    const g = this.selectedGroup;
+    if (!g) return [];
+    // after-midnight slots (before 4 AM) count as the end of that booking day
+    const key = b => {
+        const h = parseInt((b.start_time || '00').substring(0, 2), 10);
+        return b.booking_date + '-' + String(h < 4 ? h + 24 : h).padStart(2, '0');
+    };
+    return [...g.bookings].sort((a, b) => key(a).localeCompare(key(b)));
 },
 
 get selectedGroup() {

@@ -51,7 +51,7 @@ class BookingController extends Controller
     // Load the dedicated booking form page
     public function create(): View
     {
-        $courts = Court::where('status', 'active')->orderBy('id')->get();
+        $courts = Court::orderBy('id')->get();
 
         // Fetch CONFIRMED and PENDING bookings so the picker can grey out
         // confirmed slots and clearly flag pending ones (only cancelled/
